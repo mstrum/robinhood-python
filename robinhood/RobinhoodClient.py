@@ -1,19 +1,9 @@
 """
-
 NOTE: APIs and HTTP flow taken from:
 https://github.com/Jamonek/Robinhood
 
 More API documentation available at:
 https://github.com/sanko/Robinhood
-
-Unused apis:
-  applications/
-  ach/transfers/
-  ach/relationships/
-  ach/iav/auth/
-  password_reset/request/
-  upload/document_requests/
-
 """
 
 import json
@@ -22,6 +12,10 @@ import requests
 
 
 API_HOST = 'https://api.robinhood.com/'
+
+
+class NoPositionFound(Exception):
+    pass
 
 
 class RobinhoodClient:
@@ -749,7 +743,11 @@ class RobinhoodClient:
     """
     # Possible param: nonzero=true includes only owned securities
     response = self._session.get(API_HOST + 'accounts/{}/positions/{}/'.format(account_number, instrument_id))
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.not_found:
+        raise NoPositionFound()
     return response.json()
 
   def get_historical_quotes(self, symbols, interval, span, bounds):
