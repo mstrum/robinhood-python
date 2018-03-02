@@ -1,3 +1,13 @@
+"""
+This expects a credentials file at ~/.robinhood/credentials like so:
+
+[account]
+RobinhoodUsername = test@gmail.com
+RobinhoodPassword = password123
+RobinhoodAccountNumber = ALPHAZULU
+
+"""
+
 import argparse
 from datetime import datetime
 from decimal import Decimal
