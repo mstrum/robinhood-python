@@ -9,12 +9,12 @@ client = RobinhoodClient()
 # Get an auth token
 config = configparser.ConfigParser()
 config.read([str(Path.home() / '.robinhood' / 'credentials')])
-self.set_auth_token_with_credentials(
+client.set_auth_token_with_credentials(
   config['account']['RobinhoodUsername'],
   config['account']['RobinhoodPassword']
 )
 
 try:
-  client.get_historical_quotes(['AAPL'], '10minute', 'day', 'regular')
+  client.get_watchlist_instruments('Default')
 finally:
   client.clear_auth_token()

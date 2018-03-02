@@ -3,18 +3,16 @@
 NOTE: APIs and HTTP flow taken from:
 https://github.com/Jamonek/Robinhood
 
+More API documentation available at:
+https://github.com/sanko/Robinhood
+
 Unused apis:
-  documents/
   applications/
   ach/transfers/
   ach/relationships/
   ach/iav/auth/
-  margin/upgrades/
-  markets/
-  notifications/
   password_reset/request/
   upload/document_requests/
-  watchlists/
 
 """
 
@@ -53,6 +51,176 @@ class RobinhoodClient:
     response = self._session.post(API_HOST + 'api-token-logout/')
     response.raise_for_status()
     del self._session.headers['Authorization']
+
+  def get_referral_code(self):
+    """
+    Example response:
+    {
+        "code": "matts952",
+        "user_id": "00000000-0000-4000-0000-000000000000",
+        "url": "https://share.robinhood.com/matts952"
+    }
+    """
+    response = self._session.get(API_HOST + 'midlands/referral/code/')
+    response.raise_for_status()
+    return response.json()
+
+  def get_markets(self):
+    """
+    Example response:
+    {
+        "previous": null,
+        "results": [
+            {
+                "operating_mic": "OTCM",
+                "mic": "OTCM",
+                "url": "https://api.robinhood.com/markets/OTCM/",
+                "timezone": "US/Eastern",
+                "name": "Otc Markets",
+                "city": "New York",
+                "website": "www.otcmarkets.com",
+                "acronym": "OTCM",
+                "country": "United States of America",
+                "todays_hours": "https://api.robinhood.com/markets/OTCM/hours/2018-03-02/"
+            },
+            ...
+        ],
+        "next": null
+    }
+    """
+    response = self._session.get(API_HOST + 'markets/')
+    response.raise_for_status()
+    return response.json()
+
+  def get_watchlists(self):
+    """
+    Example response:
+    {
+        "results": [
+            {
+                "name": "Default",
+                "user": "https://api.robinhood.com/user/",
+                "url": "https://api.robinhood.com/watchlists/Default/"
+            }
+        ],
+        "previous": null,
+        "next": null
+    }
+    """
+    response = self._session.get(API_HOST + 'watchlists/')
+    response.raise_for_status()
+    return response.json()
+
+  def get_watchlist_instruments(self, watchlist_name):
+    """
+    Example response:
+    {
+        "previous": null,
+        "next": null,
+        "results": [
+            {
+                "created_at": "2018-02-05T22:58:18.267521Z",
+                "instrument": "https://api.robinhood.com/instruments/81733743-965a-4d93-b87a-6973cb9efd34/",
+                "watchlist": "https://api.robinhood.com/watchlists/Default/",
+                "url": "https://api.robinhood.com/watchlists/Default/81733743-965a-4d93-b87a-6973cb9efd34/"
+            },
+            ....
+            }
+        ]
+    }
+  
+    """
+    response = self._session.get(API_HOST + 'watchlists/{}/'.format(watchlist_name))
+    response.raise_for_status()
+    return response.json()
+
+  def get_notification_settings(self):
+    """
+    Example response:
+    {
+        "trading_email": true,
+        "market_email": true,
+        "transfers_email": true,
+        "margin_email": true,
+        "transfers": {
+            "email_enabled": true,
+            "push_enabled": true
+        },
+        "account_summary": {
+            "email_enabled": true,
+            "push_enabled": true,
+            "frequency": "weekly"
+        },
+        "dividends": {
+            "email_enabled": true,
+            "push_enabled": true,
+            "tracking": "watched",
+            "timing": "all"
+        },
+        "margin_maintenance": {
+            "email_enabled": true,
+            "push_enabled": true,
+            "maintenance_threshold": "close"
+        },
+        "orders": {
+            "email_enabled": true,
+            "push_enabled": true
+        },
+        "compliance_push": true,
+        "margin_push": true,
+        "lang": "en-us",
+        "earnings": {
+            "email_enabled": true,
+            "push_enabled": true,
+            "tracking": "watched"
+        },
+        "price_movements": {
+            "email_enabled": true,
+            "push_enabled": true,
+            "tracking": "watched",
+            "threshold": "5_pct"
+        },
+        "compliance_email": true,
+        "corporate_actions": {
+            "email_enabled": true,
+            "push_enabled": true,
+            "tracking": "watched",
+            "timing": "all"
+        },
+        "user": "https://api.robinhood.com/user/",
+        "transfers_push": true,
+        "cash_transfers": {
+            "email_enabled": true,
+            "push_enabled": true
+        },
+        "trading_push": true,
+        "market_push": true
+    }
+    """
+    response = self._session.get(API_HOST + 'settings/notifications')
+    response.raise_for_status()
+    return response.json()
+
+  def get_notification_devices(self):
+    """
+    Example response:
+    {
+        "previous": null,
+        "results": [
+            {
+                "token": "XXX:XXX-XXXX",
+                "identifier": "XXXX",
+                "url": "https://api.robinhood.com/notifications/devices/00000000-0000-4000-0000-000000000000/",
+                "id": "00000000-0000-4000-0000-000000000000",
+                "type": "android"
+            }
+        ],
+        "next": null
+    }
+    """
+    response = self._session.get(API_HOST + 'notifications/devices/')
+    response.raise_for_status()
+    return response.json()
 
   def get_account(self):
     """
@@ -148,10 +316,44 @@ class RobinhoodClient:
     response.raise_for_status()
     return response.json()
 
+  def get_top100_instruments(self):
+    """
+    Example response:
+    {
+        "slug": "100-most-popular",
+        "description": "",
+        "instruments": [
+            "https://api.robinhood.com/instruments/3a47ca97-d5a2-4a55-9045-053a588894de/",
+            ...
+        ],
+        "name": "100 Most Popular"
+    }
+    """
+    response = self._session.get(API_HOST + 'midlands/tags/tag/100-most-popular/')
+    response.raise_for_status()
+    return response.json()
+
+  def get_top10_instruments(self):
+    """
+    Example response:
+    {
+        "slug": "10-most-popular",
+        "description": "",
+        "instruments": [
+            "https://api.robinhood.com/instruments/3a47ca97-d5a2-4a55-9045-053a588894de/",
+            ...
+        ],
+        "name": "10 Most Popular"
+    }
+    """
+    response = self._session.get(API_HOST + 'midlands/tags/tag/10-most-popular/')
+    response.raise_for_status()
+    return response.json()
+
   def get_instruments(self, query=None):
     """
     Args:
-      query: Usually either a stock ticker (for one) or None for all (e.g. AAPL)
+      query: Can be any string, like a stock ticker or None for all (e.g. AAPL)
 
     Example response for AAPL:
     {
@@ -219,7 +421,7 @@ class RobinhoodClient:
     response.raise_for_status()
     return response.json()
 
-  def get_instrument(self, instrument_id):
+  def get_instrument_by_id(self, instrument_id):
     """
     Args:
       instrument_id: Internal robinhood instrument id (a uuid)
@@ -249,6 +451,72 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'instruments/{}/'.format(instrument_id))
+    response.raise_for_status()
+    return response.json()
+
+  def get_instrument_by_symbol(self, symbol):
+    """
+    Args:
+      symbol: e.g. AAPL
+
+    Example response:
+    {
+        "next": null,
+        "results": [
+            {
+                "country": "US",
+                "min_tick_size": null,
+                "bloomberg_unique": "EQ0010169500001000",
+                "type": "stock",
+                "id": "00000000-0000-4000-0000-000000000000",
+                "state": "active",
+                "list_date": "1990-01-02",
+                "symbol": "AAPL",
+                "margin_initial_ratio": "0.5000",
+                "quote": "https://api.robinhood.com/quotes/AAPL/",
+                "url": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+                "name": "Apple Inc. - Common Stock",
+                "splits": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/splits/",
+                "fundamentals": "https://api.robinhood.com/fundamentals/AAPL/",
+                "market": "https://api.robinhood.com/markets/XNAS/",
+                "simple_name": "Apple",
+                "tradability": "tradable",
+                "maintenance_ratio": "0.2500",
+                "day_trade_ratio": "0.2500",
+                "tradeable": true
+            }
+        ],
+        "previous": null
+    }
+    """
+    params = {
+      'symbol': symbol,
+    }
+    response = self._session.get(API_HOST + 'instruments/', params=params)
+    response.raise_for_status()
+    return response.json()
+
+  def get_instrument_split_history(self, instrument_id):
+    """
+    Args:
+      instrument_id: Internal robinhood instrument id (a uuid)
+
+    Example response:
+    {
+        "previous": null,
+        "next": null,
+        "results": [
+            {
+                "execution_date": "2014-06-09",
+                "multiplier": "7.00000000",
+                "url": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/splits/93657cb7-478b-42b0-a23c-9a64042cb694/",
+                "divisor": "1.00000000",
+                "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/"
+            }
+        ]
+    }
+    """
+    response = self._session.get(API_HOST + 'instruments/{}/splits'.format(instrument_id))
     response.raise_for_status()
     return response.json()
 
@@ -454,8 +722,7 @@ class RobinhoodClient:
     Args:
       symbol: e.g. AAPL
       interval: [5minute, 10minute]
-      ? week? year?
-      span: [day]
+      span: [day, week]
       bounds: [extended, regular]
     Example response:
     {
@@ -533,7 +800,7 @@ class RobinhoodClient:
     response.raise_for_status()
     return response.json()
 
-  def get_fundamentals(self, symbol):
+  def get_fundamental(self, symbol):
     """
     Args:
       symbol: e.g. AAPL
@@ -563,6 +830,41 @@ class RobinhoodClient:
     response.raise_for_status()
     return response.json()
 
+  def get_fundamentals(self, symbols):
+    """
+    Args:
+      symbols: e.g. [AAPL, ...]
+
+    Example response:
+    [
+        {
+            "description": "Apple, Inc. engages in the design, manufacture, and marketing of mobile communication, media devices, personal computers, and portable digital music players. It operates through the following geographical segments: Americas, Europe, Greater China, Japan, and Rest of Asia Pacific. The Americas segment includes both North and South America. The Europe segment consists of European countries, as well as India, the Middle East, and Africa. The Greater China segment comprises of China, Hong Kong, and Taiwan. The Rest of Asia Pacific segment includes Australia and Asian countries not included in the reportable operating segments of the company. The company was founded by Steven Paul Jobs, Ronald Gerald Wayne, and Stephen G. Wozniak on April 1, 1976 and is headquartered in Cupertino, CA.",
+            "volume": "24285834.0000",
+            "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+            "low_52_weeks": "137.0500",
+            "pe_ratio": "17.9804",
+            "headquarters_state": "California",
+            "ceo": "Tim Cook",
+            "average_volume": "28771372.6932",
+            "high": "179.7750",
+            "dividend_yield": "1.5572",
+            "open": "178.5500",
+            "year_founded": 1976,
+            "headquarters_city": "Cupertino",
+            "market_cap": "905143676100.0000",
+            "high_52_weeks": "180.6150",
+            "low": "172.6800",
+            "num_employees": 123000
+        }
+    ]
+    """
+    params = {
+      'symbols': ','.join(symbols),
+    }
+    response = self._session.get(API_HOST + 'fundamentals/', params=params)
+    response.raise_for_status()
+    return response.json()['results']
+
   def order(self, account_url, instrument_url, symbol, quantity, bid_price, transaction_type, trigger, order_type, time_in_force):
     """
     Args:
@@ -574,7 +876,7 @@ class RobinhoodClient:
       transaction_type: [buy, sell]
       trigger: [immediate, stop]
       order_type: [market, limit]
-      time_in_force: [gfd, gtc] (eod or until cancelled)
+      time_in_force: [gfd, gtc, ioc, opg] (eod or until cancelled)
     """
     exit()
     body = {
