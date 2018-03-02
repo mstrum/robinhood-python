@@ -20,7 +20,7 @@ from dateutil.parser import parse
 import click
 import pytz
 
-from robinhood.RobinhoodClient import RobinhoodClient, NoPositionFound
+from robinhood.RobinhoodClient import RobinhoodClient, NotFound
 
 # Set up the client
 client = RobinhoodClient()
@@ -44,12 +44,17 @@ def get_quote(symbol):
       account_number = account['account_number']
 
     # Get instrument parts
-    instrument = client.get_instrument_by_symbol(symbol)
-    instrument_id = instrument['id']
-    instrument_url = instrument['url']
-    listed_since = parse(instrument['list_date']).date()
-    tradable = instrument['tradeable']
-    simple_name = instrument['simple_name']
+    try:
+      instrument = client.get_instrument_by_symbol(symbol)
+    except NotFound:
+      print('symbol {} was not found'.format(symbol))
+      exit()
+    else:
+      instrument_id = instrument['id']
+      instrument_url = instrument['url']
+      listed_since = parse(instrument['list_date']).date()
+      tradable = instrument['tradeable']
+      simple_name = instrument['simple_name']
 
     # Get fundamentals
     fundamental = client.get_fundamental(symbol)
@@ -79,7 +84,7 @@ def get_quote(symbol):
     # Get position
     try:
       position = client.get_position_by_instrument_id(account_number, instrument_id)
-    except NoPositionFound:
+    except NotFound:
       position_average_buy_price = 0
       position_quantity = 0
       position_equity = 0

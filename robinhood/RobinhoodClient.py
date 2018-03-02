@@ -14,7 +14,7 @@ import requests
 API_HOST = 'https://api.robinhood.com/'
 
 
-class NoPositionFound(Exception):
+class NotFound(Exception):
     pass
 
 
@@ -489,6 +489,8 @@ class RobinhoodClient:
     response = self._session.get(API_HOST + 'instruments/', params=params)
     response.raise_for_status()
     response_json = response.json()
+    if len(response_json['results']) == 0:
+      raise NotFound()
     assert len(response_json['results']) == 1
     instrument = response_json['results'][0]
     assert instrument['symbol'] == symbol
@@ -747,7 +749,7 @@ class RobinhoodClient:
       response.raise_for_status()
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.not_found:
-        raise NoPositionFound()
+        raise NotFound()
     return response.json()
 
   def get_historical_quotes(self, symbols, interval, span, bounds):
