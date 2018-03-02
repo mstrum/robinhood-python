@@ -1,23 +1,16 @@
 """
-This expects a credentials file at ~/.robinhood/credentials like so:
-
-[account]
-RobinhoodUsername = test@gmail.com
-RobinhoodPassword = password123
-RobinhoodAccountNumber = ALPHAZULU
-
+This expects a credentials file at .creds, make sure to run login.py and then
+logout.py when you are done.
 """
 
 import argparse
 from datetime import datetime
 from decimal import Decimal
 from math import ceil
-from pathlib import Path
 import configparser
 import json
 
 from dateutil.parser import parse
-import click
 import pytz
 
 from robinhood.RobinhoodClient import RobinhoodClient, NotFound
@@ -27,22 +20,19 @@ client = RobinhoodClient()
 
 # Get an auth token
 config = configparser.ConfigParser()
-config.read([str(Path.home() / '.robinhood' / 'credentials')])
-client.set_auth_token_with_credentials(
-  config['account']['RobinhoodUsername'],
-  config['account']['RobinhoodPassword']
-)
-account_number = config['account'].get('RobinhoodAccountNumber')
+config.read(['.creds'])
+auth_token = config.get('account', 'AuthToken')
+if not auth_token:
+  print('Please run login.py before running this script')
+  exit()
+
+client.set_auth_token(auth_token)
+account_number = config['account']['AccountNumber']
 
 
 def get_quote(symbol):
   now = datetime.now(pytz.UTC)
   try:
-    global account_number
-    if not account_number:
-      account = client.get_account()
-      account_number = account['account_number']
-
     # Get instrument parts
     try:
       instrument = client.get_instrument_by_symbol(symbol)

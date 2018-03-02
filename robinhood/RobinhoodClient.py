@@ -31,6 +31,9 @@ class RobinhoodClient:
       'User-Agent': 'Robinhood/823 (iPhone; iOS 7.1.2; Scale/2.00)',
     }
 
+  def set_auth_token(self, auth_token):
+    self._session.headers['Authorization'] = 'Token {}'.format(auth_token)
+
   def set_auth_token_with_credentials(self, username, password):
     body = {
       'username': username,
@@ -39,7 +42,8 @@ class RobinhoodClient:
     response = self._session.post(API_HOST + 'api-token-auth/', data=body)
     response.raise_for_status()
     auth_token = response.json()['token']
-    self._session.headers['Authorization'] = 'Token {}'.format(auth_token)
+    self.set_auth_token(auth_token)
+    return auth_token
 
   def clear_auth_token(self):
     response = self._session.post(API_HOST + 'api-token-logout/')
