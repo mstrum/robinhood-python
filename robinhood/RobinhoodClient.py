@@ -494,7 +494,11 @@ class RobinhoodClient:
     }
     response = self._session.get(API_HOST + 'instruments/', params=params)
     response.raise_for_status()
-    return response.json()
+    response_json = response.json()
+    assert len(response_json['results']) == 1
+    instrument = response_json['results'][0]
+    assert instrument['symbol'] == symbol
+    return instrument
 
   def get_instrument_split_history(self, instrument_id):
     """
@@ -527,19 +531,19 @@ class RobinhoodClient:
 
     Example response:
     {
-        "bid_price": "175.1100",
         "adjusted_previous_close": "178.1200",
-        "ask_size": 1400,
-        "previous_close_date": "2018-02-28",
-        "symbol": "AAPL",
-        "bid_size": 500,
-        "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
-        "previous_close": "178.1200",
-        "updated_at": "2018-03-02T01:00:00Z",
         "ask_price": "175.3000",
-        "last_trade_price": "175.0000",
-        "trading_halted": false,
+        "ask_size": 1400,
+        "bid_price": "175.1100",
+        "bid_size": 500,
         "has_traded": true,
+        "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+        "last_trade_price": "175.0000",
+        "previous_close_date": "2018-02-28",
+        "previous_close": "178.1200",
+        "symbol": "AAPL",
+        "trading_halted": false,
+        "updated_at": "2018-03-02T01:00:00Z",
         "last_extended_hours_trade_price": "175.1000",
         "last_trade_price_source": "consolidated"
     }
@@ -611,7 +615,7 @@ class RobinhoodClient:
     response.raise_for_status()
     return response.json()
 
-  def get_orders(self):
+  def get_orders(self, instrument_url=None):
     """
     Example response:
     {
@@ -651,7 +655,10 @@ class RobinhoodClient:
         "previous": null
     }
     """
-    response = self._session.get(API_HOST + 'orders/')
+    params = {}
+    if instrument_url:
+      params['instrument'] = instrument_url
+    response = self._session.get(API_HOST + 'orders/', params=params)
     response.raise_for_status()
     return response.json()
 
@@ -714,6 +721,34 @@ class RobinhoodClient:
     """
     # Possible param: nonzero=true includes only owned securities
     response = self._session.get(API_HOST + 'positions/')
+    response.raise_for_status()
+    return response.json()
+
+  def get_position_by_instrument_id(self, account_number, instrument_id):
+    """
+    Example response:
+    {
+        "shares_held_for_options_events": "0.0000",
+        "intraday_average_buy_price": "0.0000",
+        "shares_held_for_buys": "0.0000",
+        "shares_held_for_stock_grants": "0.0000",
+        "intraday_quantity": "0.0000",
+        "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
+        "shares_pending_from_options_events": "0.0000",
+        "updated_at": "2018-02-28T15:40:29.270433Z",
+        "average_buy_price": "0.0000",
+        "shares_held_for_sells": "0.0000",
+        "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
+        "shares_held_for_options_collateral": "0.0000",
+        "pending_average_buy_price": "0.0000",
+        "created_at": "2018-02-09T15:42:15.536132Z",
+        "quantity": "0.0000",
+        "url": "https://api.robinhood.com/accounts/XXXXXXXX/positions/450dfc6d-5510-4d40-abfb-f633b7d9be3e/"
+    }
+
+    """
+    # Possible param: nonzero=true includes only owned securities
+    response = self._session.get(API_HOST + 'accounts/{}/positions/{}/'.format(account_number, instrument_id))
     response.raise_for_status()
     return response.json()
 
