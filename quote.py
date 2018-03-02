@@ -60,8 +60,8 @@ def get_quote(symbol):
     print()
     print('---------------- recents ----------------')
     print('dy\t{:.2f}%\t\tpe\t{:.2f}x'.format(dividend_yield, pe_ratio))
-    print('52w\t{:.2f} <-> {:.2f}'.format(low_52, high_52))
-    print('1d\t{:.2f} <-> {:.2f} (from {:.2f})'.format(last_low, last_high, last_open))
+    print('52w\t${:.2f} <-> ${:.2f}'.format(low_52, high_52))
+    print('1d\t${:.2f} <-> ${:.2f} (from ${:.2f})'.format(last_low, last_high, last_open))
 
     print()
     print('---------------- position ----------------')
@@ -78,7 +78,7 @@ def get_quote(symbol):
       position_average_buy_price = Decimal(position['average_buy_price'])
       position_quantity = int(float(position['quantity']))
       position_equity = position_quantity * position_average_buy_price
-      print('{} @ {:.2f} = {:.2f}'.format(position_quantity, position_average_buy_price, position_equity))
+      print('{} @ ${:.2f} = ${:.2f}'.format(position_quantity, position_average_buy_price, position_equity))
 
     # Get order history, put as a subdisplay of position
     print()
@@ -99,7 +99,7 @@ def get_quote(symbol):
           execution_price = Decimal(execution['price'])
           execution_quantity = int(float(execution['quantity']))
           execution_date = parse(execution['settlement_date']).date()
-        print('\t{:%m/%d/%Y}\t{}\t{} @ {:.2f}'.format(execution_date, order_type, execution_quantity, execution_price))
+        print('\t{:%m/%d/%Y}\t{}\t{} @ ${:.2f}'.format(execution_date, order_type, execution_quantity, execution_price))
 
     # Get quote
     quote = client.get_quote(symbol)
@@ -122,9 +122,9 @@ def get_quote(symbol):
       print('!!!!!!!!!!!!! HALTED !!!!!!!!!!!!!')
     if not has_traded:
       print('!!!!!!!!!!!!! HAS NOT TRADED !!!!!!!!!!!!!')
-    print('{} @ {:.2f} <-> {} @ {:.2f} (last {:.2f})'.format(bid_size, bid_price, ask_size, ask_price, last_trade_price))
+    print('{} @ ${:.2f} <-> {} @ ${:.2f} (last {:.2f})'.format(bid_size, bid_price, ask_size, ask_price, last_trade_price))
     print('\t{}m ago @ {:%I:%M%p}'.format(updated_minutes_ago, updated_at.astimezone(pytz.timezone('US/Pacific'))))
-    print('\tlast close {:.2f} on {:%b %d} (ext {:.2f})'.format(last_close_price, last_close_date, last_extended_hours_trade_price))
+    print('\tlast close ${:.2f} on {:%b %d} (ext ${:.2f})'.format(last_close_price, last_close_date, last_extended_hours_trade_price))
 
   finally:
     client.clear_auth_token()
