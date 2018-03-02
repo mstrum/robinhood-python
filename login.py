@@ -7,6 +7,7 @@ AuthToken = MYAUTHTOKEN
 
 """
 
+from __future__ import print_function
 import configparser
 import getpass
 
@@ -16,7 +17,7 @@ from robinhood.RobinhoodClient import RobinhoodClient
 client = RobinhoodClient()
 
 # Get an auth token
-username = input('Username: ')
+username = raw_input('Username: ')
 password = getpass.getpass()
 print('What is the airspeed velocity of an unladen swallow')
 auth_token = client.set_auth_token_with_credentials(username, password)
