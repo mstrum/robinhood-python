@@ -18,7 +18,7 @@ To-create
     * Positions I'm watching, especially if I have criteria
 
 ## Todo
-* Switch away from user/pwd credentials stored on file.  Take user/pass and leave a console open, stash a token, etc.
+* Switch away from user/pwd credentials stored on file.  Take user/pass and leave a console open, stash a token, use something like keyring, etc.
 * Deal with paging in a reusable and out-of-site manner
 * Cache as much data as possible
   * Orders that are fulfilled/canceled/etc. don't need to be downloaded twice
