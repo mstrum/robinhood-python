@@ -64,8 +64,8 @@ def get_quote(symbol):
     last_open = Decimal(fundamental['open'])
     last_high = Decimal(fundamental['high'])
     last_low = Decimal(fundamental['low'])
-    pe_ratio = Decimal(fundamental['pe_ratio']) if fundamental['pe_ratio'] else None
-    dividend_yield = Decimal(fundamental['dividend_yield'])
+    pe_ratio = Decimal(fundamental['pe_ratio']) if fundamental['pe_ratio'] else 0.0
+    dividend_yield = Decimal(fundamental['dividend_yield']) if fundamental['dividend_yield'] else 0.0
 
     print('==================== {} ({}) ===================='.format(symbol, simple_name))
     if not tradable:
@@ -124,7 +124,7 @@ def get_quote(symbol):
     trading_halted = quote['trading_halted']
     last_close_price = Decimal(quote['previous_close'])
     last_close_date = parse(quote['previous_close_date']).date()
-    last_extended_hours_trade_price = Decimal(quote['last_extended_hours_trade_price'])
+    last_extended_hours_trade_price = Decimal(quote['last_extended_hours_trade_price']) if quote['last_extended_hours_trade_price'] else last_close_price
     last_trade_price = Decimal(quote['last_trade_price'])
     bid_price = Decimal(quote['bid_price'])
     bid_size = int(quote['bid_size'])
