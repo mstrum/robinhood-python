@@ -18,6 +18,7 @@ Robinhood module in Python
     * Historical quotes
 
 ## Scripts
+
 * logout.py
   * Calls logout on Robinhood if currently logged in and deletes the local auth token cache
 * quote.py AMZN
@@ -27,9 +28,16 @@ Robinhood module in Python
   * TODO
     * Add current equity values
 * TODO
-  * ./order.py
-    * Will handle any order scenario
+  * ./orders.py
+    * Will download a shapshot of all fulfilled orders
+  * ./report.py
+    * Unlike generate_portfolio, includes:
+      * Dividends received
+      * Positions that were fully sold
+      * Profit/losses from sales
   * ./potentials.py
     * Will show a view combining portfolio and watching symbols and show ones I may be interested in.
       * Positions I'm in that I want to increase
       * Positions I'm watching, especially if I have criteria
+  * ./order.py
+    * Will handle any order scenario
