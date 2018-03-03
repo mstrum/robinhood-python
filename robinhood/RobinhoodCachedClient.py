@@ -62,6 +62,17 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
+  def get_fundamental(self, symbol, force_cache=True):
+    cache_path = os.path.join(cache_root_path, 'fundamental_{}'.format(symbol))
+    if os.path.exists(cache_path):
+      with open(cache_path, 'r') as cache_file:
+        return json.load(cache_file)
+    else:
+      cache_json = super(RobinhoodCachedClient, self).get_fundamental(symbol)
+      with open(cache_path, 'w') as cache_file:
+        json.dump(cache_json, cache_file)
+      return cache_json
+
   def get_instrument_by_id(self, instrument_id, force_cache=True):
     cache_path = os.path.join(cache_root_path, 'instrument_{}'.format(instrument_id))
     if os.path.exists(cache_path):
