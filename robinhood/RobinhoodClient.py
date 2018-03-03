@@ -771,7 +771,10 @@ class RobinhoodClient:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
       raise
-    return response.json()
+    portfolio_json = response.json()
+    # Until paging is handled, just error out if it comes up
+    assert not portfolio_json['next']
+    return portfolio_json['results']
 
   def get_position_by_instrument_id(self, account_number, instrument_id):
     """

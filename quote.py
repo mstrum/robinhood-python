@@ -66,13 +66,13 @@ def get_quote(symbol):
   except NotFound:
     position_average_buy_price = 0
     position_quantity = 0
-    position_equity = 0
+    position_equity_cost = 0
     print('None')
   else:
     position_average_buy_price = Decimal(position['average_buy_price'])
     position_quantity = int(float(position['quantity']))
-    position_equity = position_quantity * position_average_buy_price
-    print('{} @ ${:.2f} = ${:.2f}'.format(position_quantity, position_average_buy_price, position_equity))
+    position_equity_cost = position_quantity * position_average_buy_price
+    print('{} @ ${:.2f} = ${:.2f}'.format(position_quantity, position_average_buy_price, position_equity_cost))
 
   # Get order history, put as a subdisplay of position
   print('')
