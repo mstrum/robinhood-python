@@ -13,6 +13,7 @@ from dateutil.parser import parse
 import pytz
 
 from .RobinhoodClient import RobinhoodClient
+from .util import get_instrument_id_from_url
 
 cache_root_path = '.robinhood'
 if not os.path.exists(cache_root_path):
@@ -51,13 +52,13 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
-  def get_positions(self, force_cache=True):
-    cache_path = os.path.join(cache_root_path, 'positions')
+  def get_position_by_instrument_id(self, account_number, instrument_id, force_cache=True):
+    cache_path = os.path.join(cache_root_path, 'position_{}'.format(instrument_id))
     if os.path.exists(cache_path):
       with open(cache_path, 'r') as cache_file:
         return json.load(cache_file)
     else:
-      cache_json = super(RobinhoodCachedClient, self).get_positions()
+      cache_json = super(RobinhoodCachedClient, self).get_position_by_instrument_id(account_number, instrument_id)
       with open(cache_path, 'w') as cache_file:
         json.dump(cache_json, cache_file)
       return cache_json
@@ -83,6 +84,28 @@ class RobinhoodCachedClient(RobinhoodClient):
       with open(cache_path, 'w') as cache_file:
         json.dump(cache_json, cache_file)
       return cache_json
+
+  def get_positions(self, include_old=False, force_cache=True):
+    positions_list_cache_path = os.path.join(cache_root_path, 'positions_' + ('all' if include_old else  'current'))
+    if os.path.exists(positions_list_cache_path):
+      account_number = self.get_account()['account_number']
+      positions = []
+      with open(positions_list_cache_path, 'r') as positions_list_cache_file:
+        positions_list = json.load(positions_list_cache_file)
+        for instrument_id in positions_list:
+          positions.append(self.get_position_by_instrument_id(account_number, instrument_id, force_cache))
+    else:
+      positions = super(RobinhoodCachedClient, self).get_positions(include_old=include_old)
+      positions_list = []
+      for position in positions:
+        instrument_id = get_instrument_id_from_url(position['instrument'])
+        positions_list.append(instrument_id)
+        position_cache_path = os.path.join(cache_root_path, 'position_{}'.format(instrument_id))
+        with open(position_cache_path, 'w') as position_cache_file:
+          json.dump(position, position_cache_file)
+      with open(positions_list_cache_path, 'w') as positions_list_cache_file:
+        json.dump(positions_list, positions_list_cache_file)
+    return positions
 
   def get_instrument_by_symbol(self, symbol, force_cache=True):
     symbol_instrument_id_cache_path = os.path.join(cache_root_path, 'symbol_instrument_id_{}'.format(symbol))

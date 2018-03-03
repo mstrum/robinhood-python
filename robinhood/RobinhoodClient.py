@@ -734,7 +734,7 @@ class RobinhoodClient:
       raise
     return response.json()['results'][0]
 
-  def get_positions(self):
+  def get_positions(self, include_old=False):
     """
     Example response:
     {
@@ -763,8 +763,14 @@ class RobinhoodClient:
         "next": null
     }
     """
-    # Possible param: nonzero=true includes only owned securities
-    response = self._session.get(API_HOST + 'positions/', headers=self._authorization_headers)
+    params = {}
+    if not include_old:
+      params['nonzero'] = 'true'
+    response = self._session.get(
+      API_HOST + 'positions/',
+      params=params,
+      headers=self._authorization_headers
+    )
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
