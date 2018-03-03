@@ -7,27 +7,17 @@ import argparse
 from datetime import datetime
 from decimal import Decimal
 from math import ceil
-import configparser
-import json
 
 from dateutil.parser import parse
 import pytz
 
-from robinhood.RobinhoodClient import RobinhoodClient, NotFound
+from robinhood.exceptions import NotFound
+from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
 
 # Set up the client
-client = RobinhoodClient()
-
-# Get an auth token
-config = configparser.ConfigParser()
-config.read(['.creds'])
-auth_token = config.get('account', 'AuthToken')
-if not auth_token:
-  print('Please run login.py before running this script')
-  exit()
-
-client.set_auth_token(auth_token)
-account_number = config['account']['AccountNumber']
+client = RobinhoodCachedClient()
+client.login()
+account_number = client.get_account()['account_number']
 
 
 def get_quote(symbol):
@@ -98,12 +88,10 @@ def get_quote(symbol):
       if order['state'] != 'filled':
         raise Exception('Not filled?')
       order_type = order['type']
-      assert len(order['executions']) == 1
-      for execution in order['executions']:
-        execution_price = Decimal(execution['price'])
-        execution_quantity = int(float(execution['quantity']))
-        execution_date = parse(execution['settlement_date']).date()
-      print('\t{:%m/%d/%Y}\t{}\t{} @ ${:.2f}'.format(execution_date, order_type, execution_quantity, execution_price))
+      order_quantity = int(float(order['quantity']))
+      order_average_price = Decimal(order['average_price'])
+      order_last_executed_at = parse(order['last_transaction_at']).date()
+      print('\t{:%m/%d/%Y}\t{}\t{} @ ${:.2f}'.format(order_last_executed_at, order_type, order_quantity, order_average_price))
 
   # Get quote
   quote = client.get_quote(symbol)

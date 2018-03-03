@@ -10,12 +10,10 @@ import json
 
 import requests
 
+from .exceptions import NotFound, NotLoggedIn
+
 
 API_HOST = 'https://api.robinhood.com/'
-
-
-class NotFound(Exception):
-    pass
 
 
 class RobinhoodClient:
@@ -26,13 +24,14 @@ class RobinhoodClient:
       'Accept-Encoding': 'gzip, deflate',
       'Accept-Language': 'en;q=1',
       'Content-type': 'application/x-www-form-urlencoded; charset=utf-8',
-      'X-Robinhood-API-Version': '1.0.0',
+      'X-Robinhood-API-Version': '1.204.0',
       'Connection': 'keep-alive',
       'User-Agent': 'Robinhood/823 (iPhone; iOS 7.1.2; Scale/2.00)',
     }
+    self._authorization_headers = {}
 
   def set_auth_token(self, auth_token):
-    self._session.headers['Authorization'] = 'Token {}'.format(auth_token)
+    self._authorization_headers['Authorization'] = 'Token {}'.format(auth_token)
 
   def set_auth_token_with_credentials(self, username, password):
     body = {
@@ -59,8 +58,13 @@ class RobinhoodClient:
         "url": "https://share.robinhood.com/matts952"
     }
     """
-    response = self._session.get(API_HOST + 'midlands/referral/code/')
-    response.raise_for_status()
+    response = self._session.get(API_HOST + 'midlands/referral/code/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()
 
   def get_markets(self):
@@ -105,8 +109,13 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'watchlists/')
-    response.raise_for_status()
+    response = self._session.get(API_HOST + 'watchlists/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()
 
   def get_watchlist_instruments(self, watchlist_name):
@@ -128,8 +137,13 @@ class RobinhoodClient:
     }
   
     """
-    response = self._session.get(API_HOST + 'watchlists/{}/'.format(watchlist_name))
-    response.raise_for_status()
+    response = self._session.get(API_HOST + 'watchlists/{}/'.format(watchlist_name), headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()
 
   def get_notification_settings(self):
@@ -195,8 +209,13 @@ class RobinhoodClient:
         "market_push": true
     }
     """
-    response = self._session.get(API_HOST + 'settings/notifications')
-    response.raise_for_status()
+    response = self._session.get(API_HOST + 'settings/notifications', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()
 
   def get_notification_devices(self):
@@ -284,8 +303,13 @@ class RobinhoodClient:
         "deposit_halted": false
     }
     """
-    response = self._session.get(API_HOST + 'accounts/')
-    response.raise_for_status()
+    response = self._session.get(API_HOST + 'accounts/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()['results'][0]
 
   def get_investment_profile(self):
@@ -310,8 +334,13 @@ class RobinhoodClient:
         "investment_objective": "growth_invest_obj"
     }
     """
-    response = self._session.get(API_HOST + 'user/investment_profile/')
-    response.raise_for_status()
+    response = self._session.get(API_HOST + 'user/investment_profile/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()
 
   def get_top100_instruments(self):
@@ -611,8 +640,13 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'dividends/')
-    response.raise_for_status()
+    response = self._session.get(API_HOST + 'dividends/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()
 
   def get_orders(self, instrument_url=None):
@@ -658,8 +692,13 @@ class RobinhoodClient:
     params = {}
     if instrument_url:
       params['instrument'] = instrument_url
-    response = self._session.get(API_HOST + 'orders/', params=params)
-    response.raise_for_status()
+    response = self._session.get(API_HOST + 'orders/', params=params, headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()
 
   def get_portfolio(self):
@@ -686,8 +725,13 @@ class RobinhoodClient:
         "last_core_equity": "0.0000"
     }
     """
-    response = self._session.get(API_HOST + 'portfolios/')
-    response.raise_for_status()
+    response = self._session.get(API_HOST + 'portfolios/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()['results'][0]
 
   def get_positions(self):
@@ -720,8 +764,13 @@ class RobinhoodClient:
     }
     """
     # Possible param: nonzero=true includes only owned securities
-    response = self._session.get(API_HOST + 'positions/')
-    response.raise_for_status()
+    response = self._session.get(API_HOST + 'positions/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()
 
   def get_position_by_instrument_id(self, account_number, instrument_id):
@@ -748,12 +797,18 @@ class RobinhoodClient:
 
     """
     # Possible param: nonzero=true includes only owned securities
-    response = self._session.get(API_HOST + 'accounts/{}/positions/{}/'.format(account_number, instrument_id))
+    response = self._session.get(
+      API_HOST + 'accounts/{}/positions/{}/'.format(account_number, instrument_id),
+      headers=self._authorization_headers
+    )
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.not_found:
         raise NotFound()
+      elif  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()
 
   def get_historical_quotes(self, symbols, interval, span, bounds):
@@ -929,7 +984,12 @@ class RobinhoodClient:
       'trigger': trigger,
       'type': order_type,
     }
-    response = self._session.post(API_HOST + 'orders/', data=body)
-    response.raise_for_status()
+    response = self._session.post(API_HOST + 'orders/', data=body, headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     print(json.dumps(response.json(), indent=4))
     return response.json()
