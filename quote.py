@@ -1,8 +1,3 @@
-"""
-This expects a credentials file at .creds, make sure to run login.py and then
-logout.py when you are done.
-"""
-
 import argparse
 from datetime import datetime
 from decimal import Decimal

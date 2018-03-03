@@ -1,25 +1,12 @@
-"""
-This expects a credentials file at .creds, make sure to run login.py and then
-logout.py when you are done.
-"""
-
-from datetime import datetime
 from decimal import Decimal
-from math import ceil
 import csv
-import json
 
-from dateutil.parser import parse
-import pytz
-
-from robinhood.exceptions import NotFound
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
 from robinhood.util import get_instrument_id_from_url
 
 # Set up the client
 client = RobinhoodCachedClient()
 client.login()
-account_number = client.get_account()['account_number']
 
 def generate_portfolio():
   with open('portfolio.csv', 'w', newline='') as portfolio_csv_file:
