@@ -10,6 +10,7 @@ from robinhood.util import get_instrument_id_from_url
 client = RobinhoodCachedClient()
 client.login()
 
+
 def generate_portfolio():
   with open('portfolio.csv', 'w', newline='') as csv_file:
     fieldnames = ['symbol', 'short_name', 'full_name', 'quantity', 'average_buy_price', 'equity_cost']
@@ -34,6 +35,7 @@ def generate_portfolio():
         'average_buy_price': average_buy_price,
         'equity_cost': equity_cost
       })
+
 
 if __name__ == '__main__':
   generate_portfolio()

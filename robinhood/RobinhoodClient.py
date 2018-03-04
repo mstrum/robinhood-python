@@ -705,6 +705,32 @@ class RobinhoodClient:
     response.raise_for_status()
     return response.json()
 
+  def get_dividend_by_id(self, dividend_id):
+    """
+    Example response:
+    {
+        "record_date": "2018-02-27",
+        "url": "https://api.robinhood.com/dividends/00000000-0000-4000-0000-000000000000/",
+        "payable_date": "2018-03-13",
+        "paid_at": null,
+        "amount": "0.84",
+        "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
+        "rate": "0.8400000000",
+        "position": "1.0000",
+        "withholding": "0.00",
+        "id": "00000000-0000-4000-0000-000000000000",
+        "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/"
+    }
+    """
+    response = self._session.get(API_HOST + 'dividends/{}/'.format(dividend_id), headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    return response.json()
+
   def get_dividends(self):
     """
     Example response:
@@ -739,7 +765,7 @@ class RobinhoodClient:
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
-    return response_json
+    return response_json['results']
 
   def get_order_by_id(self, order_id):
     """

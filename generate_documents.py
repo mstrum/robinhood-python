@@ -8,6 +8,7 @@ from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
 client = RobinhoodCachedClient()
 client.login()
 
+
 def generate_documents():
   with open('documents.csv', 'w', newline='') as csv_file:
     fieldnames = ['document_id', 'date', 'type', 'path']
@@ -30,6 +31,7 @@ def generate_documents():
         'type': document_type,
         'path': pdf_path,
       })
+
 
 if __name__ == '__main__':
   generate_documents()

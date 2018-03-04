@@ -30,6 +30,8 @@ Robinhood module in Python
   * TODO:
     * Write out csv
     * Allow for limiting to today
+* ./generate_dividends.py
+  * Will download a shapshot of all dividends past and future
 * ./generate_documents.py
   * Will download a shapshot of all documents including the PDFs
 * ./generate_tag_list.py [10-most-popular|100-most-popular]

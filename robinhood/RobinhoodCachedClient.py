@@ -111,6 +111,17 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
+  def get_dividend_by_id(self, dividend_id, force_live=False):
+    cache_path = os.path.join(cache_root_path, 'dividend_{}'.format(dividend_id))
+    if os.path.exists(cache_path) and not force_live:
+      with open(cache_path, 'r') as cache_file:
+        return json.load(cache_file)
+    else:
+      cache_json = super(RobinhoodCachedClient, self).get_dividend_by_id(dividend_id)
+      with open(cache_path, 'w') as cache_file:
+        json.dump(cache_json, cache_file)
+      return cache_json
+
   def get_instrument_ids_for_tag(self, tag, force_live=False):
     cache_path = os.path.join(cache_root_path, 'tag_{}'.format(tag))
     if os.path.exists(cache_path) and not force_live:
@@ -142,6 +153,27 @@ class RobinhoodCachedClient(RobinhoodClient):
       with open(documents_list_cache_path, 'w') as documents_list_cache_file:
         json.dump(documents_list, documents_list_cache_file)
     return documents
+
+  def get_dividends(self, force_live=False):
+    dividends_list_cache_path = os.path.join(cache_root_path, 'dividends')
+    if os.path.exists(dividends_list_cache_path) and not force_live:
+      dividends = []
+      with open(dividends_list_cache_path, 'r') as dividends_list_cache_file:
+        dividends_list = json.load(dividends_list_cache_file)
+        for dividend_id in dividends_list:
+          dividends.append(self.get_dividend_by_id(dividend_id, force_live=force_live))
+    else:
+      dividends = super(RobinhoodCachedClient, self).get_dividends()
+      dividends_list = []
+      for dividend in dividends:
+        dividend_id = dividend['id']
+        dividends_list.append(dividend_id)
+        dividend_cache_path = os.path.join(cache_root_path, 'dividend_{}'.format(dividend_id))
+        with open(dividend_cache_path, 'w') as dividend_cache_file:
+          json.dump(dividend, dividend_cache_file)
+      with open(dividends_list_cache_path, 'w') as dividends_list_cache_file:
+        json.dump(dividends_list, dividends_list_cache_file)
+    return dividends
 
   def get_positions(self, include_old=False, force_live=False):
     positions_list_cache_path = os.path.join(cache_root_path, 'positions_' + ('all' if include_old else  'current'))

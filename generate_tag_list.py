@@ -10,6 +10,7 @@ from robinhood.util import KNOWN_TAGS
 client = RobinhoodCachedClient()
 client.login()
 
+
 def generate_tag_list(tag):
   with open('{}.csv'.format(tag), 'w', newline='') as csv_file:
     fieldnames = ['instrument_id']
@@ -20,6 +21,7 @@ def generate_tag_list(tag):
       csv_writer.writerow({
         'instrument_id': instrument_id,
       })
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Get a list that Robinhood provides')

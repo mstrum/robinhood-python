@@ -2,6 +2,7 @@
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
 
+
 client = RobinhoodCachedClient()
 client.logout()
 print('Logged out!')

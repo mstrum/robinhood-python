@@ -8,9 +8,13 @@ from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
 client = RobinhoodCachedClient()
 client.login()
 
+
 def generate_orders():
   for order in client.get_orders():
+    # TODO: go through order
+    # TODO: get instrument
     pass
+
 
 if __name__ == '__main__':
   generate_orders()
