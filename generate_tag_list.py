@@ -13,13 +13,20 @@ client.login()
 
 def generate_tag_list(tag):
   with open('{}.csv'.format(tag), 'w', newline='') as csv_file:
-    fieldnames = ['instrument_id']
+    fieldnames = ['symbol', 'short_name', 'full_name']
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
 
     for instrument_id in client.get_instrument_ids_for_tag(tag):
+      instrument = client.get_instrument_by_id(instrument_id)
+      simple_name = instrument['simple_name']
+      full_name = instrument['name']
+      symbol = instrument['symbol']
+
       csv_writer.writerow({
-        'instrument_id': instrument_id,
+        'symbol': symbol,
+        'short_name': simple_name,
+        'full_name': full_name,
       })
 
 
