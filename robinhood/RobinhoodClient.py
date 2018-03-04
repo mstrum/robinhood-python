@@ -769,6 +769,8 @@ class RobinhoodClient:
 
   def get_order_by_id(self, order_id):
     """
+    States: queued, unconfirmed, confirmed, partially_filled, filled, rejected, canceled, or failed
+
     Example response:
     {
         "account": "https://api.robinhood.com/accounts/XXXXXXXX/",

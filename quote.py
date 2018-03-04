@@ -80,10 +80,9 @@ def get_quote(symbol):
     print('\tNone')
   else:
     for order in orders['results']:
-      if order['state'] in ['cancelled', 'failed', 'rejected']:
-        continue
+      # TODO: Handle any others?
       if order['state'] != 'filled':
-        raise Exception('Not filled?')
+        continue
       order_type = order['type']
       order_quantity = int(float(order['quantity']))
       order_average_price = Decimal(order['average_price'])

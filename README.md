@@ -27,9 +27,6 @@ Robinhood module in Python
     * Add current equity values
 * ./generate_orders.py
   * Will download a shapshot of all fulfilled orders
-  * TODO:
-    * Write out csv
-    * Allow for limiting to today
 * ./generate_dividends.py
   * Will download a shapshot of all dividends past and future
 * ./generate_documents.py
