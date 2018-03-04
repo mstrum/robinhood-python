@@ -33,8 +33,6 @@ Robinhood module in Python
   * Will download a shapshot of all documents including the PDFs
 * ./generate_tag_list.py [10-most-popular|100-most-popular]
   * Will download a list of the most popular instruments
-  * TODO:
-    * Write out a report instead of the instrument ids
 * TODO
   * ./report.py
     * Unlike generate_portfolio, includes:
