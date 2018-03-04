@@ -32,6 +32,8 @@ Robinhood module in Python
   * TODO:
     * Write out csv
     * Allow for limiting to today
+* ./generate_documents.py
+  * Will download a shapshot of all documents including the PDFs
 * TODO
   * ./report.py
     * Unlike generate_portfolio, includes:

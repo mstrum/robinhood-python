@@ -1,16 +1,8 @@
 from __future__ import print_function
 
-import argparse
-from datetime import datetime
-from decimal import Decimal
-from math import ceil
-import configparser
 import getpass
 import json
 import os
-
-from dateutil.parser import parse
-import pytz
 
 from .RobinhoodClient import RobinhoodClient
 from .util import get_instrument_id_from_url
@@ -96,6 +88,50 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
+  def download_document_by_id(self, document_id, force_live=False):
+    """Note that this uses binary content for the files."""
+    cache_path = os.path.join(cache_root_path, 'document_pdf_{}'.format(document_id))
+    if os.path.exists(cache_path) and not force_live:
+      with open(cache_path, 'rb') as cache_file:
+        return cache_file.read()
+    else:
+      cache_content = super(RobinhoodCachedClient, self).download_document_by_id(document_id)
+      with open(cache_path, 'wb') as cache_file:
+        cache_file.write(cache_content)
+      return cache_content
+
+  def get_document_by_id(self, document_id, force_live=False):
+    cache_path = os.path.join(cache_root_path, 'document_{}'.format(document_id))
+    if os.path.exists(cache_path) and not force_live:
+      with open(cache_path, 'r') as cache_file:
+        return json.load(cache_file)
+    else:
+      cache_json = super(RobinhoodCachedClient, self).get_document_by_id(order_id)
+      with open(cache_path, 'w') as cache_file:
+        json.dump(cache_json, cache_file)
+      return cache_json
+
+  def get_documents(self, force_live=False):
+    documents_list_cache_path = os.path.join(cache_root_path, 'documents')
+    if os.path.exists(documents_list_cache_path) and not force_live:
+      documents = []
+      with open(documents_list_cache_path, 'r') as documents_list_cache_file:
+        documents_list = json.load(documents_list_cache_file)
+        for document_id in documents_list:
+          documents.append(self.get_document_by_id(document_id, force_live=force_live))
+    else:
+      documents = super(RobinhoodCachedClient, self).get_documents()
+      documents_list = []
+      for document in documents:
+        document_id = document['id']
+        documents_list.append(document_id)
+        document_cache_path = os.path.join(cache_root_path, 'document_{}'.format(document_id))
+        with open(document_cache_path, 'w') as document_cache_file:
+          json.dump(document, document_cache_file)
+      with open(documents_list_cache_path, 'w') as documents_list_cache_file:
+        json.dump(documents_list, documents_list_cache_file)
+    return documents
+
   def get_positions(self, include_old=False, force_live=False):
     positions_list_cache_path = os.path.join(cache_root_path, 'positions_' + ('all' if include_old else  'current'))
     if os.path.exists(positions_list_cache_path) and not force_live:
@@ -104,7 +140,7 @@ class RobinhoodCachedClient(RobinhoodClient):
       with open(positions_list_cache_path, 'r') as positions_list_cache_file:
         positions_list = json.load(positions_list_cache_file)
         for instrument_id in positions_list:
-          positions.append(self.get_position_by_instrument_id(account_number, instrument_id, force_live))
+          positions.append(self.get_position_by_instrument_id(account_number, instrument_id, force_live=force_live))
     else:
       positions = super(RobinhoodCachedClient, self).get_positions(include_old=include_old)
       positions_list = []
@@ -123,7 +159,7 @@ class RobinhoodCachedClient(RobinhoodClient):
     if os.path.exists(symbol_instrument_id_cache_path) and not force_live:
       with open(symbol_instrument_id_cache_path, 'r') as symbol_instrument_id_cache_file:
         instrument_id = symbol_instrument_id_cache_file.read()
-      return self.get_instrument_by_id(instrument_id, force_live)
+      return self.get_instrument_by_id(instrument_id, force_live=force_live)
     else:
       instrument_json = super(RobinhoodCachedClient, self).get_instrument_by_symbol(symbol)
       instrument_id = instrument_json['id']
@@ -141,7 +177,7 @@ class RobinhoodCachedClient(RobinhoodClient):
       with open(orders_list_cache_path, 'r') as orders_list_cache_file:
         orders_list = json.load(orders_list_cache_file)
         for order_id in orders_list:
-          orders.append(self.get_order_by_id(order_id, force_live))
+          orders.append(self.get_order_by_id(order_id, force_live=force_live))
     else:
       orders = super(RobinhoodCachedClient, self).get_orders()
       orders_list = []

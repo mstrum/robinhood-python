@@ -11,10 +11,7 @@ import json
 import requests
 
 from .exceptions import NotFound, NotLoggedIn
-from .util import get_cursor_from_url
-
-
-API_HOST = 'https://api.robinhood.com/'
+from .util import API_HOST, get_cursor_from_url
 
 
 class RobinhoodClient:
@@ -93,7 +90,92 @@ class RobinhoodClient:
     """
     response = self._session.get(API_HOST + 'markets/')
     response.raise_for_status()
+    response_json = response.json()
+    # This api likely never pages, but you never know.
+    assert not response_json['next']
+    return response_json
+
+  def download_document_by_id(self, document_id):
+    """The response is a PDF file"""
+    response = self._session.get(
+      API_HOST + 'documents/{}/download/'.format(document_id),
+      headers=self._authorization_headers
+    )
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    return response.content
+
+  def get_document_by_id(self, document_id):
+    """
+    Example response:
+    {
+        "insert_1_url": "",
+        "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
+        "download_url": "https://api.robinhood.com/documents/00000000-0000-4000-0000-000000000000/download/",
+        "insert_4_url": "",
+        "insert_2_url": "",
+        "insert_6_url": "",
+        "url": "https://api.robinhood.com/documents/00000000-0000-4000-0000-000000000000/",
+        "created_at": "2018-02-01T16:17:07.579125Z",
+        "insert_3_url": "",
+        "id": "00000000-0000-4000-0000-000000000000",
+        "updated_at": "2018-02-01T18:58:54.013192Z",
+        "type": "trade_confirm",
+        "insert_5_url": "",
+        "date": "2018-02-01"
+    }
+    """
+    response = self._session.get(API_HOST + 'documents/{}/'.format(document_id), headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
     return response.json()
+
+  def get_documents(self):
+    """
+    Example response:
+    {
+        "results": [
+            {
+                "insert_1_url": "",
+                "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
+                "download_url": "https://api.robinhood.com/documents/00000000-0000-4000-0000-000000000000/download/",
+                "insert_4_url": "",
+                "insert_2_url": "",
+                "insert_6_url": "",
+                "url": "https://api.robinhood.com/documents/00000000-0000-4000-0000-000000000000/",
+                "created_at": "2018-02-01T16:17:07.579125Z",
+                "insert_3_url": "",
+                "id": "00000000-0000-4000-0000-000000000000",
+                "updated_at": "2018-02-01T18:58:54.013192Z",
+                "type": "trade_confirm",
+                "insert_5_url": "",
+                "date": "2018-02-01"
+            },
+            ...
+        ],
+        "previous": null,
+        "next": null
+    }
+    """
+    response = self._session.get(API_HOST + 'documents/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
 
   def get_watchlists(self):
     """
@@ -117,7 +199,10 @@ class RobinhoodClient:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
       raise
-    return response.json()
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json
 
   def get_watchlist_instruments(self, watchlist_name):
     """
@@ -145,7 +230,10 @@ class RobinhoodClient:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
       raise
-    return response.json()
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json
 
   def get_notification_settings(self):
     """
@@ -236,9 +324,17 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'notifications/devices/')
-    response.raise_for_status()
-    return response.json()
+    response = self._session.get(API_HOST + 'notifications/devices/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    response_json = response.json()
+    # This probably won't autopage for a LONG time
+    assert not response_json['next']
+    return response_json
 
   def get_account(self):
     """
@@ -447,7 +543,10 @@ class RobinhoodClient:
     params = {'query': query}
     response = self._session.get(API_HOST + 'instruments/', params=params)
     response.raise_for_status()
-    return response.json()
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json
 
   def get_instrument_by_id(self, instrument_id):
     """
@@ -552,7 +651,10 @@ class RobinhoodClient:
     """
     response = self._session.get(API_HOST + 'instruments/{}/splits'.format(instrument_id))
     response.raise_for_status()
-    return response.json()
+    response_json = response.json()
+    # This is probably never the case.
+    assert not response_json['next']
+    return response_json
 
   def get_quote(self, symbol):
     """
@@ -648,7 +750,10 @@ class RobinhoodClient:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
       raise
-    return response.json()
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json
 
   def get_order_by_id(self, order_id):
     """
@@ -832,7 +937,7 @@ class RobinhoodClient:
         raise NotLoggedIn(http_error.response.json()['detail'])
       raise
     portfolio_json = response.json()
-    # Until paging is handled, just error out if it comes up
+    # TODO: autopage
     assert not portfolio_json['next']
     return portfolio_json['results']
 
