@@ -41,9 +41,9 @@ class RobinhoodCachedClient(RobinhoodClient):
     if os.path.exists(cache_path):
       os.remove(cache_path)
 
-  def get_account(self, force_cache=True):
+  def get_account(self, force_live=False):
     cache_path = os.path.join(cache_root_path, 'account')
-    if os.path.exists(cache_path):
+    if os.path.exists(cache_path) and not force_live:
       with open(cache_path, 'r') as cache_file:
         return json.load(cache_file)
     else:
@@ -52,9 +52,9 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
-  def get_position_by_instrument_id(self, account_number, instrument_id, force_cache=True):
+  def get_position_by_instrument_id(self, account_number, instrument_id, force_live=False):
     cache_path = os.path.join(cache_root_path, 'position_{}'.format(instrument_id))
-    if os.path.exists(cache_path):
+    if os.path.exists(cache_path) and not force_live:
       with open(cache_path, 'r') as cache_file:
         return json.load(cache_file)
     else:
@@ -63,9 +63,9 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
-  def get_fundamental(self, symbol, force_cache=True):
+  def get_fundamental(self, symbol, force_live=False):
     cache_path = os.path.join(cache_root_path, 'fundamental_{}'.format(symbol))
-    if os.path.exists(cache_path):
+    if os.path.exists(cache_path) and not force_live:
       with open(cache_path, 'r') as cache_file:
         return json.load(cache_file)
     else:
@@ -74,9 +74,9 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
-  def get_instrument_by_id(self, instrument_id, force_cache=True):
+  def get_instrument_by_id(self, instrument_id, force_live=False):
     cache_path = os.path.join(cache_root_path, 'instrument_{}'.format(instrument_id))
-    if os.path.exists(cache_path):
+    if os.path.exists(cache_path) and not force_live:
       with open(cache_path, 'r') as cache_file:
         return json.load(cache_file)
     else:
@@ -85,9 +85,9 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
-  def get_order_by_id(self, order_id, force_cache=True):
+  def get_order_by_id(self, order_id, force_live=False):
     cache_path = os.path.join(cache_root_path, 'order_{}'.format(order_id))
-    if os.path.exists(cache_path):
+    if os.path.exists(cache_path) and not force_live:
       with open(cache_path, 'r') as cache_file:
         return json.load(cache_file)
     else:
@@ -96,15 +96,15 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
-  def get_positions(self, include_old=False, force_cache=True):
+  def get_positions(self, include_old=False, force_live=False):
     positions_list_cache_path = os.path.join(cache_root_path, 'positions_' + ('all' if include_old else  'current'))
-    if os.path.exists(positions_list_cache_path):
+    if os.path.exists(positions_list_cache_path) and not force_live:
       account_number = self.get_account()['account_number']
       positions = []
       with open(positions_list_cache_path, 'r') as positions_list_cache_file:
         positions_list = json.load(positions_list_cache_file)
         for instrument_id in positions_list:
-          positions.append(self.get_position_by_instrument_id(account_number, instrument_id, force_cache))
+          positions.append(self.get_position_by_instrument_id(account_number, instrument_id, force_live))
     else:
       positions = super(RobinhoodCachedClient, self).get_positions(include_old=include_old)
       positions_list = []
@@ -118,12 +118,12 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(positions_list, positions_list_cache_file)
     return positions
 
-  def get_instrument_by_symbol(self, symbol, force_cache=True):
+  def get_instrument_by_symbol(self, symbol, force_live=False):
     symbol_instrument_id_cache_path = os.path.join(cache_root_path, 'symbol_instrument_id_{}'.format(symbol))
-    if os.path.exists(symbol_instrument_id_cache_path):
+    if os.path.exists(symbol_instrument_id_cache_path) and not force_live:
       with open(symbol_instrument_id_cache_path, 'r') as symbol_instrument_id_cache_file:
         instrument_id = symbol_instrument_id_cache_file.read()
-      return self.get_instrument_by_id(instrument_id, force_cache)
+      return self.get_instrument_by_id(instrument_id, force_live)
     else:
       instrument_json = super(RobinhoodCachedClient, self).get_instrument_by_symbol(symbol)
       instrument_id = instrument_json['id']
@@ -133,15 +133,15 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(instrument_json, instrument_cache_file)
       return instrument_json
 
-  def get_orders(self, instrument_url=None, force_cache=True):
+  def get_orders(self, instrument_url=None, force_live=False):
     """TODO: Handle orders by instrument."""
     orders_list_cache_path = os.path.join(cache_root_path, 'orders')
-    if os.path.exists(orders_list_cache_path):
+    if os.path.exists(orders_list_cache_path) and not force_live:
       orders = []
       with open(orders_list_cache_path, 'r') as orders_list_cache_file:
         orders_list = json.load(orders_list_cache_file)
         for order_id in orders_list:
-          orders.append(self.get_order_by_id(order_id, force_cache))
+          orders.append(self.get_order_by_id(order_id, force_live))
     else:
       orders = super(RobinhoodCachedClient, self).get_orders()
       orders_list = []
