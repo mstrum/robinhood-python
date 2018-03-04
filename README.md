@@ -44,3 +44,8 @@ Robinhood module in Python
       * Positions I'm watching, especially if I have criteria
   * ./order.py
     * Will handle any order scenario
+    * TODO:
+      * Market buy
+      * Market sell
+      * Limit buy
+      * Limit sell
