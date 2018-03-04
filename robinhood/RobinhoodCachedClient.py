@@ -111,6 +111,17 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
+  def get_instrument_ids_for_tag(self, tag, force_live=False):
+    cache_path = os.path.join(cache_root_path, 'tag_{}'.format(tag))
+    if os.path.exists(cache_path) and not force_live:
+      with open(cache_path, 'r') as cache_file:
+        return json.load(cache_file)
+    else:
+      cache_json = super(RobinhoodCachedClient, self).get_instrument_ids_for_tag(tag)
+      with open(cache_path, 'w') as cache_file:
+        json.dump(cache_json, cache_file)
+      return cache_json
+
   def get_documents(self, force_live=False):
     documents_list_cache_path = os.path.join(cache_root_path, 'documents')
     if os.path.exists(documents_list_cache_path) and not force_live:

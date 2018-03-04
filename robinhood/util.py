@@ -2,6 +2,11 @@ from urllib.parse import parse_qs, urlparse
 
 API_HOST = 'https://api.robinhood.com/'
 
+KNOWN_TAGS = [
+  '100-most-popular',
+  '10-most-popular',
+]
+
 
 def get_instrument_id_from_url(instrument_url):
   instrument_id = urlparse(instrument_url).path.split('/')[-2]

@@ -9,10 +9,10 @@ client = RobinhoodCachedClient()
 client.login()
 
 def generate_documents():
-  with open('documents.csv', 'w', newline='') as documents_csv_file:
+  with open('documents.csv', 'w', newline='') as csv_file:
     fieldnames = ['document_id', 'date', 'type', 'path']
-    documents_csv_writer = csv.DictWriter(documents_csv_file, fieldnames=fieldnames)
-    documents_csv_writer.writeheader()
+    csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+    csv_writer.writeheader()
 
     for document in client.get_documents():
       document_id = document['id']
@@ -24,7 +24,7 @@ def generate_documents():
       with open(pdf_path, 'wb') as document_pdf_file:
         document_pdf_file.write(contents)
 
-      documents_csv_writer.writerow({
+      csv_writer.writerow({
         'document_id': document_id,
         'date': document_date,
         'type': document_type,
@@ -33,4 +33,3 @@ def generate_documents():
 
 if __name__ == '__main__':
   generate_documents()
-

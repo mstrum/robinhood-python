@@ -11,7 +11,7 @@ import json
 import requests
 
 from .exceptions import NotFound, NotLoggedIn
-from .util import API_HOST, get_cursor_from_url
+from .util import API_HOST, KNOWN_TAGS, get_cursor_from_url, get_instrument_id_from_url
 
 
 class RobinhoodClient:
@@ -440,7 +440,7 @@ class RobinhoodClient:
       raise
     return response.json()
 
-  def get_top100_instruments(self):
+  def get_instrument_ids_for_tag(self, tag):
     """
     Example response:
     {
@@ -453,26 +453,12 @@ class RobinhoodClient:
         "name": "100 Most Popular"
     }
     """
-    response = self._session.get(API_HOST + 'midlands/tags/tag/100-most-popular/')
+    assert tag in KNOWN_TAGS
+    response = self._session.get(API_HOST + 'midlands/tags/tag/{}/'.format(tag))
     response.raise_for_status()
-    return response.json()
-
-  def get_top10_instruments(self):
-    """
-    Example response:
-    {
-        "slug": "10-most-popular",
-        "description": "",
-        "instruments": [
-            "https://api.robinhood.com/instruments/3a47ca97-d5a2-4a55-9045-053a588894de/",
-            ...
-        ],
-        "name": "10 Most Popular"
-    }
-    """
-    response = self._session.get(API_HOST + 'midlands/tags/tag/10-most-popular/')
-    response.raise_for_status()
-    return response.json()
+    response_json = response.json()
+    instrument_ids = [get_instrument_id_from_url(instrument_url) for instrument_url in response_json['instruments']]
+    return instrument_ids
 
   def get_instruments(self, query=None):
     """

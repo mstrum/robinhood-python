@@ -12,7 +12,7 @@ Robinhood module in Python
 * robinhood.RobinhoodCachedClient
   * Client that handles caching on top of the normal client
   * TODO
-    * Handle more fine graned caching then on vs off (e.g. off, 5minute, 1day, etc.)
+    * Handle more fine grained caching then on vs off (e.g. off, 5minute, 1day, etc.)
     * Orders
     * TopX lists
     * Historical quotes
@@ -34,6 +34,10 @@ Robinhood module in Python
     * Allow for limiting to today
 * ./generate_documents.py
   * Will download a shapshot of all documents including the PDFs
+* ./generate_tag_list.py [10-most-popular|100-most-popular]
+  * Will download a list of the most popular instruments
+  * TODO:
+    * Write out a report instead of the instrument ids
 * TODO
   * ./report.py
     * Unlike generate_portfolio, includes:
