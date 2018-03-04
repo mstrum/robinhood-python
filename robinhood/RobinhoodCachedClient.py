@@ -85,6 +85,17 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
+  def get_order_by_id(self, order_id, force_cache=True):
+    cache_path = os.path.join(cache_root_path, 'order_{}'.format(order_id))
+    if os.path.exists(cache_path):
+      with open(cache_path, 'r') as cache_file:
+        return json.load(cache_file)
+    else:
+      cache_json = super(RobinhoodCachedClient, self).get_order_by_id(order_id)
+      with open(cache_path, 'w') as cache_file:
+        json.dump(cache_json, cache_file)
+      return cache_json
+
   def get_positions(self, include_old=False, force_cache=True):
     positions_list_cache_path = os.path.join(cache_root_path, 'positions_' + ('all' if include_old else  'current'))
     if os.path.exists(positions_list_cache_path):
@@ -121,3 +132,25 @@ class RobinhoodCachedClient(RobinhoodClient):
       with open(os.path.join(cache_root_path, 'instrument_{}'.format(instrument_id)), 'w') as instrument_cache_file:
         json.dump(instrument_json, instrument_cache_file)
       return instrument_json
+
+  def get_orders(self, instrument_url=None, force_cache=True):
+    """TODO: Handle orders by instrument."""
+    orders_list_cache_path = os.path.join(cache_root_path, 'orders')
+    if os.path.exists(orders_list_cache_path):
+      orders = []
+      with open(orders_list_cache_path, 'r') as orders_list_cache_file:
+        orders_list = json.load(orders_list_cache_file)
+        for order_id in orders_list:
+          orders.append(self.get_order_by_id(order_id, force_cache))
+    else:
+      orders = super(RobinhoodCachedClient, self).get_orders()
+      orders_list = []
+      for order in orders:
+        order_id = order['id']
+        orders_list.append(order_id)
+        order_cache_path = os.path.join(cache_root_path, 'order_{}'.format(order_id))
+        with open(order_cache_path, 'w') as order_cache_file:
+          json.dump(order, order_cache_file)
+      with open(orders_list_cache_path, 'w') as orders_list_cache_file:
+        json.dump(orders_list, orders_list_cache_file)
+    return orders

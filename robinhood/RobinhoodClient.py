@@ -11,6 +11,7 @@ import json
 import requests
 
 from .exceptions import NotFound, NotLoggedIn
+from .util import get_cursor_from_url
 
 
 API_HOST = 'https://api.robinhood.com/'
@@ -649,6 +650,48 @@ class RobinhoodClient:
       raise
     return response.json()
 
+  def get_order_by_id(self, order_id):
+    """
+    Example response:
+    {
+        "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
+        "trigger": "immediate",
+        "state": "cancelled",
+        "stop_price": null,
+        "cumulative_quantity": "0.00000",
+        "last_transaction_at": "2018-03-01T00:00:00.000000Z",
+        "reject_reason": null,
+        "average_price": null,
+        "quantity": "1.00000",
+        "cancel": null,
+        "price": "0.--000000",
+        "override_dtbp_checks": false,
+        "response_category": "success",
+        "type": "limit",
+        "override_day_trade_checks": false,
+        "position": "https://api.robinhood.com/accounts/XXXXXXXX/positions/00000000-0000-4000-0000-000000000000/",
+        "id": "00000000-0000-4000-0000-000000000000",
+        "executions": [],
+        "time_in_force": "gtc",
+        "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+        "created_at": "2018-03-01T00:00:00.000000Z",
+        "fees": "0.00",
+        "updated_at": "2018-03-01T00:00:00.000000Z",
+        "ref_id": "00000000-0000-4000-0000-000000000000",
+        "side": "buy",
+        "url": "https://api.robinhood.com/orders/00000000-0000-4000-0000-000000000000/",
+        "extended_hours": true
+    }
+    """
+    response = self._session.get(API_HOST + 'orders/{}/'.format(order_id), headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    return response.json()
+
   def get_orders(self, instrument_url=None):
     """
     Example response:
@@ -689,17 +732,28 @@ class RobinhoodClient:
         "previous": null
     }
     """
-    params = {}
-    if instrument_url:
-      params['instrument'] = instrument_url
-    response = self._session.get(API_HOST + 'orders/', params=params, headers=self._authorization_headers)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      raise
-    return response.json()
+    orders = []
+    cursor = None
+
+    while True:
+      params = {}
+      if instrument_url:
+        params['instrument'] = instrument_url
+      if cursor:
+        params['cursor'] = cursor
+      response = self._session.get(API_HOST + 'orders/', params=params, headers=self._authorization_headers)
+      try:
+        response.raise_for_status()
+      except requests.HTTPError as http_error:
+        if  http_error.response.status_code == requests.codes.unauthorized:
+          raise NotLoggedIn(http_error.response.json()['detail'])
+        raise
+      orders_json = response.json()
+      orders.extend(orders_json['results'])
+      if orders_json['next']:
+        cursor = get_cursor_from_url(orders_json['next'])
+      else:
+        return orders
 
   def get_portfolio(self):
     """

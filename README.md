@@ -27,9 +27,9 @@ Robinhood module in Python
   * Will download a shapshot of the current portfolio
   * TODO
     * Add current equity values
+* ./generate_orders.py
+  * Will download a shapshot of all fulfilled orders
 * TODO
-  * ./orders.py
-    * Will download a shapshot of all fulfilled orders
   * ./report.py
     * Unlike generate_portfolio, includes:
       * Dividends received
