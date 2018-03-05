@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from decimal import Decimal
+import argparse
 import csv
 
 from dateutil.parser import parse
@@ -14,12 +15,12 @@ client = RobinhoodCachedClient()
 client.login()
 
 
-def generate_orders():
+def generate_orders(live):
   with open('orders.csv', 'w', newline='') as csv_file:
     fieldnames = ['symbol', 'short_name', 'full_name', 'state', 'side', 'quantity', 'average_price', 'amount', 'last_transaction_at', 'fees']
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
-    for order in client.get_orders():
+    for order in client.get_orders(force_live=live):
       order_id = order['id']
       state = order['state']
 
@@ -58,4 +59,7 @@ def generate_orders():
 
 
 if __name__ == '__main__':
-  generate_orders()
+  parser = argparse.ArgumentParser(description='Download a list of your orders')
+  parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
+  args = parser.parse_args()
+  generate_orders(args.live)

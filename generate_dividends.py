@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from decimal import Decimal
+import argparse
 import csv
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
@@ -11,12 +12,12 @@ client = RobinhoodCachedClient()
 client.login()
 
 
-def generate_dividends():
+def generate_dividends(live):
   with open('dividends.csv', 'w', newline='') as csv_file:
     fieldnames = ['symbol', 'short_name', 'full_name', 'paid', 'paid_at', 'payable_date', 'record_date', 'quantity', 'rate', 'amount']
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
-    for dividend in client.get_dividends():
+    for dividend in client.get_dividends(force_live=live):
       paid_at = dividend['paid_at']
       is_paid = paid_at is not None
       payable_date = dividend['payable_date'] is not None
@@ -46,4 +47,7 @@ def generate_dividends():
 
 
 if __name__ == '__main__':
-  generate_dividends()
+  parser = argparse.ArgumentParser(description='Download a list of your dividends')
+  parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
+  args = parser.parse_args()
+  generate_dividends(args.live)

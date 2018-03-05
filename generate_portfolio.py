@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from decimal import Decimal
+import argparse
 import csv
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
@@ -11,12 +12,12 @@ client = RobinhoodCachedClient()
 client.login()
 
 
-def generate_portfolio():
+def generate_portfolio(live):
   with open('portfolio.csv', 'w', newline='') as csv_file:
     fieldnames = ['symbol', 'short_name', 'full_name', 'quantity', 'average_buy_price', 'equity_cost']
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
-    for position in client.get_positions():
+    for position in client.get_positions(force_live=live):
       quantity = int(float(position['quantity']))
       average_buy_price = Decimal(position['average_buy_price'])
       equity_cost = quantity * average_buy_price
@@ -38,4 +39,7 @@ def generate_portfolio():
 
 
 if __name__ == '__main__':
-  generate_portfolio()
+  parser = argparse.ArgumentParser(description='Download a snapshot of your portfolio')
+  parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
+  args = parser.parse_args()
+  generate_portfolio(args.live)

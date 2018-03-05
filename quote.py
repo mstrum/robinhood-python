@@ -17,7 +17,7 @@ client.login()
 account_number = client.get_account()['account_number']
 
 
-def get_quote(symbol):
+def get_quote(symbol, live):
   now = datetime.now(pytz.UTC)
   # Get instrument parts
   try:
@@ -32,7 +32,7 @@ def get_quote(symbol):
     simple_name = instrument['simple_name']
 
   # Get fundamentals
-  fundamental = client.get_fundamental(symbol)
+  fundamental = client.get_fundamental(symbol, force_live=live)
   founded_year = fundamental['year_founded']
   high_52 = Decimal(fundamental['high_52_weeks'])
   low_52 = Decimal(fundamental['low_52_weeks'])
@@ -61,7 +61,7 @@ def get_quote(symbol):
 
   # Get position
   try:
-    position = client.get_position_by_instrument_id(account_number, instrument_id)
+    position = client.get_position_by_instrument_id(account_number, instrument_id, force_live=live)
   except NotFound:
     position_average_buy_price = 0
     position_quantity = 0
@@ -76,7 +76,7 @@ def get_quote(symbol):
   # Get order history, put as a subdisplay of position
   print('')
   print('\t------------ orders ------------')
-  orders = client.get_orders(instrument_id=instrument_id)
+  orders = client.get_orders(instrument_id=instrument_id, force_live=live)
   if len(orders) == 0:
     print('\tNone')
   else:
@@ -122,5 +122,6 @@ def get_quote(symbol):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Get a quote for a symbol')
   parser.add_argument('symbol', help='A symbol to get a quote on')
+  parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
   args = parser.parse_args()
-  get_quote(args.symbol)
+  get_quote(args.symbol, args.live)

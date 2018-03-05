@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import csv
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
@@ -9,13 +10,13 @@ client = RobinhoodCachedClient()
 client.login()
 
 
-def generate_documents():
+def generate_documents(live):
   with open('documents.csv', 'w', newline='') as csv_file:
     fieldnames = ['document_id', 'date', 'type', 'path']
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
 
-    for document in client.get_documents():
+    for document in client.get_documents(force_live=live):
       document_id = document['id']
       document_type = document['type']
       document_date = document['date']
@@ -34,4 +35,7 @@ def generate_documents():
 
 
 if __name__ == '__main__':
-  generate_documents()
+  parser = argparse.ArgumentParser(description='Download a list of your documents')
+  parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
+  args = parser.parse_args()
+  generate_documents(args.live)
