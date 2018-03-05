@@ -212,9 +212,12 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(instrument_json, instrument_cache_file)
       return instrument_json
 
-  def get_orders(self, instrument_url=None, force_live=False):
+  def get_orders(self, instrument_id=None, force_live=False):
     """TODO: Handle orders by instrument."""
-    orders_list_cache_path = os.path.join(cache_root_path, 'orders')
+    if instrument_id:
+      orders_list_cache_path = os.path.join(cache_root_path, 'instrument_orders_{}'.format(instrument_id))
+    else:
+      orders_list_cache_path = os.path.join(cache_root_path, 'orders')
     if os.path.exists(orders_list_cache_path) and not force_live:
       orders = []
       with open(orders_list_cache_path, 'r') as orders_list_cache_file:
@@ -222,7 +225,7 @@ class RobinhoodCachedClient(RobinhoodClient):
         for order_id in orders_list:
           orders.append(self.get_order_by_id(order_id, force_live=force_live))
     else:
-      orders = super(RobinhoodCachedClient, self).get_orders()
+      orders = super(RobinhoodCachedClient, self).get_orders(instrument_id=instrument_id)
       orders_list = []
       for order in orders:
         order_id = order['id']

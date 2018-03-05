@@ -11,7 +11,13 @@ import json
 import requests
 
 from .exceptions import NotFound, NotLoggedIn
-from .util import API_HOST, KNOWN_TAGS, get_cursor_from_url, get_instrument_id_from_url
+from .util import (
+  API_HOST,
+  KNOWN_TAGS,
+  get_cursor_from_url,
+  get_instrument_id_from_url,
+  get_instrument_url_from_id
+)
 
 
 class RobinhoodClient:
@@ -811,7 +817,7 @@ class RobinhoodClient:
       raise
     return response.json()
 
-  def get_orders(self, instrument_url=None):
+  def get_orders(self, instrument_id=None):
     """
     Example response:
     {
@@ -856,8 +862,8 @@ class RobinhoodClient:
 
     while True:
       params = {}
-      if instrument_url:
-        params['instrument'] = instrument_url
+      if instrument_id:
+        params['instrument'] = get_instrument_url_from_id(instrument_id)
       if cursor:
         params['cursor'] = cursor
       response = self._session.get(API_HOST + 'orders/', params=params, headers=self._authorization_headers)

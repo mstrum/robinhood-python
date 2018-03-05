@@ -27,7 +27,6 @@ def get_quote(symbol):
     exit()
   else:
     instrument_id = instrument['id']
-    instrument_url = instrument['url']
     listed_since = parse(instrument['list_date']).date()
     tradable = instrument['tradeable']
     simple_name = instrument['simple_name']
@@ -50,9 +49,12 @@ def get_quote(symbol):
 
   print('')
   print('---------------- recents ----------------')
-  print('dy\t{:.2f}%\t\tpe\t{:.2f}x'.format(dividend_yield, pe_ratio))
-  print('52w\t${:.2f} <-> ${:.2f}'.format(low_52, high_52))
-  print('1d\t${:.2f} <-> ${:.2f} (from ${:.2f})'.format(last_low, last_high, last_open))
+  print('dy:\t{:.2f}%'.format(dividend_yield))
+  print('pe:\t{:.2f}x'.format(pe_ratio))
+  year_spread = high_52 - low_52
+  print('52w:\t${:.2f} <-> ${:.2f} (spread is ${:.2f} / {:.2f}%)'.format(low_52, high_52, year_spread, (year_spread) * 100 / high_52))
+  day_spread = last_high - last_low
+  print('1d:\topen ${:.2f} ... ${:.2f} <-> ${:.2f} (spread is ${:.2f} / ${:.2f}%) '.format(last_open, last_low, last_high, day_spread, (day_spread) * 100 / last_high))
 
   print('')
   print('---------------- position ----------------')
@@ -74,12 +76,11 @@ def get_quote(symbol):
   # Get order history, put as a subdisplay of position
   print('')
   print('\t------------ orders ------------')
-  orders = client.get_orders(instrument_url)
-  assert not orders['next']
-  if len(orders['results']) == 0:
+  orders = client.get_orders(instrument_id=instrument_id)
+  if len(orders) == 0:
     print('\tNone')
   else:
-    for order in orders['results']:
+    for order in orders:
       # TODO: Handle any others?
       if order['state'] != 'filled':
         continue
@@ -110,9 +111,12 @@ def get_quote(symbol):
     print('!!!!!!!!!!!!! HALTED !!!!!!!!!!!!!')
   if not has_traded:
     print('!!!!!!!!!!!!! HAS NOT TRADED !!!!!!!!!!!!!')
-  print('{} @ ${:.2f} <-> {} @ ${:.2f} (last {:.2f})'.format(bid_size, bid_price, ask_size, ask_price, last_trade_price))
-  print('\t{}m ago @ {:%I:%M%p}'.format(updated_minutes_ago, updated_at.astimezone(pytz.timezone('US/Pacific'))))
-  print('\tlast close ${:.2f} on {:%b %d} (ext ${:.2f})'.format(last_close_price, last_close_date, last_extended_hours_trade_price))
+  print('close\t${:.2f} on {:%b %d} (${:.2f} in extended hours)'.format(last_close_price, last_close_date, last_extended_hours_trade_price))
+  print('spread:\t${:.2f} ({}) <-> ${:.2f} ({})'.format(bid_price, bid_size, ask_price, ask_size))
+  bid_spread = ask_price - bid_price
+  print('\t${:.2f} ({:.2f}%)'.format(bid_spread, bid_spread * 100 / last_trade_price))
+  print('last:\t${:.2f} ({:.2f}% within spread)'.format(last_trade_price, (bid_spread - (ask_price - last_trade_price)) * 100 / bid_spread))
+  print('age:\t{}m ago @ {:%I:%M%p}'.format(updated_minutes_ago, updated_at.astimezone(pytz.timezone('US/Pacific'))))
 
 
 if __name__ == '__main__':
