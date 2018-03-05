@@ -28,6 +28,8 @@ Robinhood module in Python
   * TODO
     * Add current equity values
     * equity value %
+    * Day change
+    * Total change?
 * generate_orders.py
   * Will download a shapshot of all fulfilled orders
 * generate_dividends.py
