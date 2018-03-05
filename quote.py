@@ -75,7 +75,7 @@ def get_quote(symbol, live):
 
   # Get order history, put as a subdisplay of position
   print('')
-  print('\t------------ orders ------------')
+  print('\t-------------- orders --------------')
   orders = client.get_orders(instrument_id=instrument_id, force_live=live)
   if len(orders) == 0:
     print('\tNone')
@@ -85,10 +85,11 @@ def get_quote(symbol, live):
       if order['state'] != 'filled':
         continue
       order_type = order['type']
+      order_side = order['side']
       order_quantity = int(float(order['quantity']))
       order_average_price = Decimal(order['average_price'])
       order_last_executed_at = parse(order['last_transaction_at']).date()
-      print('\t{:%m/%d/%Y}\t{}\t{} @ ${:.2f}'.format(order_last_executed_at, order_type, order_quantity, order_average_price))
+      print('\t{:%m/%d/%Y}\t{} {}\t{} @ ${:.2f}'.format(order_last_executed_at, order_type, order_side, order_quantity, order_average_price))
 
   # Get quote
   quote = client.get_quote(symbol)
