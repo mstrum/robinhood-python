@@ -4,6 +4,10 @@ https://github.com/Jamonek/Robinhood
 
 More API documentation available at:
 https://github.com/sanko/Robinhood
+
+Some APIs not in use yet:
+* Getting instruments in bulk (instruments/?ids=...)
+
 """
 
 import json
@@ -52,6 +56,89 @@ class RobinhoodClient:
     response = self._session.post(API_HOST + 'api-token-logout/')
     response.raise_for_status()
     del self._session.headers['Authorization']
+
+  def get_user(self):
+    """
+    Example response:
+    {
+        "basic_info": "https://api.robinhood.com/user/basic_info/",
+        "url": "https://api.robinhood.com/user/",
+        "email_verified": true,
+        "id": "00000000-000-4000-0000-0000000000",
+        "additional_info": "https://api.robinhood.com/user/additional_info/",
+        "id_info": "https://api.robinhood.com/user/id/",
+        "last_name": "Bob",
+        "first_name": "Smith",
+        "email": "test@example.com",
+        "international_info": "https://api.robinhood.com/user/international_info/",
+        "investment_profile": "https://api.robinhood.com/user/investment_profile/",
+        "employment": "https://api.robinhood.com/user/employment/",
+        "username": "test",
+        "created_at": "2018-02-01T22:46:39.922345Z"
+    }
+    """
+    response = self._session.get(API_HOST + 'user/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    return response.json()
+
+  def get_user_basic_info(self):
+    """
+    Example response:
+    {
+        "phone_number": "15555555555",
+        "citizenship": "US",
+        "address": "123 Fake St",
+        "state": "CA",
+        "number_dependents": 0,
+        "updated_at": "2018-02-01T15:06:10.045924Z",
+        "tax_id_ssn": "1234",
+        "country_of_residence": "US",
+        "user": "https://api.robinhood.com/user/",
+        "zipcode": "000000000",
+        "city": "Fake Town",
+        "date_of_birth": "1999-01-01"
+    }
+    """
+    response = self._session.get(API_HOST + 'user/basic_info', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    return response.json()
+
+  def get_user_additional_info(self):
+    """
+    Example response:
+    {
+        "security_affiliated_firm_relationship": "",
+        "object_to_disclosure": false,
+        "security_affiliated_person_name": "Tim",
+        "updated_at": "2018-02-01T22:47:11.227574Z",
+        "control_person": true,
+        "control_person_security_symbol": "symbol",
+        "user": "https://api.robinhood.com/user/",
+        "security_affiliated_address": "addr",
+        "security_affiliated_employee": false,
+        "stock_loan_consent_status": "needs_response",
+        "sweep_consent": false,
+        "security_affiliated_firm_name": ""
+    }
+    """
+    response = self._session.get(API_HOST + 'user/additional_info', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    return response.json()
 
   def get_referral_code(self):
     """
@@ -532,7 +619,10 @@ class RobinhoodClient:
         "next": "https://api.robinhood.com/instruments/?cursor=XXXXXXXX"
     }
     """
-    params = {'query': query}
+    params = {
+      'query': query,
+      'active_instruments_only': False
+    }
     response = self._session.get(API_HOST + 'instruments/', params=params)
     response.raise_for_status()
     response_json = response.json()
@@ -610,6 +700,7 @@ class RobinhoodClient:
     """
     params = {
       'symbol': symbol,
+      'active_instruments_only': False,
     }
     response = self._session.get(API_HOST + 'instruments/', params=params)
     response.raise_for_status()
@@ -879,6 +970,43 @@ class RobinhoodClient:
         cursor = get_cursor_from_url(orders_json['next'])
       else:
         return orders
+
+  def get_sp500_movers(self, direction):
+    """
+    Args:
+      direction: up or down
+
+    Example response:
+    {
+        "count": 10,
+        "previous": null,
+        "results": [
+            {
+                "instrument_url": "https://api.robinhood.com/instruments/e6f3bb44-dcdf-445b-bbcb-2e738fd21d6d/",
+                "symbol": "XL",
+                "price_movement": {
+                    "market_hours_last_price": "55.9200",
+                    "market_hours_last_movement_pct": "29.15"
+                },
+                "description": "XL Group Ltd. is a holding company, which engages in the provision of general insurance services. The company operates in two segments: Insurance and Reinsurance. The Insurance segment provides commercial property, casualty and specialty insurance products on a global basis. The Reinsurance provides casualty, property risk, property catastrophe, specialty, and other reinsurance lines on a global basis with business being written on both a proportional and non-proportional treaty basis and also on a facultative basis. XL Group was founded in 1986 and is headquartered in Hamilton, Bermuda.",
+                "updated_at": "2018-03-05T14:03:03.190560Z"
+            },
+            ...
+        ],
+        "next": null
+    }
+    """
+    params = {
+      'direction': direction,
+    }
+    response = self._session.get(API_HOST + 'midlands/movers/sp500/', params=params, headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    return response.json()['results']
 
   def get_portfolio(self):
     """

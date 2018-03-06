@@ -72,8 +72,14 @@ Robinhood module in Python
 * GET /referral/
 * GET /referral/campaign/general/
 * GET /referral/campaign/general/context/
+* GET /marketdata/earnings/
+* GET /accounts/<ACCNT>/day_trade_checks/
+* GET /ach/transfers/ updated_at[gte]
 * GET /marketdata/forex/historicals/{<SYMBOL>/?bounds=24_7
-* GET /holdings/
-* GET /movers/sp500/
+* GET /marketdata/historicals/<SYMBOL>/
+* GET /marketdata/quotes/<SYMBOL|INST_ID>/?bounds=trading
+* GET /marketdata/quotes/?bounds=trading instruments|symbols
+* GET /marketdata/historicals/ symbols, interval, span, bounds, cursor
+* GET /marketdata/prices/<INST_ID>/?delayed=false&source=consolidated
+* GET /portfolios/historicals/<ACCOUNT_NUMBER>/ bounds, span, interval
 * GET /search/ (w/query)
-* GET https://brokerage-static.s3.amazonaws.com/popular_stocks/data.json
