@@ -6,8 +6,22 @@ More API documentation available at:
 https://github.com/sanko/Robinhood
 
 Some APIs not in use yet:
-* Getting instruments in bulk (instruments/?ids=...)
-
+* GET /instruments/ (ids=...)
+* GET /referral/promotion/
+* GET /referral/
+* GET /referral/campaign/general/
+* GET /referral/campaign/general/context/
+* GET /marketdata/earnings/
+* GET /accounts/<ACCNT>/day_trade_checks/
+* GET /accounts/<ACCNT>/dtbp_checks/
+* GET /marketdata/forex/historicals/{<SYMBOL>/?bounds=24_7
+* GET /marketdata/historicals/<SYMBOL>/
+* GET /marketdata/historicals/ symbols, interval, span, bounds, cursor
+* GET /marketdata/prices/<INST_ID>/?delayed=false&source=consolidated
+* GET /marketdata/quotes/?bounds=trading instruments|symbols
+* GET /marketdata/quotes/<SYMBOL|INST_ID>/?bounds=trading
+* GET /portfolios/historicals/<ACCOUNT_NUMBER>/ bounds, span, interval
+* GET /search/ (w/query)
 """
 
 import json

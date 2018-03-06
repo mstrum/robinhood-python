@@ -19,6 +19,7 @@ Robinhood module in Python
 
 ## Scripts
 
+Lists dealing with the user and assets
 * logout.py
   * Calls logout on Robinhood if currently logged in and deletes the local auth token cache
 * quote.py AMZN
@@ -32,10 +33,16 @@ Robinhood module in Python
     * Total change?
 * generate_orders.py
   * Will download a shapshot of all fulfilled orders
+  * TODO
+    * Add in referral rewards
 * generate_dividends.py
   * Will download a shapshot of all dividends past and future
+* generate_transfers.py
+  * Download the history of bank transfers
 * generate_documents.py
   * Will download a shapshot of all documents including the PDFs
+
+Generic lists:
 * generate_tag_list.py [10-most-popular|100-most-popular]
   * Will download a list of the most popular instruments
   * TODO
@@ -44,46 +51,29 @@ Robinhood module in Python
   * Download the 10 most popular stocks in Robinhood as of Sunday
 * generate_sp500_movers.py
   * Download the top movers, both down and up, from the S&P 500
-* TODO
-  * generate_summary.py
-    * Will download a shapshot of a very high level summary
-    * TODO
-      * Total buy in
-      * Total buy out
-      * Total dividend
-      * Total change
-      * Total change %
-  * report.py
-    * Unlike generate_portfolio, includes:
-      * Dividends received
-      * Positions that were fully sold
-      * Profit/losses from sales
-  * potentials.py
-    * Will show a view combining portfolio and watching symbols and show ones I may be interested in.
-      * Positions I'm in that I want to increase
-      * Positions I'm watching, especially if I have criteria
-  * order.py
-    * Will handle any order scenario
-    * TODO:
-      * Market buy
-      * Market sell
-      * Limit buy
-      * Limit sell
 
-## More APIs to inspect
-
-* GET /referral/promotion/
-* GET /referral/
-* GET /referral/campaign/general/
-* GET /referral/campaign/general/context/
-* GET /marketdata/earnings/
-* GET /accounts/<ACCNT>/day_trade_checks/
-* GET /accounts/<ACCNT>/dtbp_checks/
-* GET /marketdata/forex/historicals/{<SYMBOL>/?bounds=24_7
-* GET /marketdata/historicals/<SYMBOL>/
-* GET /marketdata/quotes/<SYMBOL|INST_ID>/?bounds=trading
-* GET /marketdata/quotes/?bounds=trading instruments|symbols
-* GET /marketdata/historicals/ symbols, interval, span, bounds, cursor
-* GET /marketdata/prices/<INST_ID>/?delayed=false&source=consolidated
-* GET /portfolios/historicals/<ACCOUNT_NUMBER>/ bounds, span, interval
-* GET /search/ (w/query)
+Scripts to add:
+* generate_summary.py
+  * Will download a shapshot of a very high level summary
+  * TODO
+    * Total buy in
+    * Total buy out
+    * Total dividend
+    * Total change
+    * Total change %
+* report.py
+  * Unlike generate_portfolio, includes:
+    * Dividends received
+    * Positions that were fully sold
+    * Profit/losses from sales
+* potentials.py
+  * Will show a view combining portfolio and watching symbols and show ones I may be interested in.
+    * Positions I'm in that I want to increase
+    * Positions I'm watching, especially if I have criteria
+* order.py
+  * Will handle any order scenario
+  * TODO:
+    * Market buy
+    * Market sell
+    * Limit buy
+    * Limit sell
