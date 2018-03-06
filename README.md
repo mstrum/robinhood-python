@@ -40,6 +40,10 @@ Robinhood module in Python
   * Will download a list of the most popular instruments
   * TODO
     * Show symbols that have entered/left the list since the last run
+* generate_popular_stocks.py
+  * Download the 10 most popular stocks in Robinhood as of Sunday
+* generate_sp500_movers.py
+  * Download the top movers, both down and up, from the S&P 500
 * TODO
   * generate_summary.py
     * Will download a shapshot of a very high level summary
@@ -74,7 +78,7 @@ Robinhood module in Python
 * GET /referral/campaign/general/context/
 * GET /marketdata/earnings/
 * GET /accounts/<ACCNT>/day_trade_checks/
-* GET /ach/transfers/ updated_at[gte]
+* GET /accounts/<ACCNT>/dtbp_checks/
 * GET /marketdata/forex/historicals/{<SYMBOL>/?bounds=24_7
 * GET /marketdata/historicals/<SYMBOL>/
 * GET /marketdata/quotes/<SYMBOL|INST_ID>/?bounds=trading

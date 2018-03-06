@@ -828,6 +828,102 @@ class RobinhoodClient:
       raise
     return response.json()
 
+  def get_ach_relationship_by_id(self, relationship_id):
+    """
+    Example response:
+    {
+        "bank_account_holder_name": "Bob Smith",
+        "created_at": "2018-02-01T23:41:03.251980Z",
+        "unlink": "https://api.robinhood.com/ach/relationships/00000000-0000-4000-0000-000000000000/unlink/",
+        "id": "00000000-0000-4000-0000-000000000000",
+        "bank_account_nickname": "MY CHECKING",
+        "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
+        "bank_account_number": "1234",
+        "verify_micro_deposits": null,
+        "withdrawal_limit": null,
+        "verified": true,
+        "initial_deposit": "0.00",
+        "bank_routing_number": "12344567",
+        "url": "https://api.robinhood.com/ach/relationships/00000000-0000-4000-0000-000000000000/",
+        "unlinked_at": null,
+        "bank_account_type": "checking",
+        "verification_method": "bank_auth"
+    }
+    """
+    response = self._session.get(API_HOST + 'ach/relationships/{}'.format(relationship_id), headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    return response.json()
+
+  def get_ach_transfer_by_id(self, transfer_id):
+    """
+    Example response:
+    {
+        "status_description": "",
+        "fees": "0.00",
+        "cancel": null,
+        "id": "00000000-0000-4000-0000-000000000000",
+        "created_at": "2018-02-01T05:54:32.902711Z",
+        "amount": "0.00",
+        "ach_relationship": "https://api.robinhood.com/ach/relationships/00000000-0000-4000-0000-000000000000/",
+        "early_access_amount": "0.00",
+        "expected_landing_date": "2018-02-08",
+        "state": "pending",
+        "updated_at": "2018-02-01T05:54:33.524297Z",
+        "scheduled": false,
+        "direction": "deposit",
+        "url": "https://api.robinhood.com/ach/transfers/00000000-0000-4000-0000-000000000000/"
+    }
+    """
+    response = self._session.get(API_HOST + 'ach/transfers/{}'.format(transfer_id), headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    return response.json()
+
+  def get_ach_transfers(self):
+    """
+    Example response:
+    [
+        {
+            "status_description": "",
+            "fees": "0.00",
+            "cancel": null,
+            "id": "00000000-0000-4000-0000-000000000000",
+            "created_at": "2018-02-01T05:54:32.902711Z",
+            "amount": "0.00",
+            "ach_relationship": "https://api.robinhood.com/ach/relationships/00000000-0000-4000-0000-000000000000/",
+            "early_access_amount": "0.00",
+            "expected_landing_date": "2018-02-08",
+            "state": "pending",
+            "updated_at": "2018-02-01T05:54:33.524297Z",
+            "scheduled": false,
+            "direction": "deposit",
+            "url": "https://api.robinhood.com/ach/transfers/00000000-0000-4000-0000-000000000000/"
+        },
+        ...
+    ]
+    """
+    # There's also updated_at[gte]
+    response = self._session.get(API_HOST + 'ach/transfers/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
   def get_dividends(self):
     """
     Example response:
@@ -1307,5 +1403,4 @@ class RobinhoodClient:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
       raise
-    print(json.dumps(response.json(), indent=4))
     return response.json()

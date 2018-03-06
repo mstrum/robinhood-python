@@ -88,6 +88,17 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
+  def get_ach_relationship_by_id(self, relationship_id, force_live=False):
+    cache_path = os.path.join(cache_root_path, 'ach_relationship_{}'.format(relationship_id))
+    if os.path.exists(cache_path) and not force_live:
+      with open(cache_path, 'r') as cache_file:
+        return json.load(cache_file)
+    else:
+      cache_json = super(RobinhoodCachedClient, self).get_ach_relationship_by_id(relationship_id)
+      with open(cache_path, 'w') as cache_file:
+        json.dump(cache_json, cache_file)
+      return cache_json
+
   def get_order_by_id(self, order_id, force_live=False):
     cache_path = os.path.join(cache_root_path, 'order_{}'.format(order_id))
     if os.path.exists(cache_path) and not force_live:
@@ -110,6 +121,17 @@ class RobinhoodCachedClient(RobinhoodClient):
       with open(cache_path, 'wb') as cache_file:
         cache_file.write(cache_content)
       return cache_content
+
+  def get_ach_transfer_by_id(self, transfer_id, force_live=False):
+    cache_path = os.path.join(cache_root_path, 'ach_transfer_{}'.format(document_id))
+    if os.path.exists(cache_path) and not force_live:
+      with open(cache_path, 'r') as cache_file:
+        return json.load(cache_file)
+    else:
+      cache_json = super(RobinhoodCachedClient, self).get_ach_transfer_by_id(transfer_id)
+      with open(cache_path, 'w') as cache_file:
+        json.dump(cache_json, cache_file)
+      return cache_json
 
   def get_document_by_id(self, document_id, force_live=False):
     cache_path = os.path.join(cache_root_path, 'document_{}'.format(document_id))
@@ -164,6 +186,27 @@ class RobinhoodCachedClient(RobinhoodClient):
       with open(documents_list_cache_path, 'w') as documents_list_cache_file:
         json.dump(documents_list, documents_list_cache_file)
     return documents
+
+  def get_ach_transfers(self, force_live=False):
+    transfers_list_cache_path = os.path.join(cache_root_path, 'ach_transfers')
+    if os.path.exists(transfers_list_cache_path) and not force_live:
+      transfers = []
+      with open(transfers_list_cache_path, 'r') as transfers_list_cache_file:
+        transfers_list = json.load(transfers_list_cache_file)
+        for transfer_id in transfers_list:
+          transfers.append(self.get_ach_transfer_by_id(transfer_id, force_live=force_live))
+    else:
+      transfers = super(RobinhoodCachedClient, self).get_ach_transfers()
+      transfers_list = []
+      for transfer in transfers:
+        transfer_id = transfer['id']
+        transfers_list.append(transfer_id)
+        transfer_cache_path = os.path.join(cache_root_path, 'ach_transfer_{}'.format(transfer_id))
+        with open(transfer_cache_path, 'w') as transfer_cache_file:
+          json.dump(transfer, transfer_cache_file)
+      with open(transfers_list_cache_path, 'w') as transfers_list_cache_file:
+        json.dump(transfers_list, transfers_list_cache_file)
+    return transfers
 
   def get_dividends(self, force_live=False):
     dividends_list_cache_path = os.path.join(cache_root_path, 'dividends')
