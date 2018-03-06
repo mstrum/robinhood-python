@@ -28,9 +28,9 @@ Lists dealing with the user and assets
   * Will download a shapshot of the current portfolio
   * TODO
     * Add current equity values
-    * Equity value %
-    * Total equity index
-    * Day change
+    * Equity value %
+    * Total equity index
+    * Day change
     * Total change?
 * generate_orders.py
   * Will download a shapshot of all fulfilled orders
