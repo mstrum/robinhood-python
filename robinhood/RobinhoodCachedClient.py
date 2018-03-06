@@ -123,7 +123,7 @@ class RobinhoodCachedClient(RobinhoodClient):
       return cache_content
 
   def get_ach_transfer_by_id(self, transfer_id, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'ach_transfer_{}'.format(document_id))
+    cache_path = os.path.join(cache_root_path, 'ach_transfer_{}'.format(transfer_id,))
     if os.path.exists(cache_path) and not force_live:
       with open(cache_path, 'r') as cache_file:
         return json.load(cache_file)

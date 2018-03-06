@@ -14,16 +14,13 @@ client.login()
 
 def generate_transfers(live):
   with open('transfers.csv', 'w', newline='') as csv_file:
-    fieldnames = ['id', 'amount', 'direction', 'state', 'early_access_amount', 'expected_landing_date', 'fees', 'bank']
+    fieldnames = ['id', 'amount', 'direction', 'state', 'pending', 'early_access_amount', 'expected_landing_date', 'fees', 'bank']
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
     for transfer in client.get_ach_transfers(force_live=live):
-      # If any of these becomes not true, probably add to the csv
-      assert not transfer['pending']
       assert not transfer['status_description']
-      assert not transfer['cancel']
 
-      relationship = client.get_ach_relationship(get_last_id_from_url(transfer['ach_relationship']))
+      relationship = client.get_ach_relationship_by_id(get_last_id_from_url(transfer['ach_relationship']))
 
       csv_writer.writerow({
         'id': transfer['id'],
