@@ -65,3 +65,15 @@ Robinhood module in Python
       * Market sell
       * Limit buy
       * Limit sell
+
+## More APIs to inspect
+
+* GET /referral/promotion/
+* GET /referral/
+* GET /referral/campaign/general/
+* GET /referral/campaign/general/context/
+* GET /marketdata/forex/historicals/{<SYMBOL>/?bounds=24_7
+* GET /holdings/
+* GET /movers/sp500/
+* GET /search/ (w/query)
+* GET https://brokerage-static.s3.amazonaws.com/popular_stocks/data.json
