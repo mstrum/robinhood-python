@@ -560,7 +560,7 @@ class RobinhoodClient:
     instrument_ids = [get_instrument_id_from_url(instrument_url) for instrument_url in response_json['instruments']]
     return instrument_ids
 
-  def get_instruments(self, query=None):
+  def get_instruments(self, query):
     """
     Args:
       query: Can be any string, like a stock ticker or None for all (e.g. AAPL)
@@ -769,17 +769,13 @@ class RobinhoodClient:
         "last_extended_hours_trade_price": "175.1000",
         "last_trade_price_source": "consolidated"
     }
-
     """
     response = self._session.get(API_HOST + 'quotes/{}/'.format(symbol))
     response.raise_for_status()
     return response.json()
 
-  def get_quotes(self, symbols):
+  def get_quotes(self, symbols=None, instrument_ids=None):
     """
-    Args:
-      symbols: E.g. [AAPL, GOOG]
-
     Example response:
     {
         "results": [
@@ -804,8 +800,49 @@ class RobinhoodClient:
         ]
     }
     """
-    params = {'symbols': ','.join(symbols)}
-    response = self._session.get(API_HOST + 'quotes/', params=params)
+    assert symbols or instrument_ids
+    assert not (symbols and instrument_ids)
+    # bounds=trading ?
+    params = {}
+    if symbols:
+      params['symbols'] = ','.join(symbols)
+    if instrument_ids:
+      params['instruments'] = ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
+
+    response = self._session.get(API_HOST + 'marketdata/quotes/', params=params)
+    response.raise_for_status()
+    return response.json()['results']
+
+  def get_prices(self, symbols=None, instrument_ids=None):
+    """
+    Example response:
+    {
+        "results": [
+            {
+                "size": 1149976,
+                "updated_at": "2018-03-07T01:00:00Z",
+                "bid_size": 100,
+                "price": "176.6700",
+                "instrument_id": "450dfc6d-5510-4d40-abfb-f633b7d9be3e",
+                "ask_size": 100,
+                "ask_price": "173.9900",
+                "bid_price": "173.6500"
+            },
+            ...
+        ]
+    }
+    """
+    assert symbols or instrument_ids
+    assert not (symbols and instrument_ids)
+    params = {
+      'source': 'consolidated',
+      'delayed': 'true',
+    }
+    if symbols:
+      params['symbols'] = ','.join(symbols)
+    if instrument_ids:
+      params['instruments'] = ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
+    response = self._session.get(API_HOST + 'marketdata/prices/'.format(instrument_id), params=params)
     response.raise_for_status()
     return response.json()
 
