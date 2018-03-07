@@ -628,7 +628,7 @@ class RobinhoodClient:
     """
     params = {
       'query': query,
-      'active_instruments_only': False
+      'active_instruments_only': True,
     }
     response = self._session.get(API_HOST + 'instruments/', params=params)
     response.raise_for_status()
@@ -707,7 +707,7 @@ class RobinhoodClient:
     """
     params = {
       'symbol': symbol,
-      'active_instruments_only': False,
+      'active_instruments_only': True,
     }
     response = self._session.get(API_HOST + 'instruments/', params=params)
     response.raise_for_status()
