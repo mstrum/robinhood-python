@@ -30,10 +30,6 @@ Lists dealing with the user and assets
     * day trade buying power check
 * generate_portfolio.py
   * Will download a shapshot of the current portfolio
-  * TODO
-    * Total equity index
-    * Day change
-    * Total change?
 * generate_orders.py
   * Will download a shapshot of all fulfilled orders
   * TODO
