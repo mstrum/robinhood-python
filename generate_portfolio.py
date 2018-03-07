@@ -60,7 +60,7 @@ def generate_portfolio(live):
     for idx, position in enumerate(positions_by_equity_worth):
       total_price_change = position['last_price'] - position['average_buy_price']
       day_price_change = position['last_price'] - position['last_open']
-      day_percentage_change = position['last_price'] * 100 / position['last_open']
+      day_percentage_change = day_price_change * 100 / position['last_open']
       total_percentage_change = total_price_change * 100 / position['average_buy_price'] if position['average_buy_price'] else 100
       csv_writer.writerow({
         'symbol': position['symbol'],
