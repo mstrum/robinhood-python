@@ -1,9 +1,10 @@
 # robinhood-python
 Robinhood module in Python
 
-*Warning* This is in HEAVY, early development and will completely change underneath you if you try to rely on it.
-
-* Note that current development is in python 3, so any python 2 support is mostly adhoc
+Some current caveats:
+* Development has been in python 3, I'm not taking much care to keep python 2 support at the moment.
+* The scripts currently default to extreme caching policies, use --live to guarantee most recent data.
+* Much of the code will assert (or not) in scenarioes where states and paging is involved where they haven't been handled correctly yet
 
 ## Module
 
@@ -24,6 +25,9 @@ Lists dealing with the user and assets
   * Calls logout on Robinhood if currently logged in and deletes the local auth token cache
 * quote.py AMZN
   * Returns the latest quote for the given symbol along with auxilary info
+  * TODO
+    * day trade check
+    * day trade buying power check
 * generate_portfolio.py
   * Will download a shapshot of the current portfolio
   * TODO
@@ -36,12 +40,15 @@ Lists dealing with the user and assets
   * Will download a shapshot of all fulfilled orders
   * TODO
     * Add in referral rewards
+    * Handle pending orders
 * generate_dividends.py
   * Will download a shapshot of all dividends past and future
 * generate_transfers.py
   * Download the history of bank transfers
 * generate_documents.py
   * Will download a shapshot of all documents including the PDFs
+* generate_rewards.py
+  * Will download a shapshot of the referral rewards you've gotten
 
 Generic lists:
 * generate_tag_list.py [10-most-popular|100-most-popular]

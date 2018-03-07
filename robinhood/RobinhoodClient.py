@@ -7,13 +7,6 @@ https://github.com/sanko/Robinhood
 
 Some APIs not in use yet:
 * GET /instruments/ (ids=...)
-* GET /referral/promotion/
-* GET /referral/
-* GET /referral/campaign/general/
-* GET /referral/campaign/general/context/
-* GET /marketdata/earnings/
-* GET /accounts/<ACCNT>/day_trade_checks/
-* GET /accounts/<ACCNT>/dtbp_checks/
 * GET /marketdata/forex/historicals/{<SYMBOL>/?bounds=24_7
 * GET /marketdata/historicals/<SYMBOL>/
 * GET /marketdata/historicals/ symbols, interval, span, bounds, cursor
@@ -328,7 +321,7 @@ class RobinhoodClient:
             }
         ]
     }
-  
+
     """
     response = self._session.get(API_HOST + 'watchlists/{}/'.format(watchlist_name), headers=self._authorization_headers)
     try:
@@ -1388,8 +1381,8 @@ class RobinhoodClient:
   def order(self, account_url, instrument_url, symbol, quantity, bid_price, transaction_type, trigger, order_type, time_in_force):
     """
     Args:
-      account_url: 
-      instrument_url: 
+      account_url:
+      instrument_url:
       symbol: e.g. AAPL
       quantity: Number in the transaction
       bid_price (float): Price when buying
@@ -1418,3 +1411,60 @@ class RobinhoodClient:
         raise NotLoggedIn(http_error.response.json()['detail'])
       raise
     return response.json()
+
+  def get_referrals(self):
+    """
+    Example response:
+    {
+        "count": 3,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "campaign": "general",
+                "created_at": "2018-02-07T20:35:06.131924Z",
+                "direction": "from",
+                "experiment": "stock-claim",
+                "id": "1000000-00-400-00-00000",
+                "reward": {
+                    "cash": null,
+                    "stocks": [
+                        {
+                            "instrument_url": "https://api.robinhood.com/instruments/2000000-00-400-00-00000/",
+                            "symbol": "GRPN",
+                            "quantity": 1.0,
+                            "cost_basis": 5.13,
+                            "state": "granted",
+                            "state_description": "Received",
+                            "claimable": false,
+                            "uuid": "3000000-00-400-00-00000",
+                            "random": true
+                        }
+                    ]
+                },
+                "state": "received",
+                "state_description": null,
+                "updated_at": "2018-02-07T22:38:44.491145Z",
+                "remind_url": null,
+                "url": "https://api.robinhood.com/referral/1000000-00-400-00-00000/",
+                "other_user": {
+                    "first_name": "Billy",
+                    "last_initial": "S"
+                },
+                "can_remind": false
+            },
+            ...
+        ]
+    }
+    """
+    response = self._session.get(API_HOST + 'midlands/referral/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']

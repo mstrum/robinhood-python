@@ -68,10 +68,13 @@ def get_quote(symbol, live):
     position_equity_cost = 0
     print('None')
   else:
-    position_average_buy_price = Decimal(position['average_buy_price'])
     position_quantity = int(float(position['quantity']))
-    position_equity_cost = position_quantity * position_average_buy_price
-    print('{} @ ${:.2f} = ${:.2f}'.format(position_quantity, position_average_buy_price, position_equity_cost))
+    if not position_quantity:
+      print('None anymore')
+    else:
+      position_average_buy_price = Decimal(position['average_buy_price'])
+      position_equity_cost = position_quantity * position_average_buy_price
+      print('{} @ ${:.2f} = ${:.2f}'.format(position_quantity, position_average_buy_price, position_equity_cost))
 
   # Get order history, put as a subdisplay of position
   print('')
@@ -112,7 +115,9 @@ def get_quote(symbol, live):
     print('!!!!!!!!!!!!! HALTED !!!!!!!!!!!!!')
   if not has_traded:
     print('!!!!!!!!!!!!! HAS NOT TRADED !!!!!!!!!!!!!')
-  print('close\t${:.2f} on {:%b %d} (${:.2f} in extended hours)'.format(last_close_price, last_close_date, last_extended_hours_trade_price))
+  print('close\t${:.2f} on {:%b %d}'.format(last_close_price, last_close_date))
+  extended_hours_spread = last_extended_hours_trade_price - last_close_price
+  print('extnd:\t${:.2f} (${:.2f} / {:.2f}% spread)'.format(last_extended_hours_trade_price, extended_hours_spread, (last_extended_hours_trade_price - last_close_price) * 100 / last_close_price))
   print('spread:\t${:.2f} ({}) <-> ${:.2f} ({})'.format(bid_price, bid_size, ask_price, ask_size))
   bid_spread = ask_price - bid_price
   print('\t${:.2f} ({:.2f}%)'.format(bid_spread, bid_spread * 100 / last_trade_price))
