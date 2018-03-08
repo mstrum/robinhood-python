@@ -25,6 +25,8 @@ from .exceptions import NotFound, NotLoggedIn
 from .util import (
   API_HOST,
   KNOWN_TAGS,
+  ORDER_SIDES,
+  ORDER_TYPES,
   get_cursor_from_url,
   get_instrument_id_from_url,
   get_instrument_url_from_id
@@ -1006,7 +1008,7 @@ class RobinhoodClient:
 
   def get_order_by_id(self, order_id):
     """
-    States: queued, unconfirmed, confirmed, partially_filled, filled, rejected, canceled, or failed
+    See util.ORDER_STATES
 
     Example response:
     {
@@ -1415,40 +1417,6 @@ class RobinhoodClient:
     response.raise_for_status()
     return response.json()['results']
 
-  def order(self, account_url, instrument_url, symbol, quantity, bid_price, transaction_type, trigger, order_type, time_in_force):
-    """
-    Args:
-      account_url:
-      instrument_url:
-      symbol: e.g. AAPL
-      quantity: Number in the transaction
-      bid_price (float): Price when buying
-      transaction_type: [buy, sell]
-      trigger: [immediate, stop]
-      order_type: [market, limit]
-      time_in_force: [gfd, gtc, ioc, opg] (eod or until cancelled)
-    """
-    exit()
-    body = {
-      'account': account_url,
-      'instrument': instrument_url,
-      'price': bid_price,
-      'quantity': quantity,
-      'side': transaction_type,
-      'symbol': symbol,
-      'time_in_force': time_in_force,
-      'trigger': trigger,
-      'type': order_type,
-    }
-    response = self._session.post(API_HOST + 'orders/', data=body, headers=self._authorization_headers)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      raise
-    return response.json()
-
   def get_referrals(self):
     """
     Example response:
@@ -1505,3 +1473,68 @@ class RobinhoodClient:
     # TODO: autopage
     assert not response_json['next']
     return response_json['results']
+
+  def order(self, account_url, instrument_url, order_type, order_side, symbol, quantity, price):
+    """
+    Args:
+      account_url
+      instrument_url
+      order_type: [market, limit]
+      order_side: [buy, sell]
+      symbol: e.g. AAPL
+      quantity: Number in the transaction
+      price (float): Price when buying
+
+    Example response:
+    {
+        "override_day_trade_checks": false,
+        "id": "00000000-0000-4000-0000-000000000000d",
+        "cumulative_quantity": "0.00000",
+        "trigger": "immediate",
+        "ref_id": null,
+        "state": "unconfirmed",
+        "quantity": "1.00000",
+        "response_category": null,
+        "extended_hours": false,
+        "price": "234.00000000",
+        "url": "https://api.robinhood.com/orders/00000000-0000-4000-0000-000000000000d/",
+        "fees": "0.00",
+        "created_at": "2018-03-08T00:56:03.878630Z",
+        "executions": [],
+        "last_transaction_at": "2018-02-01T00:56:03.878630Z",
+        "type": "limit",
+        "side": "sell",
+        "cancel": "https://api.robinhood.com/orders/00000000-0000-4000-0000-000000000000d/cancel/",
+        "instrument": "https://api.robinhood.com/instruments/10000000-0000-4000-0000-000000000000/",
+        "position": "https://api.robinhood.com/positions/XXXXXXXX/10000000-0000-4000-0000-000000000000/",
+        "stop_price": null,
+        "average_price": null,
+        "updated_at": "2018-02-01T00:56:03.955774Z",
+        "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
+        "reject_reason": null,
+        "time_in_force": "gtc",
+        "override_dtbp_checks": false
+    }
+    """
+    assert order_side in ORDER_SIDES
+    assert order_type in ORDER_TYPES
+
+    body = {
+      'account': account_url,
+      'instrument': instrument_url,
+      'price': price,
+      'quantity': quantity,
+      'side': order_side,
+      'symbol': symbol,
+      'time_in_force': 'gtc', # see util.TIME_IN_FORCES
+      'trigger': 'immediate', # see util.TRIGGERS
+      'type': order_type,
+    }
+    response = self._session.post(API_HOST + 'orders/', data=body, headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      raise
+    return response.json()

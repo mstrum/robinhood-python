@@ -20,7 +20,7 @@ Some current caveats:
 
 ## Scripts
 
-Lists dealing with the user and assets
+Lists dealing with the user and assets:
 * logout.py
   * Calls logout on Robinhood if currently logged in and deletes the local auth token cache
 * quote.py AMZN
@@ -43,6 +43,10 @@ Lists dealing with the user and assets
   * Will download a shapshot of all documents including the PDFs
 * generate_rewards.py
   * Will download a shapshot of the referral rewards you've gotten
+
+Perform actions:
+* order.py
+  * Prints the quote for the given symbol, confirms, and places an order
 
 Generic lists:
 * generate_tag_list.py [10-most-popular|100-most-popular]
@@ -72,10 +76,3 @@ Scripts to add:
   * Will show a view combining portfolio and watching symbols and show ones I may be interested in.
     * Positions I'm in that I want to increase
     * Positions I'm watching, especially if I have criteria
-* order.py
-  * Will handle any order scenario
-  * TODO:
-    * Market buy
-    * Market sell
-    * Limit buy
-    * Limit sell

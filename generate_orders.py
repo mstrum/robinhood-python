@@ -26,7 +26,7 @@ def generate_orders(live):
 
       # TODO: Handle any others?
       if state != 'filled':
-        if state != 'cancelled':
+        if state not in ['queued', 'cancelled']:
           print('Skipping order {} with state {} that may need to be handled...'.format(order_id, state))
         continue
 
@@ -59,7 +59,7 @@ def generate_orders(live):
 
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description='Download a list of your orders')
+  parser = argparse.ArgumentParser(description='Download a list of your completed orders')
   parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
   args = parser.parse_args()
   generate_orders(args.live)

@@ -11,13 +11,9 @@ import pytz
 from robinhood.exceptions import NotFound
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
 
-# Set up the client
-client = RobinhoodCachedClient()
-client.login()
-account_number = client.get_account()['account_number']
+def display_quote(client, symbol, live):
+  account_number = client.get_account()['account_number']
 
-
-def get_quote(symbol, live):
   now = datetime.now(pytz.UTC)
   # Get instrument parts
   try:
@@ -84,15 +80,13 @@ def get_quote(symbol, live):
     print('\tNone')
   else:
     for order in orders:
-      # TODO: Handle any others?
-      if order['state'] != 'filled':
-        continue
+      order_state = order['state']
       order_type = order['type']
       order_side = order['side']
       order_quantity = int(float(order['quantity']))
-      order_average_price = Decimal(order['average_price'])
+      order_price = Decimal(order['average_price']) if order['average_price'] else Decimal(order['price'])
       order_last_executed_at = parse(order['last_transaction_at']).date()
-      print('\t{:%m/%d/%Y}\t{} {}\t{} @ ${:.2f}'.format(order_last_executed_at, order_type, order_side, order_quantity, order_average_price))
+      print('\t{:%m/%d/%Y}\t{}\t{} {}\t{} @ ${:.2f}'.format(order_last_executed_at, order_state, order_type, order_side, order_quantity, order_price))
 
   # Get quote
   quote = client.get_quote(symbol)
@@ -130,4 +124,7 @@ if __name__ == '__main__':
   parser.add_argument('symbol', help='A symbol to get a quote on')
   parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
   args = parser.parse_args()
-  get_quote(args.symbol, args.live)
+
+  client = RobinhoodCachedClient()
+  client.login()
+  display_quote(client, args.symbol, args.live)

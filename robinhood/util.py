@@ -6,6 +6,34 @@ KNOWN_TAGS = [
   '100-most-popular',
   '10-most-popular',
 ]
+ORDER_TYPES = [
+  'market',
+  'limit',
+]
+ORDER_SIDES = [
+  'buy',
+  'sell',
+]
+TIME_IN_FORCES = [
+  'gfd',
+  'gtc',
+  'ioc',
+  'opg',
+]
+TRIGGERS = [
+  'immediate',
+  'stop',
+]
+ORDER_STATES = [
+  'queued',
+  'unconfirmed',
+  'confirmed',
+  'partially_filled',
+  'filled',
+  'rejected',
+  'canceled',
+  'failed',
+]
 
 
 def get_instrument_id_from_url(instrument_url):
