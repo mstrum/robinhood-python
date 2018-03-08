@@ -30,8 +30,8 @@ def display_quote(client, symbol, live):
   # Get fundamentals
   fundamental = client.get_fundamental(symbol, force_live=live)
   founded_year = fundamental['year_founded']
-  high_52 = Decimal(fundamental['high_52_weeks'])
-  low_52 = Decimal(fundamental['low_52_weeks'])
+  high_52 = Decimal(fundamental['high_52_weeks']) if fundamental['high_52_weeks'] else None
+  low_52 = Decimal(fundamental['low_52_weeks']) if fundamental['low_52_weeks'] else None
   last_open = Decimal(fundamental['open'])
   last_high = Decimal(fundamental['high'])
   last_low = Decimal(fundamental['low'])
@@ -47,8 +47,9 @@ def display_quote(client, symbol, live):
   print('---------------- recents ----------------')
   print('dy:\t{:.2f}%'.format(dividend_yield))
   print('pe:\t{:.2f}x'.format(pe_ratio))
-  year_spread = high_52 - low_52
-  print('52w:\t${:.2f} <-> ${:.2f} (spread is ${:.2f} / {:.2f}%)'.format(low_52, high_52, year_spread, (year_spread) * 100 / high_52))
+  if high_52:
+    year_spread = high_52 - low_52
+    print('52w:\t${:.2f} <-> ${:.2f} (spread is ${:.2f} / {:.2f}%)'.format(low_52, high_52, year_spread, (year_spread) * 100 / high_52))
   day_spread = last_high - last_low
   print('1d:\topen ${:.2f} ... ${:.2f} <-> ${:.2f} (spread is ${:.2f} / ${:.2f}%) '.format(last_open, last_low, last_high, day_spread, (day_spread) * 100 / last_high))
 
