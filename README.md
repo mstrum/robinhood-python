@@ -11,7 +11,7 @@ Some current caveats:
 * robinhood.RobinhoodClient
   * Client that handles getting data from the Robinhood APIs
   * TODO
-    * Some APIs likely need paging support (only orders has it for now)
+    * Some APIs likely need paging support, I've personally added as needed
 * robinhood.RobinhoodCachedClient
   * Client that handles caching on top of the normal client
   * TODO
@@ -20,29 +20,32 @@ Some current caveats:
 
 ## Scripts
 
-Lists dealing with the user and assets:
 * logout.py
-  * Calls logout on Robinhood if currently logged in and deletes the local auth token cache
-* quote.py AMZN
-  * Returns the latest quote for the given symbol along with auxilary info
-  * TODO
-    * day trade check
-    * day trade buying power check
+  * Invalidates the current auth token and deletes the cached token
+
+Various downloads:
 * generate_portfolio.py
-  * Will download a shapshot of the current portfolio
+  * Current positions with various stats
 * generate_orders.py
-  * Will download a shapshot of all fulfilled orders
+  * Fulfilled orders
   * TODO
     * Add in referral rewards
     * Handle pending orders
 * generate_dividends.py
-  * Will download a shapshot of all dividends past and future
+  * All dividends, received or planned
 * generate_transfers.py
-  * Download the history of bank transfers
+  * ACH bank transfers
 * generate_documents.py
-  * Will download a shapshot of all documents including the PDFs
+  * Documents (including PDFs) that you've received
 * generate_rewards.py
-  * Will download a shapshot of the referral rewards you've gotten
+  * Referral rewards you've gotten
+
+Display information:
+* quote.py AMZN
+  * Displays the latest quote for the given symbol along with auxilary info
+  * TODO
+    * day trade check
+    * day trade buying power check
 
 Perform actions:
 * order.py
@@ -50,13 +53,13 @@ Perform actions:
 
 Generic lists:
 * generate_tag_list.py [10-most-popular|100-most-popular]
-  * Will download a list of the most popular instruments
+  * Stocks that have the given tag
   * TODO
     * Show symbols that have entered/left the list since the last run
 * generate_popular_stocks.py
-  * Download the 10 most popular stocks in Robinhood as of Sunday
+  * Most popular stocks in Robinhood as of Sunday
 * generate_sp500_movers.py
-  * Download the top movers, both down and up, from the S&P 500
+  * Top movers, both down and up, from the S&P 500
 
 Scripts to add:
 * generate_summary.py
