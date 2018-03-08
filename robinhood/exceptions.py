@@ -3,3 +3,6 @@ class NotFound(Exception):
 
 class NotLoggedIn(Exception):
     pass
+
+class MfaRequired(Exception):
+    pass

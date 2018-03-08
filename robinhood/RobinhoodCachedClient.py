@@ -4,6 +4,7 @@ import getpass
 import json
 import os
 
+from .exceptions import MfaRequired
 from .RobinhoodClient import RobinhoodClient
 from .util import get_instrument_id_from_url
 
@@ -24,7 +25,13 @@ class RobinhoodCachedClient(RobinhoodClient):
       # Get a new auth token
       username = input('Username: ')
       password = getpass.getpass()
-      auth_token = self.set_auth_token_with_credentials(username, password)
+
+      try:
+        auth_token = self.set_auth_token_with_credentials(username, password)
+      except MfaRequired:
+        mfa = input('MFA: ')
+        auth_token = self.set_auth_token_with_credentials(username, password, mfa)
+
       with open(cache_path, 'w') as cache_file:
         cache_file.write(auth_token)
 

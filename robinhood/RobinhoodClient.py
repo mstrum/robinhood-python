@@ -1,9 +1,11 @@
 """
-NOTE: APIs and HTTP flow taken from:
+Good unofficial API documentation:
+https://github.com/sanko/Robinhood
+
+Another python library that inspired this:
 https://github.com/Jamonek/Robinhood
 
 More API documentation available at:
-https://github.com/sanko/Robinhood
 
 Some APIs not in use yet:
 * GET /instruments/ (ids=...)
@@ -21,7 +23,7 @@ import json
 
 import requests
 
-from .exceptions import NotFound, NotLoggedIn
+from .exceptions import MfaRequired, NotFound, NotLoggedIn
 from .util import (
   API_HOST,
   KNOWN_TAGS,
@@ -50,13 +52,19 @@ class RobinhoodClient:
   def set_auth_token(self, auth_token):
     self._authorization_headers['Authorization'] = 'Token {}'.format(auth_token)
 
-  def set_auth_token_with_credentials(self, username, password):
+  def set_auth_token_with_credentials(self, username, password, mfa=None):
     body = {
       'username': username,
       'password': password,
     }
+    if mfa:
+      body['mfa_code'] = mfa
+
     response = self._session.post(API_HOST + 'api-token-auth/', data=body)
     response.raise_for_status()
+    response_json = response.json()
+    if 'mfa_required' in response_json:
+      raise MfaRequired()
     auth_token = response.json()['token']
     self.set_auth_token(auth_token)
     return auth_token
