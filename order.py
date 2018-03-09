@@ -62,7 +62,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Place an order')
   parser.add_argument('order_type', choices=ORDER_TYPES)
   parser.add_argument('order_side', choices=ORDER_SIDES)
-  parser.add_argument('symbol', help='The stock ticker')
+  parser.add_argument('symbol', type=str.upper, help='The stock ticker')
   parser.add_argument('quantity', type=int)
   parser.add_argument('price', type=float)
   args = parser.parse_args()
