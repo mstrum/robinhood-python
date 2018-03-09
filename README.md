@@ -47,7 +47,7 @@ Display information:
   * TODO
     * day trade check
     * day trade buying power check
-* show_pending_orders.py AMZN
+* show_pending_orders.py
   * Displays any outstanding orders along with position information
 * show_interesting_stocks.py
   * Show stocks that are on various lists
