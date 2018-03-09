@@ -28,41 +28,38 @@ Some current caveats:
   * Invalidates the current auth token and deletes the cached token
 
 Various downloads:
-* generate_portfolio.py
+* generate_portfolio.py [--live]
   * Current positions with various stats
-* generate_orders.py
+* generate_orders.py [--live]
   * Fulfilled orders
-* generate_dividends.py
+* generate_dividends.py [--live]
   * All dividends, received or planned
-* generate_transfers.py
+* generate_transfers.py [--live]
   * ACH bank transfers
-* generate_documents.py
+* generate_documents.py [--live]
   * Documents (including PDFs) that you've received
-* generate_rewards.py
+* generate_rewards.py [--live]
   * Referral rewards you've gotten
 
 Display information:
-* show_quote.py AMZN
+* show_quote.py AMZN [--live]
   * Displays the latest quote for the given symbol along with auxilary info
   * TODO
     * day trade check
     * day trade buying power check
 * show_pending_orders.py AMZN
   * Displays any outstanding orders along with position information
+* show_interesting_stocks.py
+  * Show stocks that are on various lists
+    * 10 popular S&P 500 stocks with Robinhood users
+    * S&P 500 top movers up and down
+    * Top 10 and 100 popular sticks with Robinhood users
+  * TODO:
+    * Movements into/outof lists?
 
 Perform actions:
 * order.py market|limit buy|sell SYMBOL QUANTITY PRICE
   * Prints the quote for the given symbol, confirms, and places an order
-
-Generic lists:
-* generate_tag_list.py 10-most-popular|100-most-popular
-  * Stocks that have the given tag
-  * TODO
-    * Show symbols that have entered/left the list since the last run
-* generate_popular_stocks.py
-  * Most popular stocks in Robinhood as of Sunday
-* generate_sp500_movers.py
-  * Top movers, both down and up, from the S&P 500
 
 Scripts to add:
 * generate_summary.py
@@ -82,3 +79,7 @@ Scripts to add:
   * Will show a view combining portfolio and watching symbols and show ones I may be interested in.
     * Positions I'm in that I want to increase
     * Positions I'm watching, especially if I have criteria
+
+## Todo
+
+* Mix in some IEX data

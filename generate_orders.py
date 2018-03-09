@@ -8,7 +8,7 @@ from dateutil.parser import parse
 import pytz
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
-from robinhood.util import get_instrument_id_from_url
+from robinhood.util import get_last_id_from_url
 
 # Set up the client
 client = RobinhoodCachedClient()
@@ -37,7 +37,7 @@ def generate_orders(live):
       last_transaction_at = parse(order['last_transaction_at']).astimezone(pytz.timezone('US/Pacific'))
       fees = Decimal(order['fees'])
       side = order['side']
-      instrument_id = get_instrument_id_from_url(order['instrument'])
+      instrument_id = get_last_id_from_url(order['instrument'])
 
       instrument = client.get_instrument_by_id(instrument_id)
       simple_name = instrument['simple_name']

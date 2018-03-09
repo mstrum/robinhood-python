@@ -5,7 +5,7 @@ import argparse
 import csv
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
-from robinhood.util import get_instrument_id_from_url
+from robinhood.util import get_last_id_from_url
 
 # Set up the client
 client = RobinhoodCachedClient()
@@ -28,7 +28,7 @@ def generate_portfolio(live):
     for position in positions:
       quantity = int(float(position['quantity']))
       average_buy_price = Decimal(position['average_buy_price'])
-      instrument_id = get_instrument_id_from_url(position['instrument'])
+      instrument_id = get_last_id_from_url(position['instrument'])
       instrument = client.get_instrument_by_id(instrument_id)
       fundamental = client.get_fundamental(instrument['symbol'], force_live=live)
       
@@ -44,7 +44,7 @@ def generate_portfolio(live):
 
     position_quotes = client.get_quotes(symbols=[p['symbol'] for p in position_by_instrument_id.values()])
     for quote in position_quotes:
-      instrument_id = get_instrument_id_from_url(quote['instrument'])
+      instrument_id = get_last_id_from_url(quote['instrument'])
       position = position_by_instrument_id[instrument_id]
 
       position['last_price'] = Decimal(quote['last_trade_price'])

@@ -10,7 +10,7 @@ import pytz
 
 from robinhood.exceptions import NotFound
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
-from robinhood.util import get_instrument_id_from_url
+from robinhood.util import get_last_id_from_url
 
 
 client = RobinhoodCachedClient()
@@ -26,7 +26,7 @@ def display_pending_orders():
     exit()
 
   for order in pending_orders:
-    instrument = client.get_instrument_by_id(get_instrument_id_from_url(order['instrument']))
+    instrument = client.get_instrument_by_id(get_last_id_from_url(order['instrument']))
     order_state = order['state']
     order_type = order['type']
     order_side = order['side']
@@ -55,4 +55,3 @@ def display_pending_orders():
 
 if __name__ == '__main__':
   display_pending_orders()
-

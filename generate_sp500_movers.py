@@ -5,7 +5,7 @@ import argparse
 import csv
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
-from robinhood.util import get_instrument_id_from_url
+from robinhood.util import get_last_id_from_url
 
 # Set up the client
 client = RobinhoodCachedClient()
@@ -20,7 +20,7 @@ def generate_sp500_movers(live):
       csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
       csv_writer.writeheader()
       for mover in client.get_sp500_movers(direction, force_live=live):
-        instrument_id = get_instrument_id_from_url(mover['instrument_url'])
+        instrument_id = get_last_id_from_url(mover['instrument_url'])
         last_price = Decimal(mover['price_movement']['market_hours_last_price'])
         movement_pct = Decimal(mover['price_movement']['market_hours_last_movement_pct'])
 

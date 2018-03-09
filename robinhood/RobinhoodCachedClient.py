@@ -6,7 +6,7 @@ import os
 
 from .exceptions import MfaRequired
 from .RobinhoodClient import RobinhoodClient
-from .util import get_instrument_id_from_url
+from .util import get_last_id_from_url
 
 cache_root_path = '.robinhood'
 if not os.path.exists(cache_root_path):
@@ -260,7 +260,7 @@ class RobinhoodCachedClient(RobinhoodClient):
       positions = super(RobinhoodCachedClient, self).get_positions(include_old=include_old)
       positions_list = []
       for position in positions:
-        instrument_id = get_instrument_id_from_url(position['instrument'])
+        instrument_id = get_last_id_from_url(position['instrument'])
         positions_list.append(instrument_id)
         position_cache_path = os.path.join(cache_root_path, 'position_{}'.format(instrument_id))
         with open(position_cache_path, 'w') as position_cache_file:

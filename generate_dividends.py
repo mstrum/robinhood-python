@@ -5,7 +5,7 @@ import argparse
 import csv
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
-from robinhood.util import get_instrument_id_from_url
+from robinhood.util import get_last_id_from_url
 
 # Set up the client
 client = RobinhoodCachedClient()
@@ -25,7 +25,7 @@ def generate_dividends(live):
       rate = Decimal(dividend['rate'])
       amount = Decimal(dividend['amount'])
       quantity = int(float(dividend['position']))
-      instrument_id = get_instrument_id_from_url(dividend['instrument'])
+      instrument_id = get_last_id_from_url(dividend['instrument'])
 
       instrument = client.get_instrument_by_id(instrument_id)
       simple_name = instrument['simple_name']

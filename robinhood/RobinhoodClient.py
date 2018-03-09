@@ -30,7 +30,7 @@ from .util import (
   ORDER_SIDES,
   ORDER_TYPES,
   get_cursor_from_url,
-  get_instrument_id_from_url,
+  get_last_id_from_url,
   get_instrument_url_from_id
 )
 
@@ -567,7 +567,7 @@ class RobinhoodClient:
     response = self._session.get(API_HOST + 'midlands/tags/tag/{}/'.format(tag))
     response.raise_for_status()
     response_json = response.json()
-    instrument_ids = [get_instrument_id_from_url(instrument_url) for instrument_url in response_json['instruments']]
+    instrument_ids = [get_last_id_from_url(instrument_url) for instrument_url in response_json['instruments']]
     return instrument_ids
 
   def get_instruments(self, query):
@@ -1120,6 +1120,30 @@ class RobinhoodClient:
         cursor = get_cursor_from_url(orders_json['next'])
       else:
         return orders
+
+  def get_popular_stocks(self):
+    """
+    The most active S&P 500 stocks based on the trading activity of Robinhood customers.
+
+    Example response:
+    This is only updated on Sunday.
+    {
+        "title": "Popular Stocks",
+        "subtitle": "Rankings based on trading activity of Robinhood customers",
+        "data": [
+            {
+                "symbol": "AAPL",
+                "subtitle": "Apple"
+            },
+            ...
+        ],
+        "disclosure": "The Popular Stocks feature is meant for informational purposes and is not ..."
+    }
+    """
+    response = requests.get('https://brokerage-static.s3.amazonaws.com/popular_stocks/data.json')
+    response_json = response.json()
+    assert len(response_json) == 1
+    return response_json[0]
 
   def get_sp500_movers(self, direction):
     """
