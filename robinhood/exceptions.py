@@ -6,3 +6,6 @@ class NotLoggedIn(Exception):
 
 class MfaRequired(Exception):
     pass
+
+class BadRequest(Exception):
+    pass

@@ -11,15 +11,19 @@ Some current caveats:
 * robinhood.RobinhoodClient
   * Client that handles getting data from the Robinhood APIs
   * TODO
-    * Some APIs likely need paging support, I've personally added as needed
+    * Some more APIs likely need paging support
 * robinhood.RobinhoodCachedClient
   * Client that handles caching on top of the normal client
   * TODO
     * Handle more fine grained caching then on vs off (e.g. off, 5minute, 1day, etc.)
+      * Use sane defaults everywhere (E.g. heavy on instruments and soft on quotes)
     * Historical quotes
 
 ## Scripts
 
+* login.py
+  * Forces a new login and caches the token. Note most scripts will do this
+    automatically so you usually don't need to call this.
 * logout.py
   * Invalidates the current auth token and deletes the cached token
 
@@ -28,9 +32,6 @@ Various downloads:
   * Current positions with various stats
 * generate_orders.py
   * Fulfilled orders
-  * TODO
-    * Add in referral rewards
-    * Handle pending orders
 * generate_dividends.py
   * All dividends, received or planned
 * generate_transfers.py
@@ -41,18 +42,20 @@ Various downloads:
   * Referral rewards you've gotten
 
 Display information:
-* quote.py AMZN
+* show_quote.py AMZN
   * Displays the latest quote for the given symbol along with auxilary info
   * TODO
     * day trade check
     * day trade buying power check
+* show_pending_orders.py AMZN
+  * Displays any outstanding orders along with position information
 
 Perform actions:
-* order.py
+* order.py market|limit buy|sell SYMBOL QUANTITY PRICE
   * Prints the quote for the given symbol, confirms, and places an order
 
 Generic lists:
-* generate_tag_list.py [10-most-popular|100-most-popular]
+* generate_tag_list.py 10-most-popular|100-most-popular
   * Stocks that have the given tag
   * TODO
     * Show symbols that have entered/left the list since the last run

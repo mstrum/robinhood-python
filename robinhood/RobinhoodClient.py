@@ -23,7 +23,7 @@ import json
 
 import requests
 
-from .exceptions import MfaRequired, NotFound, NotLoggedIn
+from .exceptions import BadRequest, MfaRequired, NotFound, NotLoggedIn
 from .util import (
   API_HOST,
   KNOWN_TAGS,
@@ -1482,6 +1482,22 @@ class RobinhoodClient:
     assert not response_json['next']
     return response_json['results']
 
+  def cancel_order(self, order_id):
+    """
+    Example response:
+    {}
+    """
+    response = self._session.post(API_HOST + 'orders/{}/cancel/'.format(order_id), headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json()['detail'])
+      raise
+    return response.json()
+
   def order(self, account_url, instrument_url, order_type, order_side, symbol, quantity, price):
     """
     Args:
@@ -1544,5 +1560,7 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json()['detail'])
       raise
     return response.json()

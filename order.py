@@ -10,7 +10,7 @@ from robinhood.util import ORDER_TYPES, ORDER_SIDES
 client = RobinhoodCachedClient()
 client.login()
 
-from quote import display_quote
+from show_quote import display_quote
 
 
 def place_order(order_type, order_side, symbol, quantity, price):
@@ -19,6 +19,21 @@ def place_order(order_type, order_side, symbol, quantity, price):
 
   display_quote(client, symbol, True)
 
+  # We could be more smart and allow canceling individual orders,
+  # but for now just do complete cancelling
+  orders = client.get_orders(instrument_id=instrument['id'], force_live=True)
+  pending_same_side_orders = [
+    order for order in orders
+    if order['state'] in ['queued', 'confirmed'] and order['side'] == order_side
+  ]
+  if pending_same_side_orders:
+    print('')
+    print('!!!!!!!!!!!!!!!!!! CAUTION !!!!!!!!!!!!!!!!!!')
+    confirm = input('There appear to be pending orders, continuing will cancel them prior to placing the new order. Continue? [N/y] ')
+    if confirm not in ['y', 'yes']:
+      print('Bailed out!')
+      exit()
+
   print('')
   print('!!!!!!!!!!!!!!!!!! CAUTION !!!!!!!!!!!!!!!!!!')
   confirm = input('Are you sure that you want to sell {} shares of {} ({}) for ${:.2f} each? [N/y]? '.format(
@@ -26,6 +41,10 @@ def place_order(order_type, order_side, symbol, quantity, price):
   if confirm not in ['y', 'yes']:
     print('Bailed out!')
     exit()
+
+  for pending_order in pending_same_side_orders:
+    cancelled_order = client.cancel_order(pending_order['id'])
+    print('Cancelled order {}'.format(pending_order['id']))
 
   order = client.order(
     account_url,

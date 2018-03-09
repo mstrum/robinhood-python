@@ -26,7 +26,7 @@ def generate_orders(live):
 
       # TODO: Handle any others?
       if state != 'filled':
-        if state not in ['queued', 'cancelled']:
+        if state not in ['queued', 'confirmed', 'cancelled']:
           print('Skipping order {} with state {} that may need to be handled...'.format(order_id, state))
         continue
 
