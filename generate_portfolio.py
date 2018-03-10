@@ -15,7 +15,7 @@ client.login()
 def generate_portfolio(live):
   with open('portfolio.csv', 'w', newline='') as csv_file:
     fieldnames = [
-      'symbol', 'short_name', 'full_name', 'quantity', 'average_buy_price',
+      'symbol', 'name', 'quantity', 'average_buy_price',
       'equity_cost', 'last_price', 'day_price_change', 'day_percentage_change',
       'total_price_change', 'total_percentage_change', 'equity_worth',
       'equity_percentage', 'equity_idx'
@@ -64,8 +64,7 @@ def generate_portfolio(live):
       total_percentage_change = total_price_change * 100 / position['average_buy_price'] if position['average_buy_price'] else 100
       csv_writer.writerow({
         'symbol': position['symbol'],
-        'short_name': position['simple_name'],
-        'full_name': position['full_name'],
+        'name': position['simple_name'] or position['full_name'],
         'quantity': position['quantity'],
         'average_buy_price': round(position['average_buy_price'], 2),
         'equity_cost': round(position['equity_cost'], 2),
