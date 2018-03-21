@@ -38,10 +38,24 @@ def display_quote(client, symbol, live):
   pe_ratio = Decimal(fundamental['pe_ratio']) if fundamental['pe_ratio'] else 0.0
   dividend_yield = Decimal(fundamental['dividend_yield']) if fundamental['dividend_yield'] else 0.0
 
+  num_open_positions = client.get_popularity(instrument_id)['num_open_positions']
+  ratings = client.get_rating(instrument_id)['summary']
+  num_ratings = sum(v for _, v in ratings.items()) if ratings else None
+  if num_ratings:
+    percent_buy = ratings['num_buy_ratings'] * 100 / num_ratings
+    percent_sell = ratings['num_sell_ratings']  * 100 / num_ratings
+
   print('==================== {} ({}) ===================='.format(symbol, simple_name))
   if not tradable:
     print('!!!!!!!!!!!!! NOT TRADEABLE !!!!!!!!!!!!!')
   print('founded {} ... listed {}'.format(founded_year, listed_since.year))
+
+  print('---------------- sentiment ----------------')
+  print('# ratings:\t{}'.format(num_ratings))
+  if num_ratings:
+    print('Buy:\t{:.2f}%'.format(percent_buy))
+    print('Sell:\t{:.2f}%'.format(percent_sell))
+  print('RH holders:\t{}'.format(num_open_positions))
 
   print('')
   print('---------------- recents ----------------')

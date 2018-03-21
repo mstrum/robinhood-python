@@ -25,6 +25,7 @@ import requests
 
 from .exceptions import BadRequest, MfaRequired, NotFound, NotLoggedIn
 from .util import (
+  ANALYTICS_HOST,
   API_HOST,
   KNOWN_TAGS,
   ORDER_SIDES,
@@ -550,6 +551,107 @@ class RobinhoodClient:
       raise
     return response.json()
 
+  def get_popularity(self, instrument_id):
+    """
+    Example response:
+    {
+        "num_open_positions": 155,
+        "instrument": "https://api.robinhood.com/instruments/e6f3bb44-dcdf-445b-bbcb-2e738fd21d6d/"
+    }
+    """
+    response = self._session.get(API_HOST + 'instruments/{}/popularity/'.format(instrument_id))
+    response.raise_for_status()
+    return response.json()
+
+  def get_popularities(self, instrument_ids):
+    """
+    Example response:
+    {
+        "next": null,
+        "results": [
+            {
+                "instrument": "https://api.robinhood.com/instruments/e6f3bb44-dcdf-445b-bbcb-2e738fd21d6d/",
+                "num_open_positions": 155
+            }
+        ],
+        "previous": null
+    }
+    """
+    params = {
+      'ids': ','.join(instrument_ids),
+    }
+    response = self._session.get(API_HOST + 'instruments/popularity/', params=params)
+    response.raise_for_status()
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json
+
+  def get_rating(self, instrument_id):
+    """
+    Example response:
+    {
+        "summary": {
+            "num_hold_ratings": 11,
+            "num_buy_ratings": 2,
+            "num_sell_ratings": 0
+        },
+        "ratings": [],
+        "instrument_id": "e6f3bb44-dcdf-445b-bbcb-2e738fd21d6d"
+    }
+    """
+    response = self._session.get(API_HOST + 'midlands/ratings/{}/'.format(instrument_id))
+    response.raise_for_status()
+    return response.json()
+
+  def get_ratings(self, instrument_ids):
+    """
+    Example response:
+    {
+        "count": 1,
+        "results": [
+            {
+                "summary": {
+                    "num_hold_ratings": 11,
+                    "num_buy_ratings": 2,
+                    "num_sell_ratings": 0
+                },
+                "ratings": [],
+                "instrument_id": "e6f3bb44-dcdf-445b-bbcb-2e738fd21d6d"
+            }
+        ],
+        "previous": null,
+        "next": null
+    }
+    """
+    params = {
+      'ids': ','.join(instrument_ids),
+    }
+    response = self._session.get(API_HOST + 'midlands/ratings/', params=params)
+    response.raise_for_status()
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
+  def get_instrument_reasons_for_personal_tag(self, tag):
+    """
+    Example response:
+    [
+        {
+            "symbol": "FB",
+            "id": "ebab2398-028d-4939-9f1d-13bf38f81c50",
+            "reason": "More trades than usual"
+        },
+        ...
+    ]
+    """
+    assert tag in KNOWN_TAGS
+    response = self._session.get(ANALYTICS_HOST + 'instruments/tag/{}/'.format(tag), headers=self._authorization_headers)
+    response.raise_for_status()
+    response_json = response.json()
+    return response_json['instruments']
+
   def get_instrument_ids_for_tag(self, tag):
     """
     Example response:
@@ -570,7 +672,7 @@ class RobinhoodClient:
     instrument_ids = [get_last_id_from_url(instrument_url) for instrument_url in response_json['instruments']]
     return instrument_ids
 
-  def get_instruments(self, query):
+  def get_instruments(self, query=None, instrument_ids=None):
     """
     Args:
       query: Can be any string, like a stock ticker or None for all (e.g. AAPL)
@@ -636,10 +738,15 @@ class RobinhoodClient:
         "next": "https://api.robinhood.com/instruments/?cursor=XXXXXXXX"
     }
     """
+    assert query or instrument_ids
+    assert not (query and instrument_ids)
     params = {
-      'query': query,
       'active_instruments_only': True,
     }
+    if query:
+      params['query'] = query
+    if instrument_ids:
+      params['ids'] = ','.join(instrument_ids)
     response = self._session.get(API_HOST + 'instruments/', params=params)
     response.raise_for_status()
     response_json = response.json()
@@ -1305,9 +1412,17 @@ class RobinhoodClient:
     """
     Args:
       symbol: e.g. AAPL
-      interval: [5minute, 10minute]
-      span: [day, week]
-      bounds: [extended, regular]
+      interval: [5minute, 10minute, day, week]
+      span: [day, week, year, 5year]
+      bounds: [extended, regular, trading]
+
+    Example combos:
+      * span=week, interval=10minute
+      * span=year, interval=day
+      * span=5year, interval=week
+      * span=5year, interval=week
+      * span=day, interval=5minute
+
     Example response:
     {
         "results": [
@@ -1383,6 +1498,27 @@ class RobinhoodClient:
     response = self._session.get(API_HOST + 'midlands/news/{}/'.format(symbol))
     response.raise_for_status()
     return response.json()
+
+  def get_tags(self, instrument_id):
+    """
+    Example response:
+    [
+        {
+            "name": "Insurance",
+            "instruments": [
+                "https://api.robinhood.com/instruments/46c13eda-65e8-4bc5-b44f-95a05a24bede/",
+                ...
+            ],
+            "slug": "insurance",
+            "description": ""
+        },
+        ...
+    ]
+    """
+    response = self._session.get(API_HOST + 'midlands/tags/instrument/{}/'.format(instrument_id))
+    response.raise_for_status()
+    response_json = response.json()
+    return response_json['tags']
 
   def get_fundamental(self, symbol):
     """

@@ -38,10 +38,17 @@ def display_sp500_movers():
         last_price, extra_percentage_symbol, movement_pct, instrument['symbol'], instrument['simple_name'] or instrument['name']))
 
 
-def display_10_most_popular():
+def display_for_you():
   print('')
-  print('----------------- 10 Most Popular Stocks With Robinhood Users -----------------')
-  instrument_ids =  client.get_instrument_ids_for_tag('10-most-popular', force_live=True)
+  print('----------------- Stocks For You -----------------')
+  reasons =  client.get_instrument_reasons_for_personal_tag('for-you')
+  for reason in reasons:
+    print('{}\t{}'.format(reason['symbol'], reason['reason']))
+
+def display_top_movers():
+  print('')
+  print('----------------- Top Movers -----------------')
+  instrument_ids =  client.get_instrument_ids_for_tag('top-movers', force_live=True)
   for instrument_id in instrument_ids:
     instrument = client.get_instrument_by_id(instrument_id)
     print('{}\t{}'.format(instrument['symbol'], instrument['simple_name'] or instrument['name']))
@@ -58,6 +65,7 @@ def display_100_most_popular():
 if __name__ == '__main__':
   display_popular_stocks()
   display_sp500_movers()
-  display_10_most_popular()
+  display_top_movers()
+  display_for_you()
   display_100_most_popular()
   print('')

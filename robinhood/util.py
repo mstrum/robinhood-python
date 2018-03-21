@@ -1,10 +1,14 @@
 from urllib.parse import parse_qs, urlparse
 
 API_HOST = 'https://api.robinhood.com/'
+ANALYTICS_HOST = 'https://analytics.robinhood.com/'
 
 KNOWN_TAGS = [
   '100-most-popular',
   '10-most-popular',
+  'top-movers',
+  # Personal tag
+  'for-you',
 ]
 ORDER_TYPES = [
   'market',
