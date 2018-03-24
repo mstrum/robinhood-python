@@ -14,6 +14,26 @@ from robinhood.util import get_last_id_from_url
 client = RobinhoodCachedClient()
 client.login()
 
+def add_subscription_fees(csv_writer, live):
+  for subscription_fee in client.get_subscription_fees():
+    amount = Decimal(subscription_fee['amount'])
+    created_at = parse(subscription_fee['created_at']).astimezone(pytz.timezone('US/Pacific')).date()
+    assert not subscription_fee['refunds']
+    assert float(subscription_fee['credit']) == 0.0
+    assert float(subscription_fee['carry_forward_credit']) == 0.0
+
+    csv_writer.writerow({
+      'symbol': '',
+      'name': 'Robinhood Gold',
+      'type': 'subscription_fee',
+      'side': 'paid',
+      'quantity': 1,
+      'average_price': amount,
+      'amount': amount,
+      'date': created_at,
+      'fees': 0,
+      'num_executions': 1,
+    })
 
 def add_transfers(csv_writer, live):
   for transfer in client.get_ach_transfers(force_live=live):
@@ -162,6 +182,7 @@ def download_history(live):
     add_dividends(csv_writer, live)
     add_rewards(csv_writer, live)
     add_transfers(csv_writer, live)
+    add_subscription_fees(csv_writer, live)
 
 
 if __name__ == '__main__':
