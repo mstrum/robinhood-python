@@ -176,6 +176,64 @@ class RobinhoodClient:
       raise
     return response.json()
 
+  def get_subscription_fees(self):
+    """
+    Example response:
+    [
+        {
+            "id": "2-2-2-2",
+            "date": "2018-02-21",
+            "credit": "0.00",
+            "subscription": "https://api.robinhood.com/subscription/subscriptions/0-0-0-0/",
+            "amount": "0.00",
+            "url": "https://api.robinhood.com/subscription/subscription_fees/2-2-2-2/",
+            "carry_forward_credit": "0.00",
+            "created_at": "2018-01-22T01:33:42.237983Z",
+            "refunds": []
+        }
+    ]
+
+    """
+    response = self._session.get(API_HOST + 'subscription/subscription_fees/', headers=self._authorization_headers)
+    response.raise_for_status()
+    response_json = response.json()
+    # TODO: auto page if needed
+    assert not response_json['next']
+    return response_json['results']
+
+  def get_subscriptions(self):
+    """
+    Example response:
+    [
+        {
+            "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
+            "id": "0-0-0-0",
+            "plan": {
+                "subscription_margin_limit": "0.00",
+                "instant_deposit_limit": "0.00",
+                "monthly_cost": "0.00",
+                "margin_interest": null,
+                "id": "1-1-1-1"
+            },
+            "credit": "0.00",
+            "renewal_date": "2018-03-20",
+            "ended_at": null,
+            "url": "https://api.robinhood.com/subscription/subscriptions/0-0-0-0/",
+            "created_at": "2018-02-22T01:33:42.231295Z",
+            "unsubscribe": null
+        }
+    ]
+    """
+    params = {
+      'active': 'true',
+    }
+    response = self._session.get(API_HOST + 'subscription/subscriptions/', params=params, headers=self._authorization_headers)
+    response.raise_for_status()
+    response_json = response.json()
+    # TODO: auto page if needed
+    assert not response_json['next']
+    return response_json['results']
+
   def get_markets(self):
     """
     Example response:
