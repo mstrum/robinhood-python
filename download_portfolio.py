@@ -12,7 +12,7 @@ client = RobinhoodCachedClient()
 client.login()
 
 
-def generate_portfolio(live):
+def download_portfolio(live):
   with open('portfolio.csv', 'w', newline='') as csv_file:
     fieldnames = [
       'symbol', 'name', 'quantity', 'average_buy_price',
@@ -83,4 +83,4 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Download a snapshot of your portfolio')
   parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
   args = parser.parse_args()
-  generate_portfolio(args.live)
+  download_portfolio(args.live)

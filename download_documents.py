@@ -10,7 +10,7 @@ client = RobinhoodCachedClient()
 client.login()
 
 
-def generate_documents(live):
+def download_documents(live):
   with open('documents.csv', 'w', newline='') as csv_file:
     fieldnames = ['document_id', 'date', 'type', 'path']
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
@@ -38,4 +38,4 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Download a list of your documents')
   parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
   args = parser.parse_args()
-  generate_documents(args.live)
+  download_documents(args.live)
