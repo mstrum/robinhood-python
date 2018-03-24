@@ -8,11 +8,11 @@ Some current caveats:
 
 ## Module
 
-* [robinhood/RobinhoodClient.py](robinhood.RobinhoodClient)
+* [RobinhoodClient](robinhood/RobinhoodClient.py)
   * Client that handles getting data from the Robinhood APIs
   * TODO
     * Some more APIs likely need paging support
-* robinhood.RobinhoodCachedClient
+* [RobinhoodCachedClient](robinhood/RobinhoodClient.py)
   * Client that handles caching on top of the normal client
   * TODO
     * Handle more fine grained caching then on vs off (e.g. off, 5minute, 1day, etc.)
