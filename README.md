@@ -8,7 +8,7 @@ Some current caveats:
 
 ## Module
 
-* robinhood.RobinhoodClient
+* [robinhood/RobinhoodClient.py](robinhood.RobinhoodClient)
   * Client that handles getting data from the Robinhood APIs
   * TODO
     * Some more APIs likely need paging support
