@@ -30,16 +30,10 @@ Some current caveats:
 Various downloads:
 * generate_portfolio.py [--live]
   * Current positions with various stats
-* generate_orders.py [--live]
-  * Fulfilled orders
-* generate_dividends.py [--live]
-  * All dividends, received or planned
-* generate_transfers.py [--live]
-  * ACH bank transfers
+* download_history.py [--live]
+  * Downloads all account history (orders, dividends, transfers, rewards, margin, etc.)
 * generate_documents.py [--live]
   * Documents (including PDFs) that you've received
-* generate_rewards.py [--live]
-  * Referral rewards you've gotten
 
 Display information:
 * show_quote.py AMZN [--live]
