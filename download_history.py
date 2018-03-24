@@ -14,6 +14,41 @@ from robinhood.util import get_last_id_from_url
 client = RobinhoodCachedClient()
 client.login()
 
+def add_margin(csv_writer, live):
+  account = client.get_account(force_live=live)
+  unallocated_margin_cash = Decimal(account['margin_balances']['unallocated_margin_cash'])
+  margin_limit = Decimal(account['margin_balances']['margin_limit'])
+  updated_at = parse(account['margin_balances']['updated_at']).astimezone(pytz.timezone('US/Pacific')).date()
+  if margin_limit == 0:
+    return
+
+  used_margin = margin_limit - unallocated_margin_cash
+
+  csv_writer.writerow({
+    'symbol': '',
+    'name': 'Robinhood Gold',
+    'type': 'margin',
+    'side': 'used',
+    'quantity': 1,
+    'average_price': used_margin,
+    'amount': used_margin,
+    'date': updated_at,
+    'fees': 0,
+    'num_executions': 1,
+  })
+  csv_writer.writerow({
+    'symbol': '',
+    'name': 'Robinhood Gold',
+    'type': 'margin',
+    'side': 'available',
+    'quantity': 1,
+    'average_price': unallocated_margin_cash,
+    'amount': unallocated_margin_cash,
+    'date': updated_at,
+    'fees': 0,
+    'num_executions': 1,
+  })
+
 def add_subscription_fees(csv_writer, live):
   for subscription_fee in client.get_subscription_fees():
     amount = Decimal(subscription_fee['amount'])
@@ -183,6 +218,7 @@ def download_history(live):
     add_rewards(csv_writer, live)
     add_transfers(csv_writer, live)
     add_subscription_fees(csv_writer, live)
+    add_margin(csv_writer, live)
 
 
 if __name__ == '__main__':

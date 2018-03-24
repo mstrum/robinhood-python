@@ -553,7 +553,7 @@ class RobinhoodClient:
             "unsettled_funds": "0.0000",
             "created_at": "2018-02-05T23:41:03.011013Z",
             "cash": "-199.0700",
-            "day_trade_buying_power": "17932.8345",
+            "day_trade_buying_power": "0.00",
             "day_trade_buying_power_held_for_orders": "0.0000",
             "marked_pattern_day_trader_date": null
         },
