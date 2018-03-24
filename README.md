@@ -21,29 +21,29 @@ Some current caveats:
 
 ## Scripts
 
-* login.py
+* [login.py](login.py)
   * Forces a new login and caches the token. Note most scripts will do this
     automatically so you usually don't need to call this.
-* logout.py
+* [logout.py](logout.py)
   * Invalidates the current auth token and deletes the cached token
 
 Various downloads:
-* generate_portfolio.py [--live]
+* [download_portfolio.py](download_portfolio.py) [--live]
   * Current positions with various stats
-* download_history.py [--live]
+* [download_history.py](download_history.py) [--live]
   * Downloads all account history (orders, dividends, transfers, rewards, margin, etc.)
-* generate_documents.py [--live]
+* [download_documents.py](download_documents.py) [--live]
   * Documents (including PDFs) that you've received
 
 Display information:
-* show_quote.py AMZN [--live]
+* [show_quote.py](show_quote.py) AMZN [--live]
   * Displays the latest quote for the given symbol along with auxilary info
   * TODO
     * day trade check
     * day trade buying power check
-* show_pending_orders.py
+* [show_pending_orders.py](show_pending_orders.py)
   * Displays any outstanding orders along with position information
-* show_interesting_stocks.py
+* [show_interesting_stocks.py](show_interesting_stocks.py)
   * Show stocks that are on various lists
     * 10 popular S&P 500 stocks with Robinhood users
     * S&P 500 top movers up and down
@@ -52,7 +52,7 @@ Display information:
     * Movements into/outof lists?
 
 Perform actions:
-* order.py market|limit buy|sell SYMBOL QUANTITY PRICE
+* [order.py](order.py) market|limit buy|sell SYMBOL QUANTITY PRICE
   * Prints the quote for the given symbol, confirms, and places an order
 
 Scripts to add:
