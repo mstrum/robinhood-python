@@ -106,6 +106,28 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(cache_json, cache_file)
       return cache_json
 
+  def get_popularity(self, instrument_id, force_live=False):
+    cache_path = os.path.join(cache_root_path, 'popularity_{}'.format(instrument_id))
+    if os.path.exists(cache_path) and not force_live:
+      with open(cache_path, 'r') as cache_file:
+        return json.load(cache_file)
+    else:
+      cache_json = super(RobinhoodCachedClient, self).get_popularity(instrument_id)
+      with open(cache_path, 'w') as cache_file:
+        json.dump(cache_json, cache_file)
+      return cache_json
+
+  def get_rating(self, instrument_id, force_live=False):
+    cache_path = os.path.join(cache_root_path, 'rating_{}'.format(instrument_id))
+    if os.path.exists(cache_path) and not force_live:
+      with open(cache_path, 'r') as cache_file:
+        return json.load(cache_file)
+    else:
+      cache_json = super(RobinhoodCachedClient, self).get_rating(instrument_id)
+      with open(cache_path, 'w') as cache_file:
+        json.dump(cache_json, cache_file)
+      return cache_json
+
   def get_ach_relationship_by_id(self, relationship_id, force_live=False):
     cache_path = os.path.join(cache_root_path, 'ach_relationship_{}'.format(relationship_id))
     if os.path.exists(cache_path) and not force_live:

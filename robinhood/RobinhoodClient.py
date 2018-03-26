@@ -8,7 +8,6 @@ https://github.com/Jamonek/Robinhood
 More API documentation available at:
 
 Some APIs not in use yet:
-* GET /instruments/ (ids=...)
 * GET /marketdata/forex/historicals/{<SYMBOL>/?bounds=24_7
 * GET /marketdata/historicals/<SYMBOL>/
 * GET /marketdata/historicals/ symbols, interval, span, bounds, cursor
@@ -618,7 +617,12 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'instruments/{}/popularity/'.format(instrument_id))
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     return response.json()
 
   def get_popularities(self, instrument_ids):
@@ -635,15 +639,27 @@ class RobinhoodClient:
         "previous": null
     }
     """
+    # We are limited to about 50, so we need to do multiple calls if grabbing more than that.
+    if len(instrument_ids) > 50:
+      full_popularities = []
+      for i in range(0, len(instrument_ids), 50):
+        full_popularities.extend(self.get_popularities(instrument_ids[i:i + 50]))
+      return full_popularities
+
     params = {
       'ids': ','.join(instrument_ids),
     }
     response = self._session.get(API_HOST + 'instruments/popularity/', params=params)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
-    return response_json
+    return response_json['results']
 
   def get_rating(self, instrument_id):
     """
@@ -659,7 +675,12 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'midlands/ratings/{}/'.format(instrument_id))
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     return response.json()
 
   def get_ratings(self, instrument_ids):
@@ -682,11 +703,24 @@ class RobinhoodClient:
         "next": null
     }
     """
+    # For now, do 20 at a time instead of paging. We can hit a scenerio where
+    # we have to limit both the instrument ids and page.
+    if len(instrument_ids) > 20:
+      full_ratings = []
+      for i in range(0, len(instrument_ids), 20):
+        full_ratings.extend(self.get_ratings(instrument_ids[i:i + 20]))
+      return full_ratings
+
     params = {
       'ids': ','.join(instrument_ids),
     }
     response = self._session.get(API_HOST + 'midlands/ratings/', params=params)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -706,7 +740,12 @@ class RobinhoodClient:
     """
     assert tag in KNOWN_TAGS
     response = self._session.get(ANALYTICS_HOST + 'instruments/tag/{}/'.format(tag), headers=self._authorization_headers)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     response_json = response.json()
     return response_json['instruments']
 
@@ -725,7 +764,12 @@ class RobinhoodClient:
     """
     assert tag in KNOWN_TAGS
     response = self._session.get(API_HOST + 'midlands/tags/tag/{}/'.format(tag))
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     response_json = response.json()
     instrument_ids = [get_last_id_from_url(instrument_url) for instrument_url in response_json['instruments']]
     return instrument_ids
@@ -798,15 +842,32 @@ class RobinhoodClient:
     """
     assert query or instrument_ids
     assert not (query and instrument_ids)
+    # We are limited to 75 based on how long the query param can be, so we
+    # need to do multiple calls if grabbing more than 75 instruments.
+    if instrument_ids and len(instrument_ids) > 75:
+      full_instruments = []
+      for i in range(0, len(instrument_ids), 75):
+        full_instruments.extend(self.get_instruments(instrument_ids=instrument_ids[i:i + 75])['results'])
+      return {
+        'results': full_instruments,
+        'next': None,
+        'previous': None,
+      }
+
     params = {
-      'active_instruments_only': True,
+      'active_instruments_only': 'false',
     }
     if query:
       params['query'] = query
     if instrument_ids:
       params['ids'] = ','.join(instrument_ids)
     response = self._session.get(API_HOST + 'instruments/', params=params)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -842,7 +903,12 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'instruments/{}/'.format(instrument_id))
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     return response.json()
 
   def get_instrument_by_symbol(self, symbol):
@@ -885,7 +951,12 @@ class RobinhoodClient:
       'active_instruments_only': True,
     }
     response = self._session.get(API_HOST + 'instruments/', params=params)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     response_json = response.json()
     if len(response_json['results']) == 0:
       raise NotFound()
@@ -946,7 +1017,12 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'quotes/{}/'.format(symbol))
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     return response.json()
 
   def get_quotes(self, symbols=None, instrument_ids=None):
@@ -985,7 +1061,12 @@ class RobinhoodClient:
       params['instruments'] = ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
 
     response = self._session.get(API_HOST + 'marketdata/quotes/', params=params)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     return response.json()['results']
 
   def get_prices(self, symbols=None, instrument_ids=None):
@@ -1018,7 +1099,12 @@ class RobinhoodClient:
     if instrument_ids:
       params['instruments'] = ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
     response = self._session.get(API_HOST + 'marketdata/prices/'.format(instrument_id), params=params)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     return response.json()
 
   def get_dividend_by_id(self, dividend_id):
@@ -1518,7 +1604,12 @@ class RobinhoodClient:
       'bounds': bounds,
     }
     response = self._session.get(API_HOST + 'quotes/historicals/', params=params)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     return response.json()
 
   def get_news(self, symbol):
@@ -1636,11 +1727,23 @@ class RobinhoodClient:
         }
     ]
     """
+    # We are limited to 100, so we need to do multiple calls if grabbing more than that.
+    if len(symbols) > 100:
+      full_fundamentals = []
+      for i in range(0, len(symbols), 100):
+        full_fundamentals.extend(self.get_fundamentals(symbols[i:i + 100]))
+      return full_fundamentals
+
     params = {
       'symbols': ','.join(symbols),
     }
     response = self._session.get(API_HOST + 'fundamentals/', params=params)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      raise
     return response.json()['results']
 
   def get_referrals(self):
