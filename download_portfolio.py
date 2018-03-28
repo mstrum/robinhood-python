@@ -75,8 +75,8 @@ def download_portfolio(live):
       if num_ratings:
         percent_buy = rating['summary']['num_buy_ratings'] * 100 / num_ratings
         percent_sell = rating['summary']['num_sell_ratings']  * 100 / num_ratings
-      position_by_instrument_id[instrument_id]['buy_rating'] = 'N/A' if not num_ratings else percent_buy
-      position_by_instrument_id[instrument_id]['sell_rating'] = 'N/A' if not num_ratings else percent_sell
+      position_by_instrument_id[instrument_id]['buy_rating'] = 'N/A' if not num_ratings else '{:.2f}'.format(percent_buy)
+      position_by_instrument_id[instrument_id]['sell_rating'] = 'N/A' if not num_ratings else '{:.2f}'.format(percent_sell)
 
     position_quotes = client.get_quotes(symbols=symbols)
     for quote in position_quotes:
