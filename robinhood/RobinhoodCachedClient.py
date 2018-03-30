@@ -40,171 +40,283 @@ class RobinhoodCachedClient(RobinhoodClient):
     if os.path.exists(cache_path):
       os.remove(cache_path)
 
-  def get_account(self, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'account')
+  def _simple_call(self, cache_name, method, force_live, args=[], binary=False):
+    cache_path = os.path.join(cache_root_path, cache_name)
+    binary_flag = 'b' if binary else ''
     if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
+      with open(cache_path, 'r' + binary_flag) as cache_file:
+        if binary:
+          return cache_file.read()
+        else:
+          return json.load(cache_file)
     else:
-      cache_json = super(RobinhoodCachedClient, self).get_account()
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+      live_content = method(*args)
+      with open(cache_path, 'w' + binary_flag) as cache_file:
+        if binary:
+          cache_file.write(live_content)
+        else:
+          json.dump(live_content, cache_file)
+      return live_content
 
-  def get_referrals(self, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'referrals')
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_referrals()
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+  def get_user(self, force_live=False):
+    return self._simple_call(
+      'user',
+      super(RobinhoodCachedClient, self).get_user,
+      force_live
+    )
 
-  def get_position_by_instrument_id(self, account_number, instrument_id, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'position_{}'.format(instrument_id))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_position_by_instrument_id(account_number, instrument_id)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+  def get_user_basic_info(self, force_live=False):
+    return self._simple_call(
+      'user_basic_info',
+      super(RobinhoodCachedClient, self).get_user_basic_info,
+      force_live
+    )
 
-  def get_sp500_movers(self, direction, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'sp500_movers_{}'.format(direction))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_sp500_movers(direction)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+  def get_user_additional_info(self, force_live=False):
+    return self._simple_call(
+      'user_additional_info',
+      super(RobinhoodCachedClient, self).get_user_additional_info,
+      force_live
+    )
 
-  def get_fundamental(self, symbol, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'fundamental_{}'.format(symbol))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_fundamental(symbol)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+  def get_referral_code(self, force_live=False):
+    return self._simple_call(
+      'referral_code',
+      super(RobinhoodCachedClient, self).get_referral_code,
+      force_live
+    )
 
-  def get_instrument_by_id(self, instrument_id, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'instrument_{}'.format(instrument_id))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_instrument_by_id(instrument_id)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+  def get_subscription_fees(self, force_live=False):
+    return self._simple_call(
+      'subscription_fees',
+      super(RobinhoodCachedClient, self).get_subscription_fees,
+      force_live
+    )
 
-  def get_popularity(self, instrument_id, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'popularity_{}'.format(instrument_id))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_popularity(instrument_id)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+  def get_subscriptions(self, force_live=False):
+    return self._simple_call(
+      'subscriptions',
+      super(RobinhoodCachedClient, self).get_subscriptions,
+      force_live
+    )
 
-  def get_rating(self, instrument_id, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'rating_{}'.format(instrument_id))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_rating(instrument_id)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
-
-  def get_ach_relationship_by_id(self, relationship_id, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'ach_relationship_{}'.format(relationship_id))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_ach_relationship_by_id(relationship_id)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
-
-  def get_order_by_id(self, order_id, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'order_{}'.format(order_id))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_order_by_id(order_id)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+  def get_markets(self, force_live=False):
+    return self._simple_call(
+      'markets',
+      super(RobinhoodCachedClient, self).get_markets,
+      force_live
+    )
 
   def download_document_by_id(self, document_id, force_live=False):
-    """Note that this uses binary content for the files."""
-    cache_path = os.path.join(cache_root_path, 'document_pdf_{}'.format(document_id))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'rb') as cache_file:
-        return cache_file.read()
-    else:
-      cache_content = super(RobinhoodCachedClient, self).download_document_by_id(document_id)
-      with open(cache_path, 'wb') as cache_file:
-        cache_file.write(cache_content)
-      return cache_content
+    return self._simple_call(
+      'document_pdf_{}'.format(document_id),
+      super(RobinhoodCachedClient, self).download_document_by_id,
+      force_live,
+      args=[document_id],
+      binary=True
+    )
 
-  def get_ach_transfer_by_id(self, transfer_id, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'ach_transfer_{}'.format(transfer_id,))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_ach_transfer_by_id(transfer_id)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+  def get_document_by_id(self, document_id):
+    return self._simple_call(
+      'document_{}'.format(document_id),
+      super(RobinhoodCachedClient, self).get_document_by_id,
+      # Documents don't change, never force live
+      False,
+      args=[document_id]
+    )
 
-  def get_document_by_id(self, document_id, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'document_{}'.format(document_id))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_document_by_id(order_id)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+  def get_watchlists(self, force_live=False):
+    return self._simple_call(
+      'watchlists',
+      super(RobinhoodCachedClient, self).get_watchlists,
+      force_live
+    )
 
-  def get_dividend_by_id(self, dividend_id, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'dividend_{}'.format(dividend_id))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_dividend_by_id(dividend_id)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+  def get_watchlist_instruments(self, watchlist_name, force_live=False):
+    return self._simple_call(
+      'watchlist_instruments_{}'.format(watchlist_name),
+      super(RobinhoodCachedClient, self).get_watchlist_instruments,
+      force_live,
+      args=[watchlist_name]
+    )
+
+  def get_notification_settings(self, force_live=False):
+    return self._simple_call(
+      'notification_settings',
+      super(RobinhoodCachedClient, self).get_notification_settings,
+      force_live
+    )
+
+  def get_notification_devices(self, force_live=False):
+    return self._simple_call(
+      'notification_devices',
+      super(RobinhoodCachedClient, self).get_notification_devices,
+      force_live
+    )
+
+  def get_account(self, force_live=False):
+    return self._simple_call(
+      'account',
+      super(RobinhoodCachedClient, self).get_account,
+      force_live
+    )
+
+  def get_investment_profile(self, force_live=False):
+    return self._simple_call(
+      'investment_profile',
+      super(RobinhoodCachedClient, self).get_investment_profile,
+      force_live
+    )
+
+  def get_popularity(self, instrument_id, force_live=False):
+    return self._simple_call(
+      'popularity_{}'.format(instrument_id),
+      super(RobinhoodCachedClient, self).get_popularity,
+      force_live,
+      args=[instrument_id]
+    )
+
+  def get_rating(self, instrument_id, force_live=False):
+    return self._simple_call(
+      'rating_{}'.format(instrument_id),
+      super(RobinhoodCachedClient, self).get_rating,
+      force_live,
+      args=[instrument_id]
+    )
+
+  def get_instrument_reasons_for_personal_tag(self, tag, force_live=False):
+    return self._simple_call(
+      'instrument_reasons_for_personal_tag_{}'.format(tag),
+      super(RobinhoodCachedClient, self).get_instrument_reasons_for_personal_tag,
+      force_live,
+      args=[tag]
+    )
 
   def get_instrument_ids_for_tag(self, tag, force_live=False):
-    cache_path = os.path.join(cache_root_path, 'tag_{}'.format(tag))
-    if os.path.exists(cache_path) and not force_live:
-      with open(cache_path, 'r') as cache_file:
-        return json.load(cache_file)
-    else:
-      cache_json = super(RobinhoodCachedClient, self).get_instrument_ids_for_tag(tag)
-      with open(cache_path, 'w') as cache_file:
-        json.dump(cache_json, cache_file)
-      return cache_json
+    return self._simple_call(
+      'tag_{}'.format(tag),
+      super(RobinhoodCachedClient, self).get_instrument_ids_for_tag,
+      force_live,
+      args=[tag]
+    )
+
+  def get_instrument_by_id(self, instrument_id):
+    return self._simple_call(
+      'instrument_{}'.format(instrument_id),
+      super(RobinhoodCachedClient, self).get_instrument_by_id,
+      # Never force live, there's nothing we care about getting updated.
+      False,
+      args=[instrument_id]
+    )
+
+  def get_instrument_split_history(self, instrument_id, force_live=False):
+    return self._simple_call(
+      'instrument_split_history_{}'.format(instrument_id),
+      super(RobinhoodCachedClient, self).get_instrument_split_history,
+      force_live,
+      args=[instrument_id]
+    )
+
+  def get_quote(self, symbol, force_live=False):
+    return self._simple_call(
+      'quote_{}'.format(symbol),
+      super(RobinhoodCachedClient, self).get_quote,
+      force_live,
+      args=[symbol]
+    )
+
+  def get_dividend_by_id(self, dividend_id, force_live=False):
+    return self._simple_call(
+      'dividend_{}'.format(dividend_id),
+      super(RobinhoodCachedClient, self).get_dividend_by_id,
+      force_live,
+      args=[dividend_id]
+    )
+
+  def get_ach_relationship_by_id(self, relationship_id, force_live=False):
+    return self._simple_call(
+      'ach_relationship_{}'.format(relationship_id),
+      super(RobinhoodCachedClient, self).get_ach_relationship_by_id,
+      force_live,
+      args=[relationship_id]
+    )
+
+  def get_ach_transfer_by_id(self, transfer_id, force_live=False):
+    return self._simple_call(
+      'ach_transfer_{}'.format(transfer_id),
+      super(RobinhoodCachedClient, self).get_ach_transfer_by_id,
+      force_live,
+      args=[transfer_id]
+    )
+
+  def get_popular_stocks(self, force_live=False):
+    return self._simple_call(
+      'popular_stocks',
+      super(RobinhoodCachedClient, self).get_popular_stocks,
+      force_live
+    )
+
+  def get_sp500_movers(self, direction, force_live=False):
+    return self._simple_call(
+      'sp500_movers_{}'.format(direction),
+      super(RobinhoodCachedClient, self).get_sp500_movers,
+      force_live,
+      args=[direction]
+    )
+
+  def get_portfolio(self, force_live=False):
+    return self._simple_call(
+      'portfolio',
+      super(RobinhoodCachedClient, self).get_portfolio,
+      force_live
+    )
+
+  def get_position_by_instrument_id(self, account_number, instrument_id, force_live=False):
+    return self._simple_call(
+      'position_{}'.format(instrument_id),
+      super(RobinhoodCachedClient, self).get_position_by_instrument_id,
+      force_live,
+      args=[account_number, instrument_id]
+    )
+
+  def get_news(self, symbol, force_live=False):
+    return self._simple_call(
+      'news_{}'.format(symbol),
+      super(RobinhoodCachedClient, self).get_news,
+      force_live,
+      args=[symbol]
+    )
+
+  def get_tags(self, instrument_id, force_live=False):
+    return self._simple_call(
+      'tags_{}'.format(instrument_id),
+      super(RobinhoodCachedClient, self).get_tags,
+      force_live,
+      args=[instrument_id]
+    )
+
+  def get_fundamental(self, symbol, force_live=False):
+    return self._simple_call(
+      'fundamental_{}'.format(symbol),
+      super(RobinhoodCachedClient, self).get_fundamental,
+      force_live,
+      args=[symbol]
+    )
+
+  def get_referrals(self, force_live=False):
+    return self._simple_call(
+      'referrals',
+      super(RobinhoodCachedClient, self).get_referrals,
+      force_live
+    )
+
+  def get_order_by_id(self, order_id, force_live=False):
+    return self._simple_call(
+      'order_{}'.format(order_id),
+      super(RobinhoodCachedClient, self).get_order_by_id,
+      force_live,
+      args=[order_id]
+    )
 
   def get_documents(self, force_live=False):
     documents_list_cache_path = os.path.join(cache_root_path, 'documents')
@@ -226,6 +338,14 @@ class RobinhoodCachedClient(RobinhoodClient):
       with open(documents_list_cache_path, 'w') as documents_list_cache_file:
         json.dump(documents_list, documents_list_cache_file)
     return documents
+
+  # TODO: get_popularities
+  # TODO: get_ratings
+  # TODO: get_instruments
+  # TODO: get_quotes
+  # TODO: get_prices
+  # TODO: get_historical_quotes
+  # TODO: get_fundamentals
 
   def get_ach_transfers(self, force_live=False):
     transfers_list_cache_path = os.path.join(cache_root_path, 'ach_transfers')
@@ -296,7 +416,7 @@ class RobinhoodCachedClient(RobinhoodClient):
     if os.path.exists(symbol_instrument_id_cache_path) and not force_live:
       with open(symbol_instrument_id_cache_path, 'r') as symbol_instrument_id_cache_file:
         instrument_id = symbol_instrument_id_cache_file.read()
-      return self.get_instrument_by_id(instrument_id, force_live=force_live)
+      return self.get_instrument_by_id(instrument_id)
     else:
       instrument_json = super(RobinhoodCachedClient, self).get_instrument_by_symbol(symbol)
       instrument_id = instrument_json['id']

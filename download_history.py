@@ -42,15 +42,15 @@ def add_margin(csv_writer, live):
     'type': 'margin',
     'side': 'available',
     'quantity': 1,
-    'average_price': unallocated_margin_cash,
-    'amount': unallocated_margin_cash,
+    'average_price': '{:.2f}'.format(unallocated_margin_cash),
+    'amount': '{:.2f}'.format(unallocated_margin_cash),
     'date': updated_at,
     'fees': 0,
     'num_executions': 1,
   })
 
 def add_subscription_fees(csv_writer, live):
-  for subscription_fee in client.get_subscription_fees():
+  for subscription_fee in client.get_subscription_fees(force_live=live):
     amount = Decimal(subscription_fee['amount'])
     created_at = parse(subscription_fee['created_at']).astimezone(pytz.timezone('US/Pacific')).date()
     assert not subscription_fee['refunds']
@@ -78,7 +78,7 @@ def add_transfers(csv_writer, live):
     amount = early_access_amount or transfer_amount
     direction = 'deposit_early_access' if early_access_amount else transfer['direction']
 
-    relationship = client.get_ach_relationship_by_id(get_last_id_from_url(transfer['ach_relationship']))
+    relationship = client.get_ach_relationship_by_id(get_last_id_from_url(transfer['ach_relationship']), force_live=live)
 
     csv_writer.writerow({
       'symbol': '',
@@ -121,8 +121,8 @@ def add_rewards(csv_writer, live):
       'type': 'reward',
       'side': 'receive',
       'quantity': quantity,
-      'average_price': cost_basis,
-      'amount': quantity * cost_basis,
+      'average_price': '{:.2f}'.format(cost_basis),
+      'amount': '{:.2f}'.format(quantity * cost_basis),
       'date': updated_at.isoformat(),
       'fees': 0,
       'num_executions': 1,
@@ -160,8 +160,8 @@ def add_orders(csv_writer, live):
       'type': 'order',
       'side': side,
       'quantity': cumulative_quantity,
-      'average_price': average_price,
-      'amount': amount,
+      'average_price': '{:.2f}'.format(average_price),
+      'amount': '{:.2f}'.format(amount),
       'date': last_transaction_at.date().isoformat(),
       'fees': fees,
       'num_executions': num_executions,
@@ -189,8 +189,8 @@ def add_dividends(csv_writer, live):
       'type': 'dividend',
       'side': 'receive',
       'quantity': quantity,
-      'average_price': rate,
-      'amount': amount,
+      'average_price': '{:.2f}'.format(rate),
+      'amount': '{:.2f}'.format(amount),
       'date': paid_at.date(),
       'fees': 0,
       'num_executions': 1,

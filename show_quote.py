@@ -12,7 +12,7 @@ from robinhood.exceptions import NotFound
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
 
 def display_quote(client, symbol, live):
-  account_number = client.get_account()['account_number']
+  account_number = client.get_account(force_live=False)['account_number']
 
   now = datetime.now(pytz.UTC)
   # Get instrument parts
@@ -38,8 +38,8 @@ def display_quote(client, symbol, live):
   pe_ratio = Decimal(fundamental['pe_ratio']) if fundamental['pe_ratio'] else 0.0
   dividend_yield = Decimal(fundamental['dividend_yield']) if fundamental['dividend_yield'] else 0.0
 
-  num_open_positions = client.get_popularity(instrument_id)['num_open_positions']
-  ratings = client.get_rating(instrument_id)['summary']
+  num_open_positions = client.get_popularity(instrument_id, force_live=live)['num_open_positions']
+  ratings = client.get_rating(instrument_id, force_live=live)['summary']
   num_ratings = sum(v for _, v in ratings.items()) if ratings else None
   if num_ratings:
     percent_buy = ratings['num_buy_ratings'] * 100 / num_ratings
