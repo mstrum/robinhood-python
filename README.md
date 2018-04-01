@@ -10,8 +10,6 @@ Some current caveats:
 
 * [RobinhoodClient](robinhood/RobinhoodClient.py)
   * Client that handles getting data from the Robinhood APIs
-  * TODO
-    * Some more APIs likely need paging support
 * [RobinhoodCachedClient](robinhood/RobinhoodClient.py)
   * Client that handles caching on top of the normal client
   * TODO
@@ -38,9 +36,6 @@ Various downloads:
 Display information:
 * [show_quote.py](show_quote.py) AMZN [--live]
   * Displays the latest quote for the given symbol along with auxilary info
-  * TODO
-    * day trade check
-    * day trade buying power check
 * [show_pending_orders.py](show_pending_orders.py)
   * Displays any outstanding orders along with position information
 * [show_interesting_stocks.py](show_interesting_stocks.py)
@@ -50,13 +45,15 @@ Display information:
     * Top 10 and 100 popular sticks with Robinhood users
   * TODO:
     * Movements into/outof lists?
+* [show_potentials.py](show_potentials.py)
+  * Show stocks and some stats to help decide on positions to push forward on.
 
 Perform actions:
-* [order.py](order.py) market|limit buy|sell SYMBOL QUANTITY PRICE
+* [order.py](order.py) [market|limit] [buy|sell] SYMBOL QUANTITY PRICE
   * Prints the quote for the given symbol, confirms, and places an order
 
 Scripts to add:
-* generate_summary.py
+* download_summary.py
   * Will download a shapshot of a very high level summary
   * TODO
     * Total buy in
@@ -64,15 +61,8 @@ Scripts to add:
     * Total dividend
     * Total change
     * Total change %
-* report.py
-  * Unlike generate_portfolio, includes:
-    * Dividends received
-    * Positions that were fully sold
-    * Profit/losses from sales
-* potentials.py
-  * Will show a view combining portfolio and watching symbols and show ones I may be interested in.
-    * Positions I'm in that I want to increase
-    * Positions I'm watching, especially if I have criteria
+    * Total dividends
+    * Positions sold out of
 
 ## Todo
 
