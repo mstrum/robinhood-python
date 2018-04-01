@@ -30,11 +30,10 @@ def add_margin(csv_writer, cache_mode):
     'type': 'margin',
     'side': 'used',
     'quantity': 1,
-    'average_price': used_margin,
+    'price': used_margin,
     'amount': used_margin,
     'date': updated_at,
     'fees': 0,
-    'num_executions': 1,
   })
   csv_writer.writerow({
     'symbol': '',
@@ -42,11 +41,10 @@ def add_margin(csv_writer, cache_mode):
     'type': 'margin',
     'side': 'available',
     'quantity': 1,
-    'average_price': '{:.2f}'.format(unallocated_margin_cash),
+    'price': '{:.2f}'.format(unallocated_margin_cash),
     'amount': '{:.2f}'.format(unallocated_margin_cash),
     'date': updated_at,
     'fees': 0,
-    'num_executions': 1,
   })
 
 def add_subscription_fees(csv_writer, cache_mode):
@@ -63,11 +61,10 @@ def add_subscription_fees(csv_writer, cache_mode):
       'type': 'subscription_fee',
       'side': 'paid',
       'quantity': 1,
-      'average_price': amount,
+      'price': amount,
       'amount': amount,
       'date': created_at,
       'fees': 0,
-      'num_executions': 1,
     })
 
 def add_transfers(csv_writer, cache_mode):
@@ -86,16 +83,24 @@ def add_transfers(csv_writer, cache_mode):
       'type': 'transfer',
       'side': direction,
       'quantity': 1,
-      'average_price': amount,
+      'price': amount,
       'amount': amount,
       'date': updated_at,
       'fees': 0,
-      'num_executions': 1,
     })
 
 
 def add_rewards(csv_writer, cache_mode):
-  for referral in client.get_referrals(cache_mode=cache_mode):
+  referrals = client.get_referrals(cache_mode=cache_mode)
+
+  instrument_ids = [
+    get_last_id_from_url(r['reward']['stocks'][0]['instrument_url'])
+    for r in referrals if r['reward']['stocks']
+  ]
+  instruments = client.get_instruments(instrument_ids)
+  instrument_by_id = { i['id']: i for i in instruments }
+
+  for referral in referrals:
     direction = referral['direction']
     if direction != 'from':
       continue
@@ -105,13 +110,13 @@ def add_rewards(csv_writer, cache_mode):
     if referral['reward']['stocks'][0]['state'] != 'granted':
       continue
 
-    instrument_id = get_last_id_from_url(referral['reward']['stocks'][0]['instrument_url'])
     cost_basis = Decimal(referral['reward']['stocks'][0]['cost_basis'])
     quantity = int(referral['reward']['stocks'][0]['quantity'])
     updated_at = parse(referral['updated_at']).astimezone(pytz.timezone('US/Pacific')).date()
     other_user = '{} {}'.format(referral['other_user']['first_name'], referral['other_user']['last_initial'])
 
-    instrument = client.get_instrument_by_id(instrument_id)
+    instrument_id = get_last_id_from_url(referral['reward']['stocks'][0]['instrument_url'])
+    instrument = instrument_by_id[instrument_id]
     name = instrument['simple_name'] or instrument['name']
     symbol = instrument['symbol']
 
@@ -121,16 +126,21 @@ def add_rewards(csv_writer, cache_mode):
       'type': 'reward',
       'side': 'receive',
       'quantity': quantity,
-      'average_price': '{:.2f}'.format(cost_basis),
+      'price': '{:.2f}'.format(cost_basis),
       'amount': '{:.2f}'.format(quantity * cost_basis),
       'date': updated_at.isoformat(),
       'fees': 0,
-      'num_executions': 1,
     })
 
 
 def add_orders(csv_writer, cache_mode):
-  for order in client.get_orders(cache_mode=cache_mode):
+  orders = client.get_orders(cache_mode=cache_mode)
+
+  instrument_ids = [get_last_id_from_url(o['instrument']) for o in orders]
+  instruments = client.get_instruments(instrument_ids)
+  instrument_by_id = { i['id']: i for i in instruments }
+
+  for order in orders:
     order_id = order['id']
     state = order['state']
 
@@ -140,36 +150,44 @@ def add_orders(csv_writer, cache_mode):
       continue
 
     order_type = order['type']
-
-    num_executions = len(order['executions'])
-    cumulative_quantity = int(float(order['cumulative_quantity']))
-    average_price = Decimal(order['average_price'])
-    amount = cumulative_quantity * average_price
-    last_transaction_at = parse(order['last_transaction_at']).astimezone(pytz.timezone('US/Pacific'))
     fees = Decimal(order['fees'])
     side = order['side']
-    instrument_id = get_last_id_from_url(order['instrument'])
 
-    instrument = client.get_instrument_by_id(instrument_id)
+    instrument_id = get_last_id_from_url(order['instrument'])
+    instrument = instrument_by_id[instrument_id]
     name = instrument['simple_name'] or instrument['name']
     symbol = instrument['symbol']
 
-    csv_writer.writerow({
-      'symbol': symbol,
-      'name': name,
-      'type': 'order',
-      'side': side,
-      'quantity': cumulative_quantity,
-      'average_price': '{:.2f}'.format(average_price),
-      'amount': '{:.2f}'.format(amount),
-      'date': last_transaction_at.date().isoformat(),
-      'fees': fees,
-      'num_executions': num_executions,
-    })
+    for execution in order['executions']:
+      price = Decimal(execution['price'])
+      quantity = int(float(execution['quantity']))
+      amount = quantity * price
+      transaction_on = parse(execution['timestamp']).astimezone(pytz.timezone('US/Pacific')).date()
+
+      csv_writer.writerow({
+        'symbol': symbol,
+        'name': name,
+        'type': 'order',
+        'side': side,
+        'quantity': quantity,
+        'price': '{:.2f}'.format(price),
+        'amount': '{:.2f}'.format(amount),
+        'date': transaction_on.isoformat(),
+        'fees': fees,
+      })
+      # Don't duplicate fees in multiple executions
+      if fees:
+        fees = 0
 
 
 def add_dividends(csv_writer, cache_mode):
-  for dividend in client.get_dividends(cache_mode=cache_mode):
+  dividends = client.get_dividends(cache_mode=cache_mode)
+
+  instrument_ids = [get_last_id_from_url(d['instrument']) for d in dividends]
+  instruments = client.get_instruments(instrument_ids)
+  instrument_by_id = { i['id']: i for i in instruments }
+
+  for dividend in dividends:
     paid_at = dividend['paid_at']
     if not paid_at:
       continue
@@ -177,9 +195,9 @@ def add_dividends(csv_writer, cache_mode):
     rate = Decimal(dividend['rate'])
     amount = Decimal(dividend['amount'])
     quantity = int(float(dividend['position']))
-    instrument_id = get_last_id_from_url(dividend['instrument'])
 
-    instrument = client.get_instrument_by_id(instrument_id)
+    instrument_id = get_last_id_from_url(dividend['instrument'])
+    instrument = instrument_by_id[instrument_id]
     name = instrument['simple_name'] or instrument['name']
     symbol = instrument['symbol']
 
@@ -189,11 +207,10 @@ def add_dividends(csv_writer, cache_mode):
       'type': 'dividend',
       'side': 'receive',
       'quantity': quantity,
-      'average_price': '{:.2f}'.format(rate),
+      'price': '{:.2f}'.format(rate),
       'amount': '{:.2f}'.format(amount),
       'date': paid_at.date(),
       'fees': 0,
-      'num_executions': 1,
     })
 
 
@@ -205,11 +222,10 @@ def download_history(cache_mode):
       'side',
       'type',
       'quantity',
-      'average_price',
+      'price',
       'amount',
       'date',
       'fees',
-      'num_executions',
     ]
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()

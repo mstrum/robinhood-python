@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
 from math import ceil
@@ -25,13 +26,18 @@ def display_pending_orders():
     print('\tNo pending orders')
     exit()
 
+
+  instrument_ids = [get_last_id_from_url(o['instrument']) for o in pending_orders]
+  instruments = client.get_instruments(instrument_ids)
+  instrument_by_id = { i['id']: i for i in instruments }
+
+  pending_orders_by_instrument = defaultdict(list)
   for order in pending_orders:
-    instrument = client.get_instrument_by_id(get_last_id_from_url(order['instrument']))
-    order_state = order['state']
-    order_type = order['type']
-    order_side = order['side']
-    order_quantity = int(float(order['quantity']))
-    order_price = Decimal(order['price'])
+    instrument_id = get_last_id_from_url(order['instrument'])
+    pending_orders_by_instrument[instrument_id].append(order)
+
+  for instrument_id, instrument_orders in pending_orders_by_instrument.items():
+    instrument = instrument_by_id[instrument_id]
 
     print('{} ({})'.format(instrument['symbol'], instrument['simple_name'] or instrument['name']))
 
@@ -49,8 +55,16 @@ def display_pending_orders():
         print('\tcurrent position\t\t{} @ ${:.2f}'.format(
           position_quantity, position_average_buy_price, position_equity_cost))
 
-    print('\t{}\t{} {}\t{} @ ${:.2f}'.format(
-      order_state, order_type, order_side, order_quantity, order_price))
+    for order in instrument_orders:
+      order_id = order['id']
+      order_state = order['state']
+      order_type = order['type']
+      order_side = order['side']
+      order_quantity = int(float(order['quantity']))
+      order_price = Decimal(order['price'])
+
+      print('\t{}\t{} {}\t{} @ ${:.2f}\t({})'.format(
+        order_state, order_type, order_side, order_quantity, order_price, order_id))
 
 
 if __name__ == '__main__':

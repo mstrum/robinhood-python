@@ -49,8 +49,10 @@ Display information:
   * Show stocks and some stats to help decide on positions to push forward on.
 
 Perform actions:
-* [order.py](order.py) [market|limit] [buy|sell] SYMBOL QUANTITY PRICE
+* [order.py](order.py) [market|limit] [buy|sell] SYMBOL QUANTITY PRICE [--no-cancel]
   * Prints the quote for the given symbol, confirms, and places an order
+* [cancel.py](cancel.py) ORDER_ID...
+  * Cancels one or more order ids given, or all pending orders if none given
 
 Scripts to add:
 * download_summary.py
