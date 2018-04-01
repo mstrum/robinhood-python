@@ -69,3 +69,8 @@ Scripts to add:
 ## Todo
 
 * Mix in some IEX data
+
+## Legal
+
+* This library may have bugs which could result in financial consequences, you are responsible for anything you execute. Inspect the underlying code if you want to be sure it's doing what you think it should be doing.
+* I am not affiliated with Robinhood and this library uses an undocumented API. If you have any questions about them, contact Robinhood directly: https://robinhood.com/
