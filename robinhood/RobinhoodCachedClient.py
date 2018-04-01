@@ -45,7 +45,7 @@ class RobinhoodCachedClient(RobinhoodClient):
     if os.path.exists(cache_path):
       os.remove(cache_path)
 
-  def _simple_call(self, cache_name, method, cache_mode, args=[], binary=False):
+  def _simple_call(self, cache_name, method, cache_mode, args=[], kwargs={}, binary=False):
     cache_path = os.path.join(cache_root_path, cache_name)
     binary_flag = 'b' if binary else ''
     if os.path.exists(cache_path) and cache_mode != FORCE_LIVE:
@@ -57,7 +57,7 @@ class RobinhoodCachedClient(RobinhoodClient):
     elif cache_mode == FORCE_CACHE:
       return None
     else:
-      live_content = method(*args)
+      live_content = method(*args, **kwargs)
       with open(cache_path, 'w' + binary_flag) as cache_file:
         if binary:
           cache_file.write(live_content)
@@ -215,6 +215,30 @@ class RobinhoodCachedClient(RobinhoodClient):
       args=[instrument_id]
     )
 
+  def get_instrument_by_symbol(self, symbol, cache_mode=CACHE_FIRST):
+    symbol_instrument_id_cache_path = os.path.join(cache_root_path, 'symbol_instrument_id_{}'.format(symbol))
+    if os.path.exists(symbol_instrument_id_cache_path):
+      with open(symbol_instrument_id_cache_path, 'r') as symbol_instrument_id_cache_file:
+        instrument_id = symbol_instrument_id_cache_file.read()
+      return self.get_instrument_by_id(instrument_id, cache_mode=cache_mode)
+
+    instrument = self._simple_call(
+      'instrument_{}'.format(symbol),
+      super(RobinhoodCachedClient, self).get_instrument_by_symbol,
+      cache_mode,
+      args=[symbol]
+    )
+    instrument_id = instrument['id']
+
+    os.rename(
+      os.path.join(cache_root_path, 'instrument_{}'.format(symbol)), 
+      os.path.join(cache_root_path, 'instrument_{}'.format(instrument_id))
+    )
+    with open(symbol_instrument_id_cache_path, 'w') as symbol_instrument_id_cache_file:
+      symbol_instrument_id_cache_file.write(instrument_id)
+
+    return instrument
+
   def get_instrument_split_history(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'instrument_split_history_{}'.format(instrument_id),
@@ -223,12 +247,12 @@ class RobinhoodCachedClient(RobinhoodClient):
       args=[instrument_id]
     )
 
-  def get_quote(self, symbol, cache_mode=CACHE_FIRST):
+  def get_quote(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
-      'quote_{}'.format(symbol),
+      'quote_{}'.format(instrument_id),
       super(RobinhoodCachedClient, self).get_quote,
       cache_mode,
-      args=[symbol]
+      args=[instrument_id]
     )
 
   def get_dividend_by_id(self, dividend_id, cache_mode=CACHE_FIRST):
@@ -277,7 +301,8 @@ class RobinhoodCachedClient(RobinhoodClient):
       cache_mode
     )
 
-  def get_position_by_instrument_id(self, account_number, instrument_id, cache_mode=CACHE_FIRST):
+  def get_position_by_instrument_id(self, instrument_id, use_account_number=None, cache_mode=CACHE_FIRST):
+    account_number = use_account_number or self.get_account()['account_number']
     return self._simple_call(
       'position_{}'.format(instrument_id),
       super(RobinhoodCachedClient, self).get_position_by_instrument_id,
@@ -329,9 +354,10 @@ class RobinhoodCachedClient(RobinhoodClient):
       search_method,
       item_to_id_method,
       item_cache_name_template,
-      search_args=[]):
+      search_args=[],
+      search_kwargs={}):
     results = []
-    live_search_content = search_method(*search_args)
+    live_search_content = search_method(*search_args, **search_kwargs)
     for live_item in live_search_content:
       results.append(live_item)
       item_id = item_to_id_method(live_item)
@@ -348,7 +374,8 @@ class RobinhoodCachedClient(RobinhoodClient):
       item_to_id_method,
       item_cache_name_template,
       cache_mode,
-      list_args=[]):
+      list_args=[],
+      list_kwargs={}):
     results = []
     list_cache_path = os.path.join(cache_root_path, list_cache_name)
     if os.path.exists(list_cache_path) and cache_mode != FORCE_LIVE:
@@ -361,12 +388,13 @@ class RobinhoodCachedClient(RobinhoodClient):
           list_method,
           item_to_id_method,
           item_cache_name_template,
-          search_args=list_args)
+          search_args=list_args,
+          search_kwargs=list_kwargs)
       live_list_ids = []
       for live_item in live_list_content:
         item_id = item_to_id_method(live_item)
         live_list_ids.append(item_id)
-        results.append(result)
+        results.append(live_item)
       with open(list_cache_path, 'w') as list_cache_file:
         json.dump(live_list_ids, list_cache_file)
     return results
@@ -399,6 +427,28 @@ class RobinhoodCachedClient(RobinhoodClient):
       lambda dividend: dividend['id'],
       'dividend_{}',
       cache_mode
+    )
+
+  def get_positions(self, include_old=False, cache_mode=CACHE_FIRST):
+    return self._list_call(
+      'positions_' + ('all' if include_old else  'current'),
+      super(RobinhoodCachedClient, self).get_positions,
+      self.get_position_by_instrument_id,
+      lambda position: get_last_id_from_url(position['instrument']),
+      'position_{}',
+      cache_mode,
+      list_kwargs={'include_old': include_old}
+    )
+
+  def get_orders(self, instrument_id=False, cache_mode=CACHE_FIRST):
+    return self._list_call(
+      'instrument_orders_{}'.format(instrument_id) if instrument_id else 'orders',
+      super(RobinhoodCachedClient, self).get_orders,
+      self.get_order_by_id,
+      lambda order: order['id'],
+      'order_{}',
+      cache_mode,
+      list_kwargs={'instrument_id': instrument_id}
     )
 
   def _search_call(
@@ -455,69 +505,15 @@ class RobinhoodCachedClient(RobinhoodClient):
         self.get_rating,
         cache_mode)
 
-  # TODO: get_quotes
+  def get_quotes(self, instrument_ids, cache_mode=CACHE_FIRST):
+    return self._search_call(
+        instrument_ids,
+        super(RobinhoodCachedClient, self).get_quotes,
+        lambda quote: get_last_id_from_url(quote['instrument']),
+        'quote_{}',
+        self.get_quote,
+        cache_mode)
+
   # TODO: get_prices
   # TODO: get_historical_quotes
   # TODO: get_fundamentals
-
-  def get_positions(self, include_old=False, cache_mode=CACHE_FIRST):
-    positions_list_cache_path = os.path.join(cache_root_path, 'positions_' + ('all' if include_old else  'current'))
-    if os.path.exists(positions_list_cache_path) and cache_mode != FORCE_LIVE:
-      account_number = self.get_account()['account_number']
-      positions = []
-      with open(positions_list_cache_path, 'r') as positions_list_cache_file:
-        positions_list = json.load(positions_list_cache_file)
-        for instrument_id in positions_list:
-          positions.append(self.get_position_by_instrument_id(account_number, instrument_id, cache_mode=cache_mode))
-    else:
-      positions = super(RobinhoodCachedClient, self).get_positions(include_old=include_old)
-      positions_list = []
-      for position in positions:
-        instrument_id = get_last_id_from_url(position['instrument'])
-        positions_list.append(instrument_id)
-        position_cache_path = os.path.join(cache_root_path, 'position_{}'.format(instrument_id))
-        with open(position_cache_path, 'w') as position_cache_file:
-          json.dump(position, position_cache_file)
-      with open(positions_list_cache_path, 'w') as positions_list_cache_file:
-        json.dump(positions_list, positions_list_cache_file)
-    return positions
-
-  def get_instrument_by_symbol(self, symbol, cache_mode=CACHE_FIRST):
-    symbol_instrument_id_cache_path = os.path.join(cache_root_path, 'symbol_instrument_id_{}'.format(symbol))
-    if os.path.exists(symbol_instrument_id_cache_path) and cache_mode != FORCE_LIVE:
-      with open(symbol_instrument_id_cache_path, 'r') as symbol_instrument_id_cache_file:
-        instrument_id = symbol_instrument_id_cache_file.read()
-      return self.get_instrument_by_id(instrument_id)
-    else:
-      instrument_json = super(RobinhoodCachedClient, self).get_instrument_by_symbol(symbol)
-      instrument_id = instrument_json['id']
-      with open(symbol_instrument_id_cache_path, 'w') as symbol_instrument_id_cache_file:
-        symbol_instrument_id_cache_file.write(instrument_id)
-      with open(os.path.join(cache_root_path, 'instrument_{}'.format(instrument_id)), 'w') as instrument_cache_file:
-        json.dump(instrument_json, instrument_cache_file)
-      return instrument_json
-
-  def get_orders(self, instrument_id=None, cache_mode=CACHE_FIRST):
-    """TODO: Handle orders by instrument."""
-    if instrument_id:
-      orders_list_cache_path = os.path.join(cache_root_path, 'instrument_orders_{}'.format(instrument_id))
-    else:
-      orders_list_cache_path = os.path.join(cache_root_path, 'orders')
-    if os.path.exists(orders_list_cache_path) and cache_mode != FORCE_LIVE:
-      orders = []
-      with open(orders_list_cache_path, 'r') as orders_list_cache_file:
-        orders_list = json.load(orders_list_cache_file)
-        for order_id in orders_list:
-          orders.append(self.get_order_by_id(order_id, cache_mode=cache_mode))
-    else:
-      orders = super(RobinhoodCachedClient, self).get_orders(instrument_id=instrument_id)
-      orders_list = []
-      for order in orders:
-        order_id = order['id']
-        orders_list.append(order_id)
-        order_cache_path = os.path.join(cache_root_path, 'order_{}'.format(order_id))
-        with open(order_cache_path, 'w') as order_cache_file:
-          json.dump(order, order_cache_file)
-      with open(orders_list_cache_path, 'w') as orders_list_cache_file:
-        json.dump(orders_list, orders_list_cache_file)
-    return orders

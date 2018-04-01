@@ -35,7 +35,7 @@ def show_potentials(cache_mode):
       'last_open': Decimal(fundamental['open']),
     }
 
-  position_quotes = client.get_quotes(symbols=[p['symbol'] for p in position_by_instrument_id.values()])
+  position_quotes = client.get_quotes(list(position_by_instrument_id.keys()), cache_mode=cache_mode)
   for quote in position_quotes:
     instrument_id = get_last_id_from_url(quote['instrument'])
     position = position_by_instrument_id[instrument_id]

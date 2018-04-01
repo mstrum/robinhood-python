@@ -1023,11 +1023,8 @@ class RobinhoodClient:
     assert not response_json['next']
     return response_json
 
-  def get_quote(self, symbol):
+  def get_quote(self, instrument_id):
     """
-    Args:
-      symbol: E.g. AAPL
-
     Example response:
     {
         "adjusted_previous_close": "178.1200",
@@ -1047,7 +1044,7 @@ class RobinhoodClient:
         "last_trade_price_source": "consolidated"
     }
     """
-    response = self._session.get(API_HOST + 'quotes/{}/'.format(symbol))
+    response = self._session.get(API_HOST + 'quotes/{}/'.format(instrument_id))
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1058,7 +1055,7 @@ class RobinhoodClient:
       raise
     return response.json()
 
-  def get_quotes(self, symbols=None, instrument_ids=None):
+  def get_quotes(self, instrument_ids):
     """
     Example response:
     {
@@ -1084,16 +1081,18 @@ class RobinhoodClient:
         ]
     }
     """
-    assert symbols or instrument_ids
-    assert not (symbols and instrument_ids)
-    # bounds=trading ?
-    params = {}
-    if symbols:
-      params['symbols'] = ','.join(symbols)
-    if instrument_ids:
-      params['instruments'] = ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
+    if len(instrument_ids) > 35:
+      full_quotes = []
+      for i in range(0, len(instrument_ids), 35):
+        full_quotes.extend(self.get_quotes(instrument_ids[i:i + 35]))
+      return full_quotes
 
-    response = self._session.get(API_HOST + 'marketdata/quotes/', params=params)
+    # bounds=trading ?
+    params = {
+      'instruments': ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
+    }
+
+    response = self._session.get(API_HOST + 'quotes/', params=params)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1569,7 +1568,7 @@ class RobinhoodClient:
     assert not portfolio_json['next']
     return portfolio_json['results']
 
-  def get_position_by_instrument_id(self, account_number, instrument_id):
+  def get_position_by_instrument_id(self, instrument_id, use_account_number=None):
     """
     Example response:
     {
@@ -1592,6 +1591,7 @@ class RobinhoodClient:
     }
 
     """
+    account_number = use_account_number or self.get_account()['account_number']
     # Possible param: nonzero=true includes only owned securities
     response = self._session.get(
       API_HOST + 'accounts/{}/positions/{}/'.format(account_number, instrument_id),

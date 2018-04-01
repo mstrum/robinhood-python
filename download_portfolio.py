@@ -78,7 +78,7 @@ def download_portfolio(cache_mode):
       position_by_instrument_id[instrument_id]['buy_rating'] = 'N/A' if not num_ratings else '{:.2f}'.format(percent_buy)
       position_by_instrument_id[instrument_id]['sell_rating'] = 'N/A' if not num_ratings else '{:.2f}'.format(percent_sell)
 
-    position_quotes = client.get_quotes(symbols=symbols)
+    position_quotes = client.get_quotes(instrument_ids, cache_mode=cache_mode)
     for quote in position_quotes:
       instrument_id = get_last_id_from_url(quote['instrument'])
       position = position_by_instrument_id[instrument_id]

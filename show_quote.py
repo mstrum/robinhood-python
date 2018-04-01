@@ -12,8 +12,6 @@ from robinhood.exceptions import NotFound
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, CACHE_FIRST, FORCE_LIVE
 
 def display_quote(client, symbol, cache_mode):
-  account_number = client.get_account()['account_number']
-
   now = datetime.now(pytz.UTC)
   # Get instrument parts
   try:
@@ -72,7 +70,7 @@ def display_quote(client, symbol, cache_mode):
 
   # Get position
   try:
-    position = client.get_position_by_instrument_id(account_number, instrument_id, cache_mode=cache_mode)
+    position = client.get_position_by_instrument_id(instrument_id, cache_mode=cache_mode)
   except NotFound:
     position_average_buy_price = 0
     position_quantity = 0
@@ -104,7 +102,7 @@ def display_quote(client, symbol, cache_mode):
       print('\t{:%m/%d/%Y}\t{}\t{} {}\t{} @ ${:.2f}'.format(order_last_executed_at, order_state, order_type, order_side, order_quantity, order_price))
 
   # Get quote
-  quote = client.get_quote(symbol)
+  quote = client.get_quote(instrument_id, cache_mode=cache_mode)
   updated_at = parse(quote['updated_at'])
   updated_minutes_ago = ceil((now - updated_at).total_seconds() / 60)
   has_traded = quote['has_traded']

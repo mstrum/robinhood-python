@@ -19,7 +19,6 @@ client.login()
 
 
 def display_pending_orders():
-  account_number = client.get_account()['account_number']
   orders = client.get_orders(cache_mode=FORCE_LIVE)
   pending_orders = [order for order in orders if order['state'] in ['queued', 'confirmed']]
   if len(pending_orders) == 0:
@@ -42,7 +41,7 @@ def display_pending_orders():
     print('{} ({})'.format(instrument['symbol'], instrument['simple_name'] or instrument['name']))
 
     try:
-      position = client.get_position_by_instrument_id(account_number, instrument['id'])
+      position = client.get_position_by_instrument_id(instrument['id'])
     except NotFound:
       print('\tNo current position (or ever)')
     else:
