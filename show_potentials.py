@@ -4,7 +4,7 @@ from decimal import Decimal
 import argparse
 import json
 
-from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
+from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, CACHE_FIRST, FORCE_LIVE
 from robinhood.util import get_last_id_from_url
 
 # Set up the client
@@ -12,9 +12,9 @@ client = RobinhoodCachedClient()
 client.login()
 
 
-def show_potentials(live):
+def show_potentials(cache_move):
   # First, get the portfolio
-  positions = client.get_positions(force_live=live)
+  positions = client.get_positions(cache_mode=cache_move)
   position_by_instrument_id = {}
   symbol_to_instrument_id = {}
   for position in positions:
@@ -22,7 +22,7 @@ def show_potentials(live):
     average_buy_price = Decimal(position['average_buy_price'])
     instrument_id = get_last_id_from_url(position['instrument'])
     instrument = client.get_instrument_by_id(instrument_id)
-    fundamental = client.get_fundamental(instrument['symbol'], force_live=live)
+    fundamental = client.get_fundamental(instrument['symbol'], cache_mode=cache_move)
     symbol_to_instrument_id[instrument['symbol']] = instrument_id
 
     position_by_instrument_id[instrument_id] = {
@@ -93,4 +93,4 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Show various position potentials to buy into')
   parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
   args = parser.parse_args()
-  show_potentials(args.live)
+  show_potentials(FORCE_LIVE if args.live else CACHE_FIRST)

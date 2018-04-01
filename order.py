@@ -3,7 +3,7 @@
 import argparse
 import json
 
-from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
+from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, FORCE_LIVE
 from robinhood.util import ORDER_TYPES, ORDER_SIDES
 
 # Set up the client
@@ -21,7 +21,7 @@ def place_order(order_type, order_side, symbol, quantity, price):
 
   # We could be more smart and allow canceling individual orders,
   # but for now just do complete cancelling
-  orders = client.get_orders(instrument_id=instrument['id'], force_live=True)
+  orders = client.get_orders(instrument_id=instrument['id'], cache_mode=FORCE_LIVE)
   pending_same_side_orders = [
     order for order in orders
     if order['state'] in ['queued', 'confirmed'] and order['side'] == order_side

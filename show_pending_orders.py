@@ -9,7 +9,7 @@ from dateutil.parser import parse
 import pytz
 
 from robinhood.exceptions import NotFound
-from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
+from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, FORCE_LIVE
 from robinhood.util import get_last_id_from_url
 
 
@@ -19,7 +19,7 @@ client.login()
 
 def display_pending_orders():
   account_number = client.get_account()['account_number']
-  orders = client.get_orders(force_live=True)
+  orders = client.get_orders(cache_mode=FORCE_LIVE)
   pending_orders = [order for order in orders if order['state'] in ['queued', 'confirmed']]
   if len(pending_orders) == 0:
     print('\tNo pending orders')

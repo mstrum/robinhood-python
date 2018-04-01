@@ -22,7 +22,7 @@ import json
 
 import requests
 
-from .exceptions import BadRequest, MfaRequired, NotFound, NotLoggedIn
+from .exceptions import BadRequest, MfaRequired, NotFound, NotLoggedIn, TooManyRequests
 from .util import (
   ANALYTICS_HOST,
   API_HOST,
@@ -61,7 +61,12 @@ class RobinhoodClient:
       body['mfa_code'] = mfa
 
     response = self._session.post(API_HOST + 'api-token-auth/', data=body)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      raise
     response_json = response.json()
     if 'mfa_required' in response_json:
       raise MfaRequired()
@@ -100,6 +105,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -127,6 +134,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -154,6 +163,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -172,6 +183,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -194,7 +207,14 @@ class RobinhoodClient:
 
     """
     response = self._session.get(API_HOST + 'subscription/subscription_fees/', headers=self._authorization_headers)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      raise
     response_json = response.json()
     # TODO: auto page if needed
     assert not response_json['next']
@@ -227,7 +247,14 @@ class RobinhoodClient:
       'active': 'true',
     }
     response = self._session.get(API_HOST + 'subscription/subscriptions/', params=params, headers=self._authorization_headers)
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      raise
     response_json = response.json()
     # TODO: auto page if needed
     assert not response_json['next']
@@ -257,7 +284,12 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'markets/')
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      raise
     response_json = response.json()
     # This api likely never pages, but you never know.
     assert not response_json['next']
@@ -274,6 +306,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.content
 
@@ -303,6 +337,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -339,6 +375,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     # TODO: autopage
@@ -366,6 +404,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     # TODO: autopage
@@ -397,6 +437,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     # TODO: autopage
@@ -472,6 +514,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -498,6 +542,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     # This probably won't autopage for a LONG time
@@ -574,6 +620,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()['results'][0]
 
@@ -605,6 +653,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -622,6 +672,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -655,6 +707,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     # TODO: autopage
@@ -680,6 +734,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -720,6 +776,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     # TODO: autopage
@@ -745,6 +803,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     return response_json['instruments']
@@ -769,47 +829,16 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     instrument_ids = [get_last_id_from_url(instrument_url) for instrument_url in response_json['instruments']]
     return instrument_ids
 
-  def get_instruments(self, query=None, instrument_ids=None):
+  def get_instruments(self, instrument_ids):
     """
-    Args:
-      query: Can be any string, like a stock ticker or None for all (e.g. AAPL)
-
-    Example response for AAPL:
-    {
-        "next": null,
-        "previous": null,
-        "results": [
-            {
-                "day_trade_ratio": "0.2500",
-                "type": "stock",
-                "symbol": "AAPL",
-                "simple_name": "Apple",
-                "quote": "https://api.robinhood.com/quotes/AAPL/",
-                "fundamentals": "https://api.robinhood.com/fundamentals/AAPL/",
-                "state": "active",
-                "list_date": "1990-01-02",
-                "id": "00000000-0000-4000-0000-000000000000",
-                "maintenance_ratio": "0.2500",
-                "country": "US",
-                "min_tick_size": null,
-                "tradability": "tradable",
-                "bloomberg_unique": "EQ0010169500001000",
-                "market": "https://api.robinhood.com/markets/XNAS/",
-                "margin_initial_ratio": "0.5000",
-                "url": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
-                "tradeable": true,
-                "name": "Apple Inc. - Common Stock",
-                "splits": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/splits/"
-            }
-        ]
-    }
-
-    Example response for <None>:
+    Example response:
     {
         "results": [
             {
@@ -840,38 +869,31 @@ class RobinhoodClient:
         "next": "https://api.robinhood.com/instruments/?cursor=XXXXXXXX"
     }
     """
-    assert query or instrument_ids
-    assert not (query and instrument_ids)
     # We are limited to 75 based on how long the query param can be, so we
     # need to do multiple calls if grabbing more than 75 instruments.
-    if instrument_ids and len(instrument_ids) > 75:
+    if len(instrument_ids) > 75:
       full_instruments = []
       for i in range(0, len(instrument_ids), 75):
-        full_instruments.extend(self.get_instruments(instrument_ids=instrument_ids[i:i + 75])['results'])
-      return {
-        'results': full_instruments,
-        'next': None,
-        'previous': None,
-      }
+        full_instruments.extend(self.get_instruments(instrument_ids=instrument_ids[i:i + 75]))
+      return full_instruments
 
     params = {
+      'ids': ','.join(instrument_ids),
       'active_instruments_only': 'false',
     }
-    if query:
-      params['query'] = query
-    if instrument_ids:
-      params['ids'] = ','.join(instrument_ids)
     response = self._session.get(API_HOST + 'instruments/', params=params)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
-    return response_json
+    return response_json['results']
 
   def get_instrument_by_id(self, instrument_id):
     """
@@ -908,6 +930,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -956,6 +980,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     if len(response_json['results']) == 0:
@@ -986,7 +1012,12 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'instruments/{}/splits'.format(instrument_id))
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      raise
     response_json = response.json()
     # This is probably never the case.
     assert not response_json['next']
@@ -1022,6 +1053,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -1066,6 +1099,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()['results']
 
@@ -1104,6 +1139,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -1130,6 +1167,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -1161,6 +1200,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -1223,6 +1264,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     # TODO: autopage
@@ -1259,6 +1302,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     # TODO: autopage
@@ -1306,6 +1351,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -1364,6 +1411,8 @@ class RobinhoodClient:
       except requests.HTTPError as http_error:
         if  http_error.response.status_code == requests.codes.unauthorized:
           raise NotLoggedIn(http_error.response.json()['detail'])
+        elif  http_error.response.status_code == requests.codes.too_many_requests:
+          raise TooManyRequests()
         raise
       orders_json = response.json()
       orders.extend(orders_json['results'])
@@ -1430,6 +1479,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()['results']
 
@@ -1463,6 +1514,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()['results'][0]
 
@@ -1508,6 +1561,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     portfolio_json = response.json()
     # TODO: autopage
@@ -1549,6 +1604,8 @@ class RobinhoodClient:
         raise NotFound()
       elif  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -1609,6 +1666,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()
 
@@ -1645,7 +1704,12 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'midlands/news/{}/'.format(symbol))
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      raise
     return response.json()
 
   def get_tags(self, instrument_id):
@@ -1665,7 +1729,12 @@ class RobinhoodClient:
     ]
     """
     response = self._session.get(API_HOST + 'midlands/tags/instrument/{}/'.format(instrument_id))
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      raise
     response_json = response.json()
     return response_json['tags']
 
@@ -1696,7 +1765,12 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'fundamentals/{}/'.format(symbol))
-    response.raise_for_status()
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      raise
     return response.json()
 
   def get_fundamentals(self, symbols):
@@ -1743,6 +1817,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()['results']
 
@@ -1797,6 +1873,8 @@ class RobinhoodClient:
     except requests.HTTPError as http_error:
       if  http_error.response.status_code == requests.codes.unauthorized:
         raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     response_json = response.json()
     # TODO: autopage
@@ -1883,5 +1961,7 @@ class RobinhoodClient:
         raise NotLoggedIn(http_error.response.json()['detail'])
       elif  http_error.response.status_code == requests.codes.bad_request:
         raise BadRequest(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
       raise
     return response.json()

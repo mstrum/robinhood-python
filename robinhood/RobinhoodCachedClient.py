@@ -12,6 +12,11 @@ cache_root_path = '.robinhood'
 if not os.path.exists(cache_root_path):
   os.makedirs(cache_root_path)
 
+# Cache modes
+CACHE_FIRST = 'CACHE_FIRST'
+FORCE_LIVE = 'FORCE_LIVE'
+FORCE_CACHE = 'FORCE_CACHE'
+
 class RobinhoodCachedClient(RobinhoodClient):
   def __init__(self):
     super(RobinhoodCachedClient, self).__init__()
@@ -40,15 +45,17 @@ class RobinhoodCachedClient(RobinhoodClient):
     if os.path.exists(cache_path):
       os.remove(cache_path)
 
-  def _simple_call(self, cache_name, method, force_live, args=[], binary=False):
+  def _simple_call(self, cache_name, method, cache_mode, args=[], binary=False):
     cache_path = os.path.join(cache_root_path, cache_name)
     binary_flag = 'b' if binary else ''
-    if os.path.exists(cache_path) and not force_live:
+    if os.path.exists(cache_path) and cache_mode != FORCE_LIVE:
       with open(cache_path, 'r' + binary_flag) as cache_file:
         if binary:
           return cache_file.read()
         else:
           return json.load(cache_file)
+    elif cache_mode == FORCE_CACHE:
+      return None
     else:
       live_content = method(*args)
       with open(cache_path, 'w' + binary_flag) as cache_file:
@@ -58,60 +65,60 @@ class RobinhoodCachedClient(RobinhoodClient):
           json.dump(live_content, cache_file)
       return live_content
 
-  def get_user(self, force_live=False):
+  def get_user(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'user',
       super(RobinhoodCachedClient, self).get_user,
-      force_live
+      cache_mode
     )
 
-  def get_user_basic_info(self, force_live=False):
+  def get_user_basic_info(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'user_basic_info',
       super(RobinhoodCachedClient, self).get_user_basic_info,
-      force_live
+      cache_mode
     )
 
-  def get_user_additional_info(self, force_live=False):
+  def get_user_additional_info(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'user_additional_info',
       super(RobinhoodCachedClient, self).get_user_additional_info,
-      force_live
+      cache_mode
     )
 
-  def get_referral_code(self, force_live=False):
+  def get_referral_code(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'referral_code',
       super(RobinhoodCachedClient, self).get_referral_code,
-      force_live
+      cache_mode
     )
 
-  def get_subscription_fees(self, force_live=False):
+  def get_subscription_fees(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'subscription_fees',
       super(RobinhoodCachedClient, self).get_subscription_fees,
-      force_live
+      cache_mode
     )
 
-  def get_subscriptions(self, force_live=False):
+  def get_subscriptions(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'subscriptions',
       super(RobinhoodCachedClient, self).get_subscriptions,
-      force_live
+      cache_mode
     )
 
-  def get_markets(self, force_live=False):
+  def get_markets(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'markets',
       super(RobinhoodCachedClient, self).get_markets,
-      force_live
+      cache_mode
     )
 
-  def download_document_by_id(self, document_id, force_live=False):
+  def download_document_by_id(self, document_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'document_pdf_{}'.format(document_id),
       super(RobinhoodCachedClient, self).download_document_by_id,
-      force_live,
+      cache_mode,
       args=[document_id],
       binary=True
     )
@@ -121,283 +128,347 @@ class RobinhoodCachedClient(RobinhoodClient):
       'document_{}'.format(document_id),
       super(RobinhoodCachedClient, self).get_document_by_id,
       # Documents don't change, never force live
-      False,
+      CACHE_FIRST,
       args=[document_id]
     )
 
-  def get_watchlists(self, force_live=False):
+  def get_watchlists(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'watchlists',
       super(RobinhoodCachedClient, self).get_watchlists,
-      force_live
+      cache_mode
     )
 
-  def get_watchlist_instruments(self, watchlist_name, force_live=False):
+  def get_watchlist_instruments(self, watchlist_name, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'watchlist_instruments_{}'.format(watchlist_name),
       super(RobinhoodCachedClient, self).get_watchlist_instruments,
-      force_live,
+      cache_mode,
       args=[watchlist_name]
     )
 
-  def get_notification_settings(self, force_live=False):
+  def get_notification_settings(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'notification_settings',
       super(RobinhoodCachedClient, self).get_notification_settings,
-      force_live
+      cache_mode
     )
 
-  def get_notification_devices(self, force_live=False):
+  def get_notification_devices(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'notification_devices',
       super(RobinhoodCachedClient, self).get_notification_devices,
-      force_live
+      cache_mode
     )
 
-  def get_account(self, force_live=False):
+  def get_account(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'account',
       super(RobinhoodCachedClient, self).get_account,
-      force_live
+      cache_mode
     )
 
-  def get_investment_profile(self, force_live=False):
+  def get_investment_profile(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'investment_profile',
       super(RobinhoodCachedClient, self).get_investment_profile,
-      force_live
+      cache_mode
     )
 
-  def get_popularity(self, instrument_id, force_live=False):
+  def get_popularity(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'popularity_{}'.format(instrument_id),
       super(RobinhoodCachedClient, self).get_popularity,
-      force_live,
+      cache_mode,
       args=[instrument_id]
     )
 
-  def get_rating(self, instrument_id, force_live=False):
+  def get_rating(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'rating_{}'.format(instrument_id),
       super(RobinhoodCachedClient, self).get_rating,
-      force_live,
+      cache_mode,
       args=[instrument_id]
     )
 
-  def get_instrument_reasons_for_personal_tag(self, tag, force_live=False):
+  def get_instrument_reasons_for_personal_tag(self, tag, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'instrument_reasons_for_personal_tag_{}'.format(tag),
       super(RobinhoodCachedClient, self).get_instrument_reasons_for_personal_tag,
-      force_live,
+      cache_mode,
       args=[tag]
     )
 
-  def get_instrument_ids_for_tag(self, tag, force_live=False):
+  def get_instrument_ids_for_tag(self, tag, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'tag_{}'.format(tag),
       super(RobinhoodCachedClient, self).get_instrument_ids_for_tag,
-      force_live,
+      cache_mode,
       args=[tag]
     )
 
-  def get_instrument_by_id(self, instrument_id):
+  def get_instrument_by_id(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'instrument_{}'.format(instrument_id),
       super(RobinhoodCachedClient, self).get_instrument_by_id,
-      # Never force live, there's nothing we care about getting updated.
-      False,
+      cache_mode,
       args=[instrument_id]
     )
 
-  def get_instrument_split_history(self, instrument_id, force_live=False):
+  def get_instrument_split_history(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'instrument_split_history_{}'.format(instrument_id),
       super(RobinhoodCachedClient, self).get_instrument_split_history,
-      force_live,
+      cache_mode,
       args=[instrument_id]
     )
 
-  def get_quote(self, symbol, force_live=False):
+  def get_quote(self, symbol, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'quote_{}'.format(symbol),
       super(RobinhoodCachedClient, self).get_quote,
-      force_live,
+      cache_mode,
       args=[symbol]
     )
 
-  def get_dividend_by_id(self, dividend_id, force_live=False):
+  def get_dividend_by_id(self, dividend_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'dividend_{}'.format(dividend_id),
       super(RobinhoodCachedClient, self).get_dividend_by_id,
-      force_live,
+      cache_mode,
       args=[dividend_id]
     )
 
-  def get_ach_relationship_by_id(self, relationship_id, force_live=False):
+  def get_ach_relationship_by_id(self, relationship_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'ach_relationship_{}'.format(relationship_id),
       super(RobinhoodCachedClient, self).get_ach_relationship_by_id,
-      force_live,
+      cache_mode,
       args=[relationship_id]
     )
 
-  def get_ach_transfer_by_id(self, transfer_id, force_live=False):
+  def get_ach_transfer_by_id(self, transfer_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'ach_transfer_{}'.format(transfer_id),
       super(RobinhoodCachedClient, self).get_ach_transfer_by_id,
-      force_live,
+      cache_mode,
       args=[transfer_id]
     )
 
-  def get_popular_stocks(self, force_live=False):
+  def get_popular_stocks(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'popular_stocks',
       super(RobinhoodCachedClient, self).get_popular_stocks,
-      force_live
+      cache_mode
     )
 
-  def get_sp500_movers(self, direction, force_live=False):
+  def get_sp500_movers(self, direction, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'sp500_movers_{}'.format(direction),
       super(RobinhoodCachedClient, self).get_sp500_movers,
-      force_live,
+      cache_mode,
       args=[direction]
     )
 
-  def get_portfolio(self, force_live=False):
+  def get_portfolio(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'portfolio',
       super(RobinhoodCachedClient, self).get_portfolio,
-      force_live
+      cache_mode
     )
 
-  def get_position_by_instrument_id(self, account_number, instrument_id, force_live=False):
+  def get_position_by_instrument_id(self, account_number, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'position_{}'.format(instrument_id),
       super(RobinhoodCachedClient, self).get_position_by_instrument_id,
-      force_live,
+      cache_mode,
       args=[account_number, instrument_id]
     )
 
-  def get_news(self, symbol, force_live=False):
+  def get_news(self, symbol, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'news_{}'.format(symbol),
       super(RobinhoodCachedClient, self).get_news,
-      force_live,
+      cache_mode,
       args=[symbol]
     )
 
-  def get_tags(self, instrument_id, force_live=False):
+  def get_tags(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'tags_{}'.format(instrument_id),
       super(RobinhoodCachedClient, self).get_tags,
-      force_live,
+      cache_mode,
       args=[instrument_id]
     )
 
-  def get_fundamental(self, symbol, force_live=False):
+  def get_fundamental(self, symbol, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'fundamental_{}'.format(symbol),
       super(RobinhoodCachedClient, self).get_fundamental,
-      force_live,
+      cache_mode,
       args=[symbol]
     )
 
-  def get_referrals(self, force_live=False):
+  def get_referrals(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'referrals',
       super(RobinhoodCachedClient, self).get_referrals,
-      force_live
+      cache_mode
     )
 
-  def get_order_by_id(self, order_id, force_live=False):
+  def get_order_by_id(self, order_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'order_{}'.format(order_id),
       super(RobinhoodCachedClient, self).get_order_by_id,
-      force_live,
+      cache_mode,
       args=[order_id]
     )
 
-  def get_documents(self, force_live=False):
-    documents_list_cache_path = os.path.join(cache_root_path, 'documents')
-    if os.path.exists(documents_list_cache_path) and not force_live:
-      documents = []
-      with open(documents_list_cache_path, 'r') as documents_list_cache_file:
-        documents_list = json.load(documents_list_cache_file)
-        for document_id in documents_list:
-          documents.append(self.get_document_by_id(document_id, force_live=force_live))
-    else:
-      documents = super(RobinhoodCachedClient, self).get_documents()
-      documents_list = []
-      for document in documents:
-        document_id = document['id']
-        documents_list.append(document_id)
-        document_cache_path = os.path.join(cache_root_path, 'document_{}'.format(document_id))
-        with open(document_cache_path, 'w') as document_cache_file:
-          json.dump(document, document_cache_file)
-      with open(documents_list_cache_path, 'w') as documents_list_cache_file:
-        json.dump(documents_list, documents_list_cache_file)
-    return documents
+  def _search_and_cache_call(
+      self,
+      search_method,
+      item_to_id_method,
+      item_cache_name_template,
+      search_args=[]):
+    results = []
+    live_search_content = search_method(*search_args)
+    for live_item in live_search_content:
+      results.append(live_item)
+      item_id = item_to_id_method(live_item)
+      item_cache_path = os.path.join(cache_root_path, item_cache_name_template.format(item_id))
+      with open(item_cache_path, 'w') as item_cache_file:
+        json.dump(live_item, item_cache_file)
+    return results
 
-  # TODO: get_popularities
-  # TODO: get_ratings
-  # TODO: get_instruments
+  def _list_call(
+      self,
+      list_cache_name,
+      list_method,
+      item_method,
+      item_to_id_method,
+      item_cache_name_template,
+      cache_mode,
+      list_args=[]):
+    results = []
+    list_cache_path = os.path.join(cache_root_path, list_cache_name)
+    if os.path.exists(list_cache_path) and cache_mode != FORCE_LIVE:
+      with open(list_cache_path, 'r') as list_cache_file:
+        list_json = json.load(list_cache_file)
+        for item_id in list_json:
+          results.append(item_method(item_id, cache_mode=cache_mode))
+    else:
+      live_list_content = self._search_and_cache_call(
+          list_method,
+          item_to_id_method,
+          item_cache_name_template,
+          search_args=list_args)
+      live_list_ids = []
+      for live_item in live_list_content:
+        item_id = item_to_id_method(live_item)
+        live_list_ids.append(item_id)
+        results.append(result)
+      with open(list_cache_path, 'w') as list_cache_file:
+        json.dump(live_list_ids, list_cache_file)
+    return results
+
+  def get_documents(self, cache_mode=CACHE_FIRST):
+    return self._list_call(
+      'documents',
+      super(RobinhoodCachedClient, self).get_documents,
+      self.get_document_by_id,
+      lambda document: document['id'],
+      'document_{}',
+      cache_mode
+    )
+
+  def get_ach_transfers(self, cache_mode=CACHE_FIRST):
+    return self._list_call(
+      'ach_transfers',
+      super(RobinhoodCachedClient, self).get_ach_transfers,
+      self.get_ach_transfer_by_id,
+      lambda ach_transfer: ach_transfer['id'],
+      'ach_transfer_{}',
+      cache_mode
+    )
+
+  def get_dividends(self, cache_mode=CACHE_FIRST):
+    return self._list_call(
+      'dividends',
+      super(RobinhoodCachedClient, self).get_dividends,
+      self.get_dividend_by_id,
+      lambda dividend: dividend['id'],
+      'dividend_{}',
+      cache_mode
+    )
+
+  def _search_call(
+      self,
+      item_ids,
+      search_method,
+      item_to_id_method,
+      item_cache_name_template,
+      item_method,
+      cache_mode):
+    items = []
+    unfound_item_ids = item_ids[:]
+    if cache_mode != FORCE_LIVE:
+      for item_id in item_ids:
+        item = item_method(item_id, cache_mode=FORCE_CACHE)
+        if item:
+          unfound_item_ids.remove(item_id)
+          items.append(item)
+
+    if unfound_item_ids:
+      live_search_content = self._search_and_cache_call(
+          search_method,
+          item_to_id_method,
+          item_cache_name_template,
+          search_args=[unfound_item_ids])
+      items.extend(live_search_content)
+
+    return items
+
+  def get_instruments(self, instrument_ids, cache_mode=CACHE_FIRST):
+    return self._search_call(
+        instrument_ids,
+        super(RobinhoodCachedClient, self).get_instruments,
+        lambda instrument: instrument['id'],
+        'instrument_{}',
+        self.get_instrument_by_id,
+        cache_mode)
+
+  def get_popularities(self, instrument_ids, cache_mode=CACHE_FIRST):
+    return self._search_call(
+        instrument_ids,
+        super(RobinhoodCachedClient, self).get_popularities,
+        lambda popularity: get_last_id_from_url(popularity['instrument']),
+        'popularity_{}',
+        self.get_popularity,
+        cache_mode)
+
+  def get_ratings(self, instrument_ids, cache_mode=CACHE_FIRST):
+    return self._search_call(
+        instrument_ids,
+        super(RobinhoodCachedClient, self).get_ratings,
+        lambda rating: rating['instrument_id'],
+        'rating_{}',
+        self.get_rating,
+        cache_mode)
+
   # TODO: get_quotes
   # TODO: get_prices
   # TODO: get_historical_quotes
   # TODO: get_fundamentals
 
-  def get_ach_transfers(self, force_live=False):
-    transfers_list_cache_path = os.path.join(cache_root_path, 'ach_transfers')
-    if os.path.exists(transfers_list_cache_path) and not force_live:
-      transfers = []
-      with open(transfers_list_cache_path, 'r') as transfers_list_cache_file:
-        transfers_list = json.load(transfers_list_cache_file)
-        for transfer_id in transfers_list:
-          transfers.append(self.get_ach_transfer_by_id(transfer_id, force_live=force_live))
-    else:
-      transfers = super(RobinhoodCachedClient, self).get_ach_transfers()
-      transfers_list = []
-      for transfer in transfers:
-        transfer_id = transfer['id']
-        transfers_list.append(transfer_id)
-        transfer_cache_path = os.path.join(cache_root_path, 'ach_transfer_{}'.format(transfer_id))
-        with open(transfer_cache_path, 'w') as transfer_cache_file:
-          json.dump(transfer, transfer_cache_file)
-      with open(transfers_list_cache_path, 'w') as transfers_list_cache_file:
-        json.dump(transfers_list, transfers_list_cache_file)
-    return transfers
-
-  def get_dividends(self, force_live=False):
-    dividends_list_cache_path = os.path.join(cache_root_path, 'dividends')
-    if os.path.exists(dividends_list_cache_path) and not force_live:
-      dividends = []
-      with open(dividends_list_cache_path, 'r') as dividends_list_cache_file:
-        dividends_list = json.load(dividends_list_cache_file)
-        for dividend_id in dividends_list:
-          dividends.append(self.get_dividend_by_id(dividend_id, force_live=force_live))
-    else:
-      dividends = super(RobinhoodCachedClient, self).get_dividends()
-      dividends_list = []
-      for dividend in dividends:
-        dividend_id = dividend['id']
-        dividends_list.append(dividend_id)
-        dividend_cache_path = os.path.join(cache_root_path, 'dividend_{}'.format(dividend_id))
-        with open(dividend_cache_path, 'w') as dividend_cache_file:
-          json.dump(dividend, dividend_cache_file)
-      with open(dividends_list_cache_path, 'w') as dividends_list_cache_file:
-        json.dump(dividends_list, dividends_list_cache_file)
-    return dividends
-
-  def get_positions(self, include_old=False, force_live=False):
+  def get_positions(self, include_old=False, cache_mode=CACHE_FIRST):
     positions_list_cache_path = os.path.join(cache_root_path, 'positions_' + ('all' if include_old else  'current'))
-    if os.path.exists(positions_list_cache_path) and not force_live:
+    if os.path.exists(positions_list_cache_path) and cache_mode != FORCE_LIVE:
       account_number = self.get_account()['account_number']
       positions = []
       with open(positions_list_cache_path, 'r') as positions_list_cache_file:
         positions_list = json.load(positions_list_cache_file)
         for instrument_id in positions_list:
-          positions.append(self.get_position_by_instrument_id(account_number, instrument_id, force_live=force_live))
+          positions.append(self.get_position_by_instrument_id(account_number, instrument_id, cache_mode=cache_mode))
     else:
       positions = super(RobinhoodCachedClient, self).get_positions(include_old=include_old)
       positions_list = []
@@ -411,9 +482,9 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(positions_list, positions_list_cache_file)
     return positions
 
-  def get_instrument_by_symbol(self, symbol, force_live=False):
+  def get_instrument_by_symbol(self, symbol, cache_mode=CACHE_FIRST):
     symbol_instrument_id_cache_path = os.path.join(cache_root_path, 'symbol_instrument_id_{}'.format(symbol))
-    if os.path.exists(symbol_instrument_id_cache_path) and not force_live:
+    if os.path.exists(symbol_instrument_id_cache_path) and cache_mode != FORCE_LIVE:
       with open(symbol_instrument_id_cache_path, 'r') as symbol_instrument_id_cache_file:
         instrument_id = symbol_instrument_id_cache_file.read()
       return self.get_instrument_by_id(instrument_id)
@@ -426,18 +497,18 @@ class RobinhoodCachedClient(RobinhoodClient):
         json.dump(instrument_json, instrument_cache_file)
       return instrument_json
 
-  def get_orders(self, instrument_id=None, force_live=False):
+  def get_orders(self, instrument_id=None, cache_mode=CACHE_FIRST):
     """TODO: Handle orders by instrument."""
     if instrument_id:
       orders_list_cache_path = os.path.join(cache_root_path, 'instrument_orders_{}'.format(instrument_id))
     else:
       orders_list_cache_path = os.path.join(cache_root_path, 'orders')
-    if os.path.exists(orders_list_cache_path) and not force_live:
+    if os.path.exists(orders_list_cache_path) and cache_mode != FORCE_LIVE:
       orders = []
       with open(orders_list_cache_path, 'r') as orders_list_cache_file:
         orders_list = json.load(orders_list_cache_file)
         for order_id in orders_list:
-          orders.append(self.get_order_by_id(order_id, force_live=force_live))
+          orders.append(self.get_order_by_id(order_id, cache_mode=cache_mode))
     else:
       orders = super(RobinhoodCachedClient, self).get_orders(instrument_id=instrument_id)
       orders_list = []

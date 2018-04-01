@@ -9,10 +9,10 @@ from dateutil.parser import parse
 import pytz
 
 from robinhood.exceptions import NotFound
-from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
+from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, CACHE_FIRST, FORCE_LIVE
 
-def display_quote(client, symbol, live):
-  account_number = client.get_account(force_live=False)['account_number']
+def display_quote(client, symbol, cache_move):
+  account_number = client.get_account()['account_number']
 
   now = datetime.now(pytz.UTC)
   # Get instrument parts
@@ -28,7 +28,7 @@ def display_quote(client, symbol, live):
     simple_name = instrument['simple_name']
 
   # Get fundamentals
-  fundamental = client.get_fundamental(symbol, force_live=live)
+  fundamental = client.get_fundamental(symbol, cache_mode=cache_move)
   founded_year = fundamental['year_founded']
   high_52 = Decimal(fundamental['high_52_weeks']) if fundamental['high_52_weeks'] else None
   low_52 = Decimal(fundamental['low_52_weeks']) if fundamental['low_52_weeks'] else None
@@ -38,8 +38,8 @@ def display_quote(client, symbol, live):
   pe_ratio = Decimal(fundamental['pe_ratio']) if fundamental['pe_ratio'] else 0.0
   dividend_yield = Decimal(fundamental['dividend_yield']) if fundamental['dividend_yield'] else 0.0
 
-  num_open_positions = client.get_popularity(instrument_id, force_live=live)['num_open_positions']
-  ratings = client.get_rating(instrument_id, force_live=live)['summary']
+  num_open_positions = client.get_popularity(instrument_id, cache_mode=cache_move)['num_open_positions']
+  ratings = client.get_rating(instrument_id, cache_mode=cache_move)['summary']
   num_ratings = sum(v for _, v in ratings.items()) if ratings else None
   if num_ratings:
     percent_buy = ratings['num_buy_ratings'] * 100 / num_ratings
@@ -72,7 +72,7 @@ def display_quote(client, symbol, live):
 
   # Get position
   try:
-    position = client.get_position_by_instrument_id(account_number, instrument_id, force_live=live)
+    position = client.get_position_by_instrument_id(account_number, instrument_id, cache_mode=cache_move)
   except NotFound:
     position_average_buy_price = 0
     position_quantity = 0
@@ -90,7 +90,7 @@ def display_quote(client, symbol, live):
   # Get order history, put as a subdisplay of position
   print('')
   print('\t-------------- orders --------------')
-  orders = client.get_orders(instrument_id=instrument_id, force_live=live)
+  orders = client.get_orders(instrument_id=instrument_id, cache_mode=cache_move)
   if len(orders) == 0:
     print('\tNone')
   else:
@@ -142,4 +142,4 @@ if __name__ == '__main__':
 
   client = RobinhoodCachedClient()
   client.login()
-  display_quote(client, args.symbol, args.live)
+  display_quote(client, args.symbol, FORCE_LIVE if args.live else CACHE_FIRST)

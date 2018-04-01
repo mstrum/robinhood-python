@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 
-from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
+from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, FORCE_LIVE
 from robinhood.util import get_last_id_from_url
 
 client = RobinhoodCachedClient()
@@ -23,7 +23,7 @@ def display_sp500_movers():
   print('----------------- Top S&P 500 Movers -----------------')
   for direction in ['up', 'down']:
     extra_percentage_symbol = '+' if direction == 'up' else ''
-    movers = client.get_sp500_movers(direction, force_live=True)
+    movers = client.get_sp500_movers(direction, cache_mode=FORCE_LIVE)
     if direction == 'down':
       movers.reverse()
 
@@ -48,7 +48,7 @@ def display_for_you():
 def display_top_movers():
   print('')
   print('----------------- Top Movers -----------------')
-  instrument_ids =  client.get_instrument_ids_for_tag('top-movers', force_live=True)
+  instrument_ids =  client.get_instrument_ids_for_tag('top-movers', cache_mode=FORCE_LIVE)
   for instrument_id in instrument_ids:
     instrument = client.get_instrument_by_id(instrument_id)
     print('{}\t{}'.format(instrument['symbol'], instrument['simple_name'] or instrument['name']))
@@ -56,7 +56,7 @@ def display_top_movers():
 def display_100_most_popular():
   print('')
   print('----------------- 100 Most Popular Stocks With Robinhood Users -----------------')
-  instrument_ids =  client.get_instrument_ids_for_tag('100-most-popular', force_live=True)
+  instrument_ids =  client.get_instrument_ids_for_tag('100-most-popular', cache_mode=FORCE_LIVE)
   for instrument_id in instrument_ids:
     instrument = client.get_instrument_by_id(instrument_id)
     print('{}\t{}'.format(instrument['symbol'], instrument['simple_name'] or instrument['name']))

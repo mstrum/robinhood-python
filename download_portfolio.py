@@ -4,7 +4,7 @@ from decimal import Decimal
 import argparse
 import csv
 
-from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
+from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, CACHE_FIRST, FORCE_LIVE
 from robinhood.util import get_last_id_from_url
 
 # Set up the client
@@ -12,7 +12,7 @@ client = RobinhoodCachedClient()
 client.login()
 
 
-def download_portfolio(live):
+def download_portfolio(cache_mode):
   with open('portfolio.csv', 'w', newline='') as csv_file:
     fieldnames = [
       'symbol',
@@ -35,7 +35,7 @@ def download_portfolio(live):
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
 
-    positions = client.get_positions(force_live=live)
+    positions = client.get_positions(cache_mode=cache_mode)
     position_by_instrument_id = {}
     for position in positions:
       quantity = int(float(position['quantity']))
@@ -49,8 +49,8 @@ def download_portfolio(live):
       }
 
     instrument_ids = list(position_by_instrument_id.keys())
-    instruments = client.get_instruments(instrument_ids=instrument_ids)
-    for instrument in instruments['results']:
+    instruments = client.get_instruments(instrument_ids, cache_mode=cache_mode)
+    for instrument in instruments:
       instrument_id = instrument['id']
       position_by_instrument_id[instrument_id]['symbol'] = instrument['symbol']
       position_by_instrument_id[instrument_id]['simple_name'] = instrument['simple_name']
@@ -63,12 +63,12 @@ def download_portfolio(live):
       instrument_id = get_last_id_from_url(fundamental['instrument'])
       position_by_instrument_id[instrument_id]['last_open'] = Decimal(fundamental['open'])
 
-    popularities = client.get_popularities(instrument_ids)
+    popularities = client.get_popularities(instrument_ids, cache_mode=cache_mode)
     for popularity in popularities:
       instrument_id = get_last_id_from_url(popularity['instrument'])
       position_by_instrument_id[instrument_id]['robinhood_holders'] = popularity['num_open_positions']
 
-    ratings = client.get_ratings(instrument_ids)
+    ratings = client.get_ratings(instrument_ids, cache_mode=cache_mode)
     for rating in ratings:
       instrument_id = rating['instrument_id']
       num_ratings = sum(v for _, v in rating['summary'].items()) if rating['summary'] else None
@@ -122,4 +122,4 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Download a snapshot of your portfolio')
   parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
   args = parser.parse_args()
-  download_portfolio(args.live)
+  download_portfolio(FORCE_LIVE if args.live else CACHE_FIRST)

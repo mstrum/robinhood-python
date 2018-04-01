@@ -7,15 +7,15 @@ import csv
 from dateutil.parser import parse
 import pytz
 
-from robinhood.RobinhoodCachedClient import RobinhoodCachedClient
+from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, CACHE_FIRST, FORCE_LIVE
 from robinhood.util import get_last_id_from_url
 
 # Set up the client
 client = RobinhoodCachedClient()
 client.login()
 
-def add_margin(csv_writer, live):
-  account = client.get_account(force_live=live)
+def add_margin(csv_writer, cache_mode):
+  account = client.get_account(cache_mode=cache_mode)
   unallocated_margin_cash = Decimal(account['margin_balances']['unallocated_margin_cash'])
   margin_limit = Decimal(account['margin_balances']['margin_limit'])
   updated_at = parse(account['margin_balances']['updated_at']).astimezone(pytz.timezone('US/Pacific')).date()
@@ -49,8 +49,8 @@ def add_margin(csv_writer, live):
     'num_executions': 1,
   })
 
-def add_subscription_fees(csv_writer, live):
-  for subscription_fee in client.get_subscription_fees(force_live=live):
+def add_subscription_fees(csv_writer, cache_mode):
+  for subscription_fee in client.get_subscription_fees(cache_mode=cache_mode):
     amount = Decimal(subscription_fee['amount'])
     created_at = parse(subscription_fee['created_at']).astimezone(pytz.timezone('US/Pacific')).date()
     assert not subscription_fee['refunds']
@@ -70,15 +70,15 @@ def add_subscription_fees(csv_writer, live):
       'num_executions': 1,
     })
 
-def add_transfers(csv_writer, live):
-  for transfer in client.get_ach_transfers(force_live=live):
+def add_transfers(csv_writer, cache_mode):
+  for transfer in client.get_ach_transfers(cache_mode=cache_mode):
     transfer_amount = Decimal(transfer['amount'])
     early_access_amount = Decimal(transfer['early_access_amount'])
     updated_at = parse(transfer['updated_at']).astimezone(pytz.timezone('US/Pacific')).date()
     amount = early_access_amount or transfer_amount
     direction = 'deposit_early_access' if early_access_amount else transfer['direction']
 
-    relationship = client.get_ach_relationship_by_id(get_last_id_from_url(transfer['ach_relationship']), force_live=live)
+    relationship = client.get_ach_relationship_by_id(get_last_id_from_url(transfer['ach_relationship']), cache_mode=cache_mode)
 
     csv_writer.writerow({
       'symbol': '',
@@ -94,8 +94,8 @@ def add_transfers(csv_writer, live):
     })
 
 
-def add_rewards(csv_writer, live):
-  for referral in client.get_referrals(force_live=live):
+def add_rewards(csv_writer, cache_mode):
+  for referral in client.get_referrals(cache_mode=cache_mode):
     direction = referral['direction']
     if direction != 'from':
       continue
@@ -129,8 +129,8 @@ def add_rewards(csv_writer, live):
     })
 
 
-def add_orders(csv_writer, live):
-  for order in client.get_orders(force_live=live):
+def add_orders(csv_writer, cache_mode):
+  for order in client.get_orders(cache_mode=cache_mode):
     order_id = order['id']
     state = order['state']
 
@@ -168,8 +168,8 @@ def add_orders(csv_writer, live):
     })
 
 
-def add_dividends(csv_writer, live):
-  for dividend in client.get_dividends(force_live=live):
+def add_dividends(csv_writer, cache_mode):
+  for dividend in client.get_dividends(cache_mode=cache_mode):
     paid_at = dividend['paid_at']
     if not paid_at:
       continue
@@ -197,7 +197,7 @@ def add_dividends(csv_writer, live):
     })
 
 
-def download_history(live):
+def download_history(cache_mode):
   with open('history.csv', 'w', newline='') as csv_file:
     fieldnames = [
       'symbol',
@@ -213,17 +213,17 @@ def download_history(live):
     ]
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
-    add_orders(csv_writer, live)
-    add_dividends(csv_writer, live)
-    add_rewards(csv_writer, live)
-    add_transfers(csv_writer, live)
-    add_subscription_fees(csv_writer, live)
-    add_margin(csv_writer, live)
+    add_orders(csv_writer, cache_mode)
+    add_dividends(csv_writer, cache_mode)
+    add_rewards(csv_writer, cache_mode)
+    add_transfers(csv_writer, cache_mode)
+    add_subscription_fees(csv_writer, cache_mode)
+    add_margin(csv_writer, cache_mode)
 
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Download a list of all financial history')
   parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
   args = parser.parse_args()
-  download_history(args.live)
+  download_history(FORCE_LIVE if args.live else CACHE_FIRST)
 
