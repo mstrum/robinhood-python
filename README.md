@@ -74,3 +74,4 @@ Scripts to add:
 
 * This library may have bugs which could result in financial consequences, you are responsible for anything you execute. Inspect the underlying code if you want to be sure it's doing what you think it should be doing.
 * I am not affiliated with Robinhood and this library uses an undocumented API. If you have any questions about them, contact Robinhood directly: https://robinhood.com/
+* By using this library, you understand that you are not to charge or make any money through advertisements or fees. Until Robinhood releases an official API with official guidance, this is only to be used for non-profit activites.  I am not responsible if Robinhood cancels your account because of misuse of this library.
