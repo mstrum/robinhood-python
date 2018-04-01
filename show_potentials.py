@@ -12,9 +12,9 @@ client = RobinhoodCachedClient()
 client.login()
 
 
-def show_potentials(cache_move):
+def show_potentials(cache_mode):
   # First, get the portfolio
-  positions = client.get_positions(cache_mode=cache_move)
+  positions = client.get_positions(cache_mode=cache_mode)
   position_by_instrument_id = {}
   symbol_to_instrument_id = {}
   for position in positions:
@@ -22,7 +22,7 @@ def show_potentials(cache_move):
     average_buy_price = Decimal(position['average_buy_price'])
     instrument_id = get_last_id_from_url(position['instrument'])
     instrument = client.get_instrument_by_id(instrument_id)
-    fundamental = client.get_fundamental(instrument['symbol'], cache_mode=cache_move)
+    fundamental = client.get_fundamental(instrument['symbol'], cache_mode=cache_mode)
     symbol_to_instrument_id[instrument['symbol']] = instrument_id
 
     position_by_instrument_id[instrument_id] = {
