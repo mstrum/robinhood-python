@@ -6,6 +6,10 @@ Some current caveats:
 * The scripts currently default to extreme caching policies, use --live to guarantee most recent data.
 * Much of the code will assert (or not) in scenarioes where states and paging is involved where they haven't been handled correctly yet
 
+## Security
+
+* Certificate pinning is used to block against MITM attacks
+
 ## Module
 
 * [RobinhoodClient](robinhood/RobinhoodClient.py)
