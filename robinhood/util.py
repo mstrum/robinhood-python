@@ -1,7 +1,12 @@
 from urllib.parse import parse_qs, urlparse
+import os
 
+CURRENT_DIRECTORY = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 API_HOST = 'https://api.robinhood.com/'
+API_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'api.robinhood.com.pem')
+API_FINGERPRINT = '8fc146fb190a16fff7d1e6485c74540e00ff36a6'
 ANALYTICS_HOST = 'https://analytics.robinhood.com/'
+ANALYTICS_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'analytics.robinhood.com.pem')
 
 KNOWN_TAGS = [
   '100-most-popular',

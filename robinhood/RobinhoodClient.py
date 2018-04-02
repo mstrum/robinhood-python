@@ -25,7 +25,9 @@ import requests
 from .exceptions import BadRequest, MfaRequired, NotFound, NotLoggedIn, TooManyRequests
 from .util import (
   ANALYTICS_HOST,
+  ANALYTICS_CERT_BUNDLE_PATH,
   API_HOST,
+  API_CERT_BUNDLE_PATH,
   KNOWN_TAGS,
   ORDER_SIDES,
   ORDER_TYPES,
@@ -60,7 +62,7 @@ class RobinhoodClient:
     if mfa:
       body['mfa_code'] = mfa
 
-    response = self._session.post(API_HOST + 'api-token-auth/', data=body)
+    response = self._session.post(API_HOST + 'api-token-auth/', data=body, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -75,7 +77,7 @@ class RobinhoodClient:
     return auth_token
 
   def clear_auth_token(self):
-    response = self._session.post(API_HOST + 'api-token-logout/')
+    response = self._session.post(API_HOST + 'api-token-logout/', verify=API_CERT_BUNDLE_PATH)
     response.raise_for_status()
     del self._session.headers['Authorization']
 
@@ -99,7 +101,7 @@ class RobinhoodClient:
         "created_at": "2018-02-01T22:46:39.922345Z"
     }
     """
-    response = self._session.get(API_HOST + 'user/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'user/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -128,7 +130,7 @@ class RobinhoodClient:
         "date_of_birth": "1999-01-01"
     }
     """
-    response = self._session.get(API_HOST + 'user/basic_info', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'user/basic_info', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -157,7 +159,7 @@ class RobinhoodClient:
         "security_affiliated_firm_name": ""
     }
     """
-    response = self._session.get(API_HOST + 'user/additional_info', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'user/additional_info', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -177,7 +179,7 @@ class RobinhoodClient:
         "url": "https://share.robinhood.com/matts952"
     }
     """
-    response = self._session.get(API_HOST + 'midlands/referral/code/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'midlands/referral/code/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -189,7 +191,7 @@ class RobinhoodClient:
     return response.json()
 
   def get_margin_calls(self):
-    response = self._session.get(API_HOST + 'margin/calls/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'margin/calls/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -221,7 +223,7 @@ class RobinhoodClient:
     ]
 
     """
-    response = self._session.get(API_HOST + 'subscription/subscription_fees/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'subscription/subscription_fees/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -261,7 +263,7 @@ class RobinhoodClient:
     params = {
       'active': 'true',
     }
-    response = self._session.get(API_HOST + 'subscription/subscriptions/', params=params, headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'subscription/subscriptions/', params=params, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -298,7 +300,7 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'markets/')
+    response = self._session.get(API_HOST + 'markets/', verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -314,7 +316,8 @@ class RobinhoodClient:
     """The response is a PDF file"""
     response = self._session.get(
       API_HOST + 'documents/{}/download/'.format(document_id),
-      headers=self._authorization_headers
+      headers=self._authorization_headers,
+      verify=API_CERT_BUNDLE_PATH
     )
     try:
       response.raise_for_status()
@@ -346,7 +349,7 @@ class RobinhoodClient:
         "date": "2018-02-01"
     }
     """
-    response = self._session.get(API_HOST + 'documents/{}/'.format(document_id), headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'documents/{}/'.format(document_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -384,7 +387,7 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'documents/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'documents/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -413,7 +416,7 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'watchlists/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'watchlists/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -446,7 +449,7 @@ class RobinhoodClient:
     }
 
     """
-    response = self._session.get(API_HOST + 'watchlists/{}/'.format(watchlist_name), headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'watchlists/{}/'.format(watchlist_name), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -523,7 +526,7 @@ class RobinhoodClient:
         "market_push": true
     }
     """
-    response = self._session.get(API_HOST + 'settings/notifications', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'settings/notifications', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -551,7 +554,7 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'notifications/devices/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'notifications/devices/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -629,7 +632,7 @@ class RobinhoodClient:
         "deposit_halted": false
     }
     """
-    response = self._session.get(API_HOST + 'accounts/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'accounts/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -662,7 +665,7 @@ class RobinhoodClient:
         "investment_objective": "growth_invest_obj"
     }
     """
-    response = self._session.get(API_HOST + 'user/investment_profile/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'user/investment_profile/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -681,7 +684,7 @@ class RobinhoodClient:
         "instrument": "https://api.robinhood.com/instruments/e6f3bb44-dcdf-445b-bbcb-2e738fd21d6d/"
     }
     """
-    response = self._session.get(API_HOST + 'instruments/{}/popularity/'.format(instrument_id))
+    response = self._session.get(API_HOST + 'instruments/{}/popularity/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -716,7 +719,7 @@ class RobinhoodClient:
     params = {
       'ids': ','.join(instrument_ids),
     }
-    response = self._session.get(API_HOST + 'instruments/popularity/', params=params)
+    response = self._session.get(API_HOST + 'instruments/popularity/', params=params, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -743,7 +746,7 @@ class RobinhoodClient:
         "instrument_id": "e6f3bb44-dcdf-445b-bbcb-2e738fd21d6d"
     }
     """
-    response = self._session.get(API_HOST + 'midlands/ratings/{}/'.format(instrument_id))
+    response = self._session.get(API_HOST + 'midlands/ratings/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -785,7 +788,7 @@ class RobinhoodClient:
     params = {
       'ids': ','.join(instrument_ids),
     }
-    response = self._session.get(API_HOST + 'midlands/ratings/', params=params)
+    response = self._session.get(API_HOST + 'midlands/ratings/', params=params, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -812,7 +815,7 @@ class RobinhoodClient:
     ]
     """
     assert tag in KNOWN_TAGS
-    response = self._session.get(ANALYTICS_HOST + 'instruments/tag/{}/'.format(tag), headers=self._authorization_headers)
+    response = self._session.get(ANALYTICS_HOST + 'instruments/tag/{}/'.format(tag), headers=self._authorization_headers, verify=ANALYTICS_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -851,7 +854,7 @@ class RobinhoodClient:
     params = {
       'similar_to': instrument_id,
     }
-    response = self._session.get(ANALYTICS_HOST + 'instruments/', params=params)
+    response = self._session.get(ANALYTICS_HOST + 'instruments/', params=params, verify=ANALYTICS_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -877,7 +880,7 @@ class RobinhoodClient:
     }
     """
     assert tag in KNOWN_TAGS
-    response = self._session.get(API_HOST + 'midlands/tags/tag/{}/'.format(tag))
+    response = self._session.get(API_HOST + 'midlands/tags/tag/{}/'.format(tag), verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -935,7 +938,7 @@ class RobinhoodClient:
       'ids': ','.join(instrument_ids),
       'active_instruments_only': 'false',
     }
-    response = self._session.get(API_HOST + 'instruments/', params=params)
+    response = self._session.get(API_HOST + 'instruments/', params=params, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -978,7 +981,7 @@ class RobinhoodClient:
         "name": "Praetorian Property, Inc. Common Stock"
     }
     """
-    response = self._session.get(API_HOST + 'instruments/{}/'.format(instrument_id))
+    response = self._session.get(API_HOST + 'instruments/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1028,7 +1031,7 @@ class RobinhoodClient:
       'symbol': symbol,
       'active_instruments_only': True,
     }
-    response = self._session.get(API_HOST + 'instruments/', params=params)
+    response = self._session.get(API_HOST + 'instruments/', params=params, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1065,7 +1068,7 @@ class RobinhoodClient:
         ]
     }
     """
-    response = self._session.get(API_HOST + 'instruments/{}/splits'.format(instrument_id))
+    response = self._session.get(API_HOST + 'instruments/{}/splits'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1098,7 +1101,7 @@ class RobinhoodClient:
         "last_trade_price_source": "consolidated"
     }
     """
-    response = self._session.get(API_HOST + 'quotes/{}/'.format(instrument_id))
+    response = self._session.get(API_HOST + 'quotes/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1146,7 +1149,7 @@ class RobinhoodClient:
       'instruments': ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
     }
 
-    response = self._session.get(API_HOST + 'quotes/', params=params)
+    response = self._session.get(API_HOST + 'quotes/', params=params, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1186,7 +1189,7 @@ class RobinhoodClient:
       params['symbols'] = ','.join(symbols)
     if instrument_ids:
       params['instruments'] = ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
-    response = self._session.get(API_HOST + 'marketdata/prices/'.format(instrument_id), params=params)
+    response = self._session.get(API_HOST + 'marketdata/prices/'.format(instrument_id), params=params, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1214,7 +1217,7 @@ class RobinhoodClient:
         "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/"
     }
     """
-    response = self._session.get(API_HOST + 'dividends/{}/'.format(dividend_id), headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'dividends/{}/'.format(dividend_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1247,7 +1250,7 @@ class RobinhoodClient:
         "verification_method": "bank_auth"
     }
     """
-    response = self._session.get(API_HOST + 'ach/relationships/{}'.format(relationship_id), headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'ach/relationships/{}'.format(relationship_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1278,7 +1281,7 @@ class RobinhoodClient:
         "url": "https://api.robinhood.com/ach/transfers/00000000-0000-4000-0000-000000000000/"
     }
     """
-    response = self._session.get(API_HOST + 'ach/transfers/{}'.format(transfer_id), headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'ach/transfers/{}'.format(transfer_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1311,7 +1314,7 @@ class RobinhoodClient:
     ]
     """
     # There's also updated_at[gte]
-    response = self._session.get(API_HOST + 'ach/transfers/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'ach/transfers/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1349,7 +1352,7 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'dividends/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'dividends/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1398,7 +1401,7 @@ class RobinhoodClient:
         "extended_hours": true
     }
     """
-    response = self._session.get(API_HOST + 'orders/{}/'.format(order_id), headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'orders/{}/'.format(order_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1458,7 +1461,7 @@ class RobinhoodClient:
         params['instrument'] = get_instrument_url_from_id(instrument_id)
       if cursor:
         params['cursor'] = cursor
-      response = self._session.get(API_HOST + 'orders/', params=params, headers=self._authorization_headers)
+      response = self._session.get(API_HOST + 'orders/', params=params, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
       try:
         response.raise_for_status()
       except requests.HTTPError as http_error:
@@ -1526,7 +1529,7 @@ class RobinhoodClient:
     params = {
       'direction': direction,
     }
-    response = self._session.get(API_HOST + 'midlands/movers/sp500/', params=params, headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'midlands/movers/sp500/', params=params, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1561,7 +1564,7 @@ class RobinhoodClient:
         "last_core_equity": "0.0000"
     }
     """
-    response = self._session.get(API_HOST + 'portfolios/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'portfolios/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1607,7 +1610,8 @@ class RobinhoodClient:
     response = self._session.get(
       API_HOST + 'positions/',
       params=params,
-      headers=self._authorization_headers
+      headers=self._authorization_headers,
+      verify=API_CERT_BUNDLE_PATH
     )
     try:
       response.raise_for_status()
@@ -1649,7 +1653,8 @@ class RobinhoodClient:
     # Possible param: nonzero=true includes only owned securities
     response = self._session.get(
       API_HOST + 'accounts/{}/positions/{}/'.format(account_number, instrument_id),
-      headers=self._authorization_headers
+      headers=self._authorization_headers,
+      verify=API_CERT_BUNDLE_PATH
     )
     try:
       response.raise_for_status()
@@ -1714,7 +1719,7 @@ class RobinhoodClient:
       'span': span,
       'bounds': bounds,
     }
-    response = self._session.get(API_HOST + 'quotes/historicals/', params=params)
+    response = self._session.get(API_HOST + 'quotes/historicals/', params=params, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1757,7 +1762,7 @@ class RobinhoodClient:
         ]
     }
     """
-    response = self._session.get(API_HOST + 'midlands/news/{}/'.format(symbol))
+    response = self._session.get(API_HOST + 'midlands/news/{}/'.format(symbol), verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1782,7 +1787,7 @@ class RobinhoodClient:
         ...
     ]
     """
-    response = self._session.get(API_HOST + 'midlands/tags/instrument/{}/'.format(instrument_id))
+    response = self._session.get(API_HOST + 'midlands/tags/instrument/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1815,7 +1820,7 @@ class RobinhoodClient:
         "year_founded": 1976
     }
     """
-    response = self._session.get(API_HOST + 'fundamentals/{}/'.format(instrument_id))
+    response = self._session.get(API_HOST + 'fundamentals/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1859,7 +1864,7 @@ class RobinhoodClient:
     params = {
       'instruments': ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
     }
-    response = self._session.get(API_HOST + 'fundamentals/', params=params)
+    response = self._session.get(API_HOST + 'fundamentals/', params=params, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1915,7 +1920,7 @@ class RobinhoodClient:
         ]
     }
     """
-    response = self._session.get(API_HOST + 'midlands/referral/', headers=self._authorization_headers)
+    response = self._session.get(API_HOST + 'midlands/referral/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1934,7 +1939,7 @@ class RobinhoodClient:
     Example response:
     {}
     """
-    response = self._session.post(API_HOST + 'orders/{}/cancel/'.format(order_id), headers=self._authorization_headers)
+    response = self._session.post(API_HOST + 'orders/{}/cancel/'.format(order_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -2001,7 +2006,7 @@ class RobinhoodClient:
       'trigger': 'immediate', # see util.TRIGGERS
       'type': order_type,
     }
-    response = self._session.post(API_HOST + 'orders/', data=body, headers=self._authorization_headers)
+    response = self._session.post(API_HOST + 'orders/', data=body, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
