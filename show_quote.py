@@ -26,7 +26,7 @@ def display_quote(client, symbol, cache_mode):
     simple_name = instrument['simple_name']
 
   # Get fundamentals
-  fundamental = client.get_fundamental(symbol, cache_mode=cache_mode)
+  fundamental = client.get_fundamental(instrument_id, cache_mode=cache_mode)
   founded_year = fundamental['year_founded']
   high_52 = Decimal(fundamental['high_52_weeks']) if fundamental['high_52_weeks'] else None
   low_52 = Decimal(fundamental['low_52_weeks']) if fundamental['low_52_weeks'] else None

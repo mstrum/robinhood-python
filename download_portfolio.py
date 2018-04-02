@@ -58,7 +58,7 @@ def download_portfolio(cache_mode):
 
     symbols = [p['symbol'] for p in position_by_instrument_id.values()]
 
-    fundamentals = client.get_fundamentals(symbols)
+    fundamentals = client.get_fundamentals(instrument_ids, cache_mode=cache_mode)
     for fundamental in fundamentals:
       instrument_id = get_last_id_from_url(fundamental['instrument'])
       position_by_instrument_id[instrument_id]['last_open'] = Decimal(fundamental['open'])

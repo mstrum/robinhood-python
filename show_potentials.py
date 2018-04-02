@@ -22,7 +22,7 @@ def show_potentials(cache_mode):
     average_buy_price = Decimal(position['average_buy_price'])
     instrument_id = get_last_id_from_url(position['instrument'])
     instrument = client.get_instrument_by_id(instrument_id)
-    fundamental = client.get_fundamental(instrument['symbol'], cache_mode=cache_mode)
+    fundamental = client.get_fundamental(instrument_id, cache_mode=cache_mode)
     symbol_to_instrument_id[instrument['symbol']] = instrument_id
 
     position_by_instrument_id[instrument_id] = {

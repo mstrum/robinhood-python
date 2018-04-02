@@ -334,12 +334,12 @@ class RobinhoodCachedClient(RobinhoodClient):
       args=[instrument_id]
     )
 
-  def get_fundamental(self, symbol, cache_mode=CACHE_FIRST):
+  def get_fundamental(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
-      'fundamental_{}'.format(symbol),
+      'fundamental_{}'.format(instrument_id),
       super(RobinhoodCachedClient, self).get_fundamental,
       cache_mode,
-      args=[symbol]
+      args=[instrument_id]
     )
 
   def get_referrals(self, cache_mode=CACHE_FIRST):
@@ -495,6 +495,15 @@ class RobinhoodCachedClient(RobinhoodClient):
         self.get_instrument_by_id,
         cache_mode)
 
+  def get_fundamentals(self, instrument_ids, cache_mode=CACHE_FIRST):
+    return self._search_call(
+        instrument_ids,
+        super(RobinhoodCachedClient, self).get_fundamentals,
+        lambda fundamental: get_last_id_from_url(fundamental['instrument']),
+        'fundamental_{}',
+        self.get_fundamental,
+        cache_mode)
+
   def get_popularities(self, instrument_ids, cache_mode=CACHE_FIRST):
     return self._search_call(
         instrument_ids,
@@ -524,4 +533,3 @@ class RobinhoodCachedClient(RobinhoodClient):
 
   # TODO: get_prices
   # TODO: get_historical_quotes
-  # TODO: get_fundamentals

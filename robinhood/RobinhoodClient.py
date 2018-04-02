@@ -1792,11 +1792,8 @@ class RobinhoodClient:
     response_json = response.json()
     return response_json['tags']
 
-  def get_fundamental(self, symbol):
+  def get_fundamental(self, instrument_id):
     """
-    Args:
-      symbol: e.g. AAPL
-
     Example response:
     {
         "average_volume": "28771372.6932",
@@ -1818,7 +1815,7 @@ class RobinhoodClient:
         "year_founded": 1976
     }
     """
-    response = self._session.get(API_HOST + 'fundamentals/{}/'.format(symbol))
+    response = self._session.get(API_HOST + 'fundamentals/{}/'.format(instrument_id))
     try:
       response.raise_for_status()
     except requests.HTTPError as http_error:
@@ -1827,11 +1824,8 @@ class RobinhoodClient:
       raise
     return response.json()
 
-  def get_fundamentals(self, symbols):
+  def get_fundamentals(self, instrument_ids):
     """
-    Args:
-      symbols: e.g. [AAPL, ...]
-
     Example response:
     [
         {
@@ -1856,14 +1850,14 @@ class RobinhoodClient:
     ]
     """
     # We are limited to 100, so we need to do multiple calls if grabbing more than that.
-    if len(symbols) > 100:
+    if len(instrument_ids) > 35:
       full_fundamentals = []
-      for i in range(0, len(symbols), 100):
-        full_fundamentals.extend(self.get_fundamentals(symbols[i:i + 100]))
+      for i in range(0, len(instrument_ids), 35):
+        full_fundamentals.extend(self.get_fundamentals(instrument_ids[i:i + 35]))
       return full_fundamentals
 
     params = {
-      'symbols': ','.join(symbols),
+      'instruments': ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
     }
     response = self._session.get(API_HOST + 'fundamentals/', params=params)
     try:
