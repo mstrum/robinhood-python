@@ -188,6 +188,21 @@ class RobinhoodClient:
       raise
     return response.json()
 
+  def get_margin_calls(self):
+    response = self._session.get(API_HOST + 'margin/calls/', headers=self._authorization_headers)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      raise
+    response_json = response.json()
+    # TODO: auto page if needed
+    assert not response_json['next']
+    return response_json['results']
+
   def get_subscription_fees(self):
     """
     Example response:
@@ -808,6 +823,45 @@ class RobinhoodClient:
       raise
     response_json = response.json()
     return response_json['instruments']
+
+  def get_similar_to(self, instrument_id):
+    """
+    Example response:
+    [
+        {
+            "description": "Visa, Inc. engages in ...",
+            "extraData": {},
+            "logo_url": ".../Visa_2014_logo_detail.svg/175px-Visa_2014_logo_detail.svg.png",
+            "tags": [
+                {
+                    "slug": "top-100-popular",
+                    "name": "Top 100 Popular"
+                },
+                ...
+            ],
+            "instrument_id": "93495afe-b84b-4664-881c-b6361b0edeef",
+            "simple_name": "Visa",
+            "symbol": "V",
+            "name": "VISA Inc.",
+            "brands": "Visa"
+        },
+        ...
+    ]
+    """
+    params = {
+      'similar_to': instrument_id,
+    }
+    response = self._session.get(ANALYTICS_HOST + 'instruments/', params=params)
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      raise
+    response_json = response.json()
+    return response_json
 
   def get_instrument_ids_for_tag(self, tag):
     """

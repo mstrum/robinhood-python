@@ -175,6 +175,14 @@ class RobinhoodCachedClient(RobinhoodClient):
       cache_mode
     )
 
+  def get_similar_to(self, instrument_id, cache_mode=CACHE_FIRST):
+    return self._simple_call(
+      'similar_to_{}'.format(instrument_id),
+      super(RobinhoodCachedClient, self).get_similar_to,
+      cache_mode,
+      args=[instrument_id]
+    )
+
   def get_popularity(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'popularity_{}'.format(instrument_id),
