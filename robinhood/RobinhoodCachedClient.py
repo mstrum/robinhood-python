@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import getpass
 import json
+import logging
 import os
 
 from .exceptions import MfaRequired
@@ -49,6 +50,7 @@ class RobinhoodCachedClient(RobinhoodClient):
     cache_path = os.path.join(cache_root_path, cache_name)
     binary_flag = 'b' if binary else ''
     if os.path.exists(cache_path) and cache_mode != FORCE_LIVE:
+      logging.debug('Getting {} from cache'.format(cache_name))
       with open(cache_path, 'r' + binary_flag) as cache_file:
         if binary:
           return cache_file.read()
@@ -383,14 +385,16 @@ class RobinhoodCachedClient(RobinhoodClient):
       item_cache_name_template,
       cache_mode,
       list_args=[],
-      list_kwargs={}):
+      list_kwargs={},
+      item_kwargs={}):
     results = []
     list_cache_path = os.path.join(cache_root_path, list_cache_name)
     if os.path.exists(list_cache_path) and cache_mode != FORCE_LIVE:
+      logging.debug('Loading {} from cache'.format(list_cache_name))
       with open(list_cache_path, 'r') as list_cache_file:
         list_json = json.load(list_cache_file)
         for item_id in list_json:
-          results.append(item_method(item_id, cache_mode=cache_mode))
+          results.append(item_method(item_id, **item_kwargs, cache_mode=cache_mode))
     else:
       live_list_content = self._search_and_cache_call(
           list_method,
@@ -437,7 +441,8 @@ class RobinhoodCachedClient(RobinhoodClient):
       cache_mode
     )
 
-  def get_positions(self, include_old=False, cache_mode=CACHE_FIRST):
+  def get_positions(self, include_old=False, use_account_number=None, cache_mode=CACHE_FIRST):
+    account_number = use_account_number or self.get_account()['account_number']
     return self._list_call(
       'positions_' + ('all' if include_old else  'current'),
       super(RobinhoodCachedClient, self).get_positions,
@@ -445,7 +450,8 @@ class RobinhoodCachedClient(RobinhoodClient):
       lambda position: get_last_id_from_url(position['instrument']),
       'position_{}',
       cache_mode,
-      list_kwargs={'include_old': include_old}
+      list_kwargs={'include_old': include_old},
+      item_kwargs={'use_account_number': account_number}
     )
 
   def get_orders(self, instrument_id=False, cache_mode=CACHE_FIRST):

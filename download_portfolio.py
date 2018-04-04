@@ -4,6 +4,9 @@ from decimal import Decimal
 import argparse
 import csv
 
+#import logging
+#logging.basicConfig(level=logging.DEBUG)
+
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, CACHE_FIRST, FORCE_LIVE
 from robinhood.util import get_last_id_from_url
 
@@ -49,7 +52,7 @@ def download_portfolio(cache_mode):
       }
 
     instrument_ids = list(position_by_instrument_id.keys())
-    instruments = client.get_instruments(instrument_ids, cache_mode=cache_mode)
+    instruments = client.get_instruments(instrument_ids)
     for instrument in instruments:
       instrument_id = instrument['id']
       position_by_instrument_id[instrument_id]['symbol'] = instrument['symbol']

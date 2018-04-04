@@ -711,9 +711,13 @@ class RobinhoodClient:
     """
     # We are limited to about 50, so we need to do multiple calls if grabbing more than that.
     if len(instrument_ids) > 50:
+      # HACK: This should never call a subclass' method
+      my_class = self.__class__
+      self.__class__ = RobinhoodClient
       full_popularities = []
       for i in range(0, len(instrument_ids), 50):
         full_popularities.extend(self.get_popularities(instrument_ids[i:i + 50]))
+      self.__class__ = my_class
       return full_popularities
 
     params = {
@@ -780,9 +784,13 @@ class RobinhoodClient:
     # For now, do 20 at a time instead of paging. We can hit a scenerio where
     # we have to limit both the instrument ids and page.
     if len(instrument_ids) > 20:
+      # HACK: This should never call a subclass' method
+      my_class = self.__class__
+      self.__class__ = RobinhoodClient
       full_ratings = []
       for i in range(0, len(instrument_ids), 20):
         full_ratings.extend(self.get_ratings(instrument_ids[i:i + 20]))
+      self.__class__ = my_class
       return full_ratings
 
     params = {
@@ -929,9 +937,13 @@ class RobinhoodClient:
     # We are limited to 75 based on how long the query param can be, so we
     # need to do multiple calls if grabbing more than 75 instruments.
     if len(instrument_ids) > 75:
+      # HACK: This should never call a subclass' method
+      my_class = self.__class__
+      self.__class__ = RobinhoodClient
       full_instruments = []
       for i in range(0, len(instrument_ids), 75):
         full_instruments.extend(self.get_instruments(instrument_ids=instrument_ids[i:i + 75]))
+      self.__class__ = my_class
       return full_instruments
 
     params = {
@@ -1139,9 +1151,13 @@ class RobinhoodClient:
     }
     """
     if len(instrument_ids) > 35:
+      # HACK: This should never call a subclass' method
+      my_class = self.__class__
+      self.__class__ = RobinhoodClient
       full_quotes = []
       for i in range(0, len(instrument_ids), 35):
         full_quotes.extend(self.get_quotes(instrument_ids[i:i + 35]))
+      self.__class__ = my_class
       return full_quotes
 
     # bounds=trading ?
@@ -1452,6 +1468,10 @@ class RobinhoodClient:
         "previous": null
     }
     """
+    # HACK: This should never call a subclass' method
+    my_class = self.__class__
+    self.__class__ = RobinhoodClient
+
     orders = []
     cursor = None
 
@@ -1475,6 +1495,7 @@ class RobinhoodClient:
       if orders_json['next']:
         cursor = get_cursor_from_url(orders_json['next'])
       else:
+        self.__class__ = my_class
         return orders
 
   def get_popular_stocks(self):
@@ -1856,9 +1877,13 @@ class RobinhoodClient:
     """
     # We are limited to 100, so we need to do multiple calls if grabbing more than that.
     if len(instrument_ids) > 35:
+      # HACK: This should never call a subclass' method
+      my_class = self.__class__
+      self.__class__ = RobinhoodClient
       full_fundamentals = []
       for i in range(0, len(instrument_ids), 35):
         full_fundamentals.extend(self.get_fundamentals(instrument_ids[i:i + 35]))
+      self.__class__ = my_class
       return full_fundamentals
 
     params = {
