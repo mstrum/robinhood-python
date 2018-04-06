@@ -1,21 +1,11 @@
 """
+A secure Robinhood library that simplifies API use.
+
 Good unofficial API documentation:
 https://github.com/sanko/Robinhood
 
 Another python library that inspired this:
 https://github.com/Jamonek/Robinhood
-
-More API documentation available at:
-
-Some APIs not in use yet:
-* GET /marketdata/forex/historicals/{<SYMBOL>/?bounds=24_7
-* GET /marketdata/historicals/<SYMBOL>/
-* GET /marketdata/historicals/ symbols, interval, span, bounds, cursor
-* GET /marketdata/prices/<INST_ID>/?delayed=false&source=consolidated
-* GET /marketdata/quotes/?bounds=trading instruments|symbols
-* GET /marketdata/quotes/<SYMBOL|INST_ID>/?bounds=trading
-* GET /portfolios/historicals/<ACCOUNT_NUMBER>/ bounds, span, interval
-* GET /search/ (w/query)
 """
 
 import json
@@ -51,36 +41,6 @@ class RobinhoodClient:
     }
     self._authorization_headers = {}
 
-  def set_auth_token(self, auth_token):
-    self._authorization_headers['Authorization'] = 'Token {}'.format(auth_token)
-
-  def set_auth_token_with_credentials(self, username, password, mfa=None):
-    body = {
-      'username': username,
-      'password': password,
-    }
-    if mfa:
-      body['mfa_code'] = mfa
-
-    response = self._session.post(API_HOST + 'api-token-auth/', data=body, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
-    response_json = response.json()
-    if 'mfa_required' in response_json:
-      raise MfaRequired()
-    auth_token = response.json()['token']
-    self.set_auth_token(auth_token)
-    return auth_token
-
-  def clear_auth_token(self):
-    response = self._session.post(API_HOST + 'api-token-logout/', verify=API_CERT_BUNDLE_PATH)
-    response.raise_for_status()
-    del self._session.headers['Authorization']
-
   def _raise_on_error(self, response):
     try:
       response.raise_for_status()
@@ -94,6 +54,31 @@ class RobinhoodClient:
       elif  http_error.response.status_code == requests.codes.not_found:
         raise NotFound()
       raise
+
+  def set_auth_token(self, auth_token):
+    self._authorization_headers['Authorization'] = 'Token {}'.format(auth_token)
+
+  def set_auth_token_with_credentials(self, username, password, mfa=None):
+    body = {
+      'username': username,
+      'password': password,
+    }
+    if mfa:
+      body['mfa_code'] = mfa
+
+    response = self._session.post(API_HOST + 'api-token-auth/', data=body, verify=API_CERT_BUNDLE_PATH)
+    self._raise_on_error(response)
+    response_json = response.json()
+    if 'mfa_required' in response_json:
+      raise MfaRequired()
+    auth_token = response.json()['token']
+    self.set_auth_token(auth_token)
+    return auth_token
+
+  def clear_auth_token(self):
+    response = self._session.post(API_HOST + 'api-token-logout/', verify=API_CERT_BUNDLE_PATH)
+    response.raise_for_status()
+    del self._session.headers['Authorization']
 
   def get_user(self):
     """

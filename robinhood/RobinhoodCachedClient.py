@@ -1,3 +1,6 @@
+"""
+A wrapper of RobinhoodClient that introduces a caching layer.
+"""
 import getpass
 import json
 import logging
