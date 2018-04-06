@@ -77,7 +77,7 @@ class RobinhoodClient:
 
   def clear_auth_token(self):
     response = self._session.post(API_HOST + 'api-token-logout/', verify=API_CERT_BUNDLE_PATH)
-    response.raise_for_status()
+    self._raise_on_error(response)
     del self._session.headers['Authorization']
 
   def get_user(self):
