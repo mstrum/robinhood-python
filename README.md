@@ -16,10 +16,6 @@ Some current caveats:
   * Client that handles getting data from the Robinhood APIs
 * [RobinhoodCachedClient](robinhood/RobinhoodClient.py)
   * Client that handles caching on top of the normal client
-  * TODO
-    * Handle more fine grained caching then on vs off (e.g. off, 5minute, 1day, etc.)
-      * Use sane defaults everywhere (E.g. heavy on instruments and soft on quotes)
-    * Historical quotes
 
 ## Scripts
 
@@ -47,32 +43,16 @@ Display information:
     * 10 popular S&P 500 stocks with Robinhood users
     * S&P 500 top movers up and down
     * Top 10 and 100 popular sticks with Robinhood users
-  * TODO:
-    * Movements into/outof lists?
+  * This script is kind of a mess and mostly just a raw dump.
 * [show_potentials.py](show_potentials.py)
   * Show stocks and some stats to help decide on positions to push forward on.
+    * Note this is basically only useful to myself ATM.
 
 Perform actions:
 * [order.py](order.py) [market|limit] [buy|sell] SYMBOL QUANTITY PRICE [--no-cancel]
   * Prints the quote for the given symbol, confirms, and places an order
 * [cancel.py](cancel.py) ORDER_ID...
   * Cancels one or more order ids given, or all pending orders if none given
-
-Scripts to add:
-* download_summary.py
-  * Will download a shapshot of a very high level summary
-  * TODO
-    * Total buy in
-    * Total buy out
-    * Total dividend
-    * Total change
-    * Total change %
-    * Total dividends
-    * Positions sold out of
-
-## Todo
-
-* Mix in some IEX data
 
 ## Legal
 
