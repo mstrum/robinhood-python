@@ -23,7 +23,7 @@ from .util import (
   ORDER_TYPES,
   get_cursor_from_url,
   get_last_id_from_url,
-  get_instrument_url_from_id
+  instrument_id_to_url
 )
 
 
@@ -962,7 +962,7 @@ class RobinhoodClient:
 
     # bounds=trading ?
     params = {
-      'instruments': ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
+      'instruments': ','.join([instrument_id_to_url(instrument_id) for instrument_id in instrument_ids])
     }
 
     response = self._session.get(API_HOST + 'quotes/', params=params, verify=API_CERT_BUNDLE_PATH)
@@ -997,7 +997,7 @@ class RobinhoodClient:
     if symbols:
       params['symbols'] = ','.join(symbols)
     if instrument_ids:
-      params['instruments'] = ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
+      params['instruments'] = ','.join([instrument_id_to_url(instrument_id) for instrument_id in instrument_ids])
     response = self._session.get(API_HOST + 'marketdata/prices/'.format(instrument_id), params=params, verify=API_CERT_BUNDLE_PATH)
     self._raise_on_error(response)
     return response.json()
@@ -1224,7 +1224,7 @@ class RobinhoodClient:
     while True:
       params = {}
       if instrument_id:
-        params['instrument'] = get_instrument_url_from_id(instrument_id)
+        params['instrument'] = instrument_id_to_url(instrument_id)
       if cursor:
         params['cursor'] = cursor
       response = self._session.get(API_HOST + 'orders/', params=params, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
@@ -1574,7 +1574,7 @@ class RobinhoodClient:
       return full_fundamentals
 
     params = {
-      'instruments': ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
+      'instruments': ','.join([instrument_id_to_url(instrument_id) for instrument_id in instrument_ids])
     }
     response = self._session.get(API_HOST + 'fundamentals/', params=params, verify=API_CERT_BUNDLE_PATH)
     self._raise_on_error(response)

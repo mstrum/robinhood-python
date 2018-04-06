@@ -65,5 +65,5 @@ def get_document_download_url_from_id(document_id):
   return '{}documents/{}/download/'.format(API_HOST, document_id)
 
 
-def get_instrument_url_from_id(instrument_id):
+def instrument_id_to_url(instrument_id):
   return '{}instruments/{}/'.format(API_HOST, instrument_id)
