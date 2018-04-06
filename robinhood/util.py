@@ -3,9 +3,9 @@ import os
 
 CURRENT_DIRECTORY = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 API_HOST = 'https://api.robinhood.com/'
-API_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'api.robinhood.com.pem')
+API_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'certs', 'api.robinhood.com.pem')
 ANALYTICS_HOST = 'https://analytics.robinhood.com/'
-ANALYTICS_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'analytics.robinhood.com.pem')
+ANALYTICS_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'certs', 'analytics.robinhood.com.pem')
 
 KNOWN_TAGS = [
   '100-most-popular',

@@ -4,8 +4,8 @@ from decimal import Decimal
 import argparse
 import csv
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
+#import logging
+#logging.basicConfig(level=logging.DEBUG)
 
 from dateutil.parser import parse
 import pytz
