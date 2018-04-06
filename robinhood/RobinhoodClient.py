@@ -81,6 +81,20 @@ class RobinhoodClient:
     response.raise_for_status()
     del self._session.headers['Authorization']
 
+  def _raise_on_error(self, response):
+    try:
+      response.raise_for_status()
+    except requests.HTTPError as http_error:
+      if  http_error.response.status_code == requests.codes.unauthorized:
+        raise NotLoggedIn(http_error.response.json()['detail'])
+      elif  http_error.response.status_code == requests.codes.bad_request:
+        raise BadRequest(http_error.response.json())
+      elif  http_error.response.status_code == requests.codes.too_many_requests:
+        raise TooManyRequests()
+      elif  http_error.response.status_code == requests.codes.not_found:
+        raise NotFound()
+      raise
+
   def get_user(self):
     """
     Example response:
@@ -102,14 +116,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'user/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_user_basic_info(self):
@@ -131,14 +138,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'user/basic_info', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_user_additional_info(self):
@@ -160,14 +160,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'user/additional_info', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_referral_code(self):
@@ -180,26 +173,12 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'midlands/referral/code/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_margin_calls(self):
     response = self._session.get(API_HOST + 'margin/calls/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: auto page if needed
     assert not response_json['next']
@@ -224,14 +203,7 @@ class RobinhoodClient:
 
     """
     response = self._session.get(API_HOST + 'subscription/subscription_fees/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: auto page if needed
     assert not response_json['next']
@@ -264,14 +236,7 @@ class RobinhoodClient:
       'active': 'true',
     }
     response = self._session.get(API_HOST + 'subscription/subscriptions/', params=params, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: auto page if needed
     assert not response_json['next']
@@ -301,12 +266,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'markets/', verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # This api likely never pages, but you never know.
     assert not response_json['next']
@@ -319,14 +279,7 @@ class RobinhoodClient:
       headers=self._authorization_headers,
       verify=API_CERT_BUNDLE_PATH
     )
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.content
 
   def get_document_by_id(self, document_id):
@@ -350,14 +303,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'documents/{}/'.format(document_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_documents(self):
@@ -388,14 +334,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'documents/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -417,14 +356,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'watchlists/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -450,14 +382,7 @@ class RobinhoodClient:
 
     """
     response = self._session.get(API_HOST + 'watchlists/{}/'.format(watchlist_name), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -527,14 +452,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'settings/notifications', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_notification_devices(self):
@@ -555,14 +473,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'notifications/devices/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # This probably won't autopage for a LONG time
     assert not response_json['next']
@@ -633,14 +544,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'accounts/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()['results'][0]
 
   def get_investment_profile(self):
@@ -666,14 +570,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'user/investment_profile/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_popularity(self, instrument_id):
@@ -685,14 +582,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'instruments/{}/popularity/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_popularities(self, instrument_ids):
@@ -724,14 +614,7 @@ class RobinhoodClient:
       'ids': ','.join(instrument_ids),
     }
     response = self._session.get(API_HOST + 'instruments/popularity/', params=params, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -751,14 +634,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'midlands/ratings/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_ratings(self, instrument_ids):
@@ -797,14 +673,7 @@ class RobinhoodClient:
       'ids': ','.join(instrument_ids),
     }
     response = self._session.get(API_HOST + 'midlands/ratings/', params=params, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -824,14 +693,7 @@ class RobinhoodClient:
     """
     assert tag in KNOWN_TAGS
     response = self._session.get(ANALYTICS_HOST + 'instruments/tag/{}/'.format(tag), headers=self._authorization_headers, verify=ANALYTICS_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     return response_json['instruments']
 
@@ -863,14 +725,7 @@ class RobinhoodClient:
       'similar_to': instrument_id,
     }
     response = self._session.get(ANALYTICS_HOST + 'instruments/', params=params, verify=ANALYTICS_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     return response_json
 
@@ -889,14 +744,7 @@ class RobinhoodClient:
     """
     assert tag in KNOWN_TAGS
     response = self._session.get(API_HOST + 'midlands/tags/tag/{}/'.format(tag), verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     instrument_ids = [get_last_id_from_url(instrument_url) for instrument_url in response_json['instruments']]
     return instrument_ids
@@ -951,14 +799,7 @@ class RobinhoodClient:
       'active_instruments_only': 'false',
     }
     response = self._session.get(API_HOST + 'instruments/', params=params, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -994,14 +835,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'instruments/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_instrument_by_symbol(self, symbol):
@@ -1044,14 +878,7 @@ class RobinhoodClient:
       'active_instruments_only': True,
     }
     response = self._session.get(API_HOST + 'instruments/', params=params, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     if len(response_json['results']) == 0:
       raise NotFound()
@@ -1081,12 +908,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'instruments/{}/splits'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # This is probably never the case.
     assert not response_json['next']
@@ -1114,14 +936,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'quotes/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_quotes(self, instrument_ids):
@@ -1166,14 +981,7 @@ class RobinhoodClient:
     }
 
     response = self._session.get(API_HOST + 'quotes/', params=params, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()['results']
 
   def get_prices(self, symbols=None, instrument_ids=None):
@@ -1206,14 +1014,7 @@ class RobinhoodClient:
     if instrument_ids:
       params['instruments'] = ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
     response = self._session.get(API_HOST + 'marketdata/prices/'.format(instrument_id), params=params, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_dividend_by_id(self, dividend_id):
@@ -1234,14 +1035,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'dividends/{}/'.format(dividend_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_ach_relationship_by_id(self, relationship_id):
@@ -1267,14 +1061,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'ach/relationships/{}'.format(relationship_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_ach_transfer_by_id(self, transfer_id):
@@ -1298,12 +1085,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'ach/transfers/{}'.format(transfer_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_ach_transfers(self):
@@ -1331,14 +1113,7 @@ class RobinhoodClient:
     """
     # There's also updated_at[gte]
     response = self._session.get(API_HOST + 'ach/transfers/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -1369,14 +1144,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'dividends/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -1418,14 +1186,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'orders/{}/'.format(order_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_orders(self, instrument_id=None):
@@ -1482,14 +1243,7 @@ class RobinhoodClient:
       if cursor:
         params['cursor'] = cursor
       response = self._session.get(API_HOST + 'orders/', params=params, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-      try:
-        response.raise_for_status()
-      except requests.HTTPError as http_error:
-        if  http_error.response.status_code == requests.codes.unauthorized:
-          raise NotLoggedIn(http_error.response.json()['detail'])
-        elif  http_error.response.status_code == requests.codes.too_many_requests:
-          raise TooManyRequests()
-        raise
+      self._raise_on_error(response)
       orders_json = response.json()
       orders.extend(orders_json['results'])
       if orders_json['next']:
@@ -1551,14 +1305,7 @@ class RobinhoodClient:
       'direction': direction,
     }
     response = self._session.get(API_HOST + 'midlands/movers/sp500/', params=params, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()['results']
 
   def get_portfolio(self):
@@ -1586,14 +1333,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'portfolios/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()['results'][0]
 
   def get_positions(self, include_old=False):
@@ -1634,14 +1374,7 @@ class RobinhoodClient:
       headers=self._authorization_headers,
       verify=API_CERT_BUNDLE_PATH
     )
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     portfolio_json = response.json()
     # TODO: autopage
     assert not portfolio_json['next']
@@ -1677,16 +1410,7 @@ class RobinhoodClient:
       headers=self._authorization_headers,
       verify=API_CERT_BUNDLE_PATH
     )
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.not_found:
-        raise NotFound()
-      elif  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_historical_quotes(self, symbols, interval, span, bounds):
@@ -1741,14 +1465,7 @@ class RobinhoodClient:
       'bounds': bounds,
     }
     response = self._session.get(API_HOST + 'quotes/historicals/', params=params, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_news(self, symbol):
@@ -1784,12 +1501,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'midlands/news/{}/'.format(symbol), verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_tags(self, instrument_id):
@@ -1809,12 +1521,7 @@ class RobinhoodClient:
     ]
     """
     response = self._session.get(API_HOST + 'midlands/tags/instrument/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     return response_json['tags']
 
@@ -1842,12 +1549,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'fundamentals/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def get_fundamentals(self, instrument_ids):
@@ -1890,14 +1592,7 @@ class RobinhoodClient:
       'instruments': ','.join([get_instrument_url_from_id(instrument_id) for instrument_id in instrument_ids])
     }
     response = self._session.get(API_HOST + 'fundamentals/', params=params, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()['results']
 
   def get_referrals(self):
@@ -1946,14 +1641,7 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(API_HOST + 'midlands/referral/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -1965,14 +1653,7 @@ class RobinhoodClient:
     {}
     """
     response = self._session.post(API_HOST + 'orders/{}/cancel/'.format(order_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json()['detail'])
-      raise
+    self._raise_on_error(response)
     return response.json()
 
   def order(self, account_url, instrument_url, order_type, order_side, symbol, quantity, price):
@@ -2032,14 +1713,5 @@ class RobinhoodClient:
       'type': order_type,
     }
     response = self._session.post(API_HOST + 'orders/', data=body, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      raise
+    self._raise_on_error(response)
     return response.json()
