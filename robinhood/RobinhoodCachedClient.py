@@ -540,3 +540,6 @@ class RobinhoodCachedClient(RobinhoodClient):
 
   # TODO: get_prices
   # TODO: get_historical_quotes
+  # TODO: crypto
+  # TODO: options
+  # TODO: oauth2

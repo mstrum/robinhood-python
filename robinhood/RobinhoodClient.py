@@ -8,6 +8,7 @@ Another python library that inspired this:
 https://github.com/Jamonek/Robinhood
 """
 
+from datetime import datetime, timedelta
 import json
 
 import requests
@@ -18,8 +19,13 @@ from .util import (
   ANALYTICS_CERT_BUNDLE_PATH,
   API_HOST,
   API_CERT_BUNDLE_PATH,
+  NUMMUS_HOST,
+  NUMMUS_CERT_BUNDLE_PATH,
   ORDER_SIDES,
   ORDER_TYPES,
+  OPTIONS_TYPES,
+  OPTIONS_STATES,
+  TRADABILITY,
   get_cursor_from_url,
   get_last_id_from_url,
   instrument_id_to_url
@@ -39,6 +45,8 @@ class RobinhoodClient:
       'User-Agent': 'Robinhood/823 (iPhone; iOS 7.1.2; Scale/2.00)',
     }
     self._authorization_headers = {}
+    self._oauth2_refresh_token = None
+    self._oauth2_expires_at = None
 
   def _raise_on_error(self, response):
     try:
@@ -56,6 +64,26 @@ class RobinhoodClient:
 
   def set_auth_token(self, auth_token):
     self._authorization_headers['Authorization'] = 'Token {}'.format(auth_token)
+
+  def set_oauth2_token(self, token_type, access_token, expires_at, refresh_token):
+    self._authorization_headers['Authorization'] = '{} {}'.format(token_type, access_token)
+    self._oauth2_refresh_token = refresh_token
+    self._oauth2_expires_at = expires_at
+
+  def migrate_token(self):
+    response = self._session.post(API_HOST + 'oauth2/migrate_token/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
+    self._raise_on_error(response)
+    oauth2_details = response.json()
+    self.set_oauth2_token(
+        oauth2_details['token_type'],
+        oauth2_details['access_token'],
+        datetime.now() + timedelta(minutes=oauth2_details['expires_in']),
+        oauth2_details['refresh_token']
+    )
+
+  def ensure_valid_oauth2_token(self):
+    if not self._oauth2_expires_at:
+      self.migrate_token()
 
   def set_auth_token_with_credentials(self, username, password, mfa=None):
     body = {
@@ -1695,5 +1723,298 @@ class RobinhoodClient:
       'type': order_type,
     }
     response = self._session.post(API_HOST + 'orders/', data=body, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
+    self._raise_on_error(response)
+    return response.json()
+
+  ### CRYPTO ###
+
+  def get_crypto_holdings(self):
+    self.ensure_valid_oauth2_token()
+    response = self._session.get(
+      NUMMUS_HOST + 'holdings/',
+      headers=self._authorization_headers,
+      verify=NUMMUS_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
+  ### OPTIONS ###
+
+  def get_options_positions(self, include_old=False):
+    """
+    Example response:
+    TODO
+    """
+    params = {}
+    if not include_old:
+      params['nonzero'] = 'true'
+    response = self._session.get(
+      API_HOST + 'options/orders/',
+      headers=self._authorization_headers,
+      params=params,
+      verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
+  def get_options_orders(self):
+    """
+    Example response:
+    TODO
+    """
+    response = self._session.get(
+      API_HOST + 'options/orders/',
+      headers=self._authorization_headers,
+      verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
+  def get_options_events(self, instrument_id=None):
+    """
+    Example response:
+    TODO
+    """
+    # states=preparing seems to be passed in if instrument is
+    params = {}
+    if instrument_id:
+      params['equity_instrument_id'] = instrument_id=None
+    response = self._session.get(
+      API_HOST + 'options/events/',
+      headers=self._authorization_headers,
+      params=params,
+      verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
+  def get_options_instrument(self, options_instrument_id):
+    """
+    Example response:
+    {
+        "type": "put",
+        "min_ticks": {
+            "cutoff_price": "3.00",
+            "below_tick": "0.05",
+            "above_tick": "0.10"
+        },
+        "updated_at": "2018-04-07T02:10:26.762886Z",
+        "created_at": "2018-03-28T04:36:05.205235Z",
+        "tradability": "untradable",
+        "chain_id": "a714bbf4-c17c-496a-b8e1-d38e58ee8a91",
+        "state": "expired",
+        "url": "https://api.robinhood.com/options/instruments/73f75306-ad07-4734-972b-22ab9dec6693/",
+        "chain_symbol": "ADI",
+        "expiration_date": "2018-04-06",
+        "strike_price": "82.0000",
+        "id": "73f75306-ad07-4734-972b-22ab9dec6693"
+    }
+    """
+    response = self._session.get(
+      API_HOST + 'options/instruments/{}/'.format(options_instrument_id),
+      headers=self._authorization_headers,
+      verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    response_json = response.json()
+    return response_json
+
+  def get_options_instruments(self, options_instrument_ids, option_type=None, tradability=None, state=None):
+    """
+    Example response:
+    [
+        {
+            "type": "put",
+            "min_ticks": {
+                "cutoff_price": "3.00",
+                "below_tick": "0.05",
+                "above_tick": "0.10"
+            },
+            "updated_at": "2018-04-07T02:10:26.762886Z",
+            "created_at": "2018-03-28T04:36:05.205235Z",
+            "tradability": "untradable",
+            "chain_id": "a714bbf4-c17c-496a-b8e1-d38e58ee8a91",
+            "state": "expired",
+            "url": "https://api.robinhood.com/options/instruments/73f75306-ad07-4734-972b-22ab9dec6693/",
+            "chain_symbol": "ADI",
+            "expiration_date": "2018-04-06",
+            "strike_price": "82.0000",
+            "id": "73f75306-ad07-4734-972b-22ab9dec6693"
+        },
+        ...
+    ]
+    """
+    # Also exist: chain_id, expiration_dates
+    params = {
+      'ids': ','.join(options_ids),
+    }
+    if option_type:
+      assert option_type in OPTIONS_TYPES
+      params['type'] = option_type
+    if state:
+      assert state in OPTIONS_STATES
+      params['state'] = state
+    if tradability:
+      assert state in TRADABILITY
+      params['tradability'] = tradability
+    response = self._session.get(
+      API_HOST + 'options/instruments/',
+      headers=self._authorization_headers,
+      params=params,
+      verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
+  def get_options_chains(self, chain_ids=None, instrument_ids=None):
+    """
+    Example response (for AAPL, whose instrument ids is 450dfc6d-5510-4d40-abfb-f633b7d9be3e):
+    [
+        {
+            "id": "cee01a93-626e-4ee6-9b04-60e2fd1392d1",
+            "underlying_instruments": [
+                {
+                    "id": "6a80d2ed-6f5d-4f1c-9418-cc5379d630e3",
+                    "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
+                    "quantity": 100
+                }
+            ],
+            "trade_value_multiplier": "100.0000",
+            "symbol": "AAPL",
+            "min_ticks": {
+                "cutoff_price": "3.00",
+                "above_tick": "0.05",
+                "below_tick": "0.01"
+            },
+            "can_open_position": true,
+            "cash_component": null,
+            "expiration_dates": [
+                "2018-04-13",
+                ...
+            ]
+        },
+        {
+            "id": "db268e26-e383-41a6-9d99-8ab21d6f2cba",
+            "underlying_instruments": [
+                {
+                    "id": "6e8abf5f-e3a0-48ae-ae97-57bfab1c477e",
+                    "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
+                    "quantity": 100
+                }
+            ],
+            "trade_value_multiplier": "100.0000",
+            "symbol": "1AAPL",
+            "min_ticks": {
+                "cutoff_price": "3.00",
+                "above_tick": "0.05",
+                "below_tick": "0.01"
+            },
+            "can_open_position": false,
+            "cash_component": null,
+            "expiration_dates": []
+        },
+        {
+            "id": "f980211b-e15d-48a8-82e8-4c9000183a09",
+            "underlying_instruments": [
+                {
+                    "id": "ca09d064-a4e1-42ca-84c2-419f5ff223f0",
+                    "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
+                    "quantity": 100
+                }
+            ],
+            "trade_value_multiplier": "100.0000",
+            "symbol": "2AAPL",
+            "min_ticks": {
+                "cutoff_price": "3.00",
+                "above_tick": "0.05",
+                "below_tick": "0.01"
+            },
+            "can_open_position": false,
+            "cash_component": null,
+            "expiration_dates": []
+        }
+    ]
+    """
+    assert not (chain_ids and instrument_ids)
+    params = {}
+    if chain_ids:
+      params['ids'] = ','.join(chain_ids),
+    if instrument_ids:
+      params['equity_instrument_ids'] = ','.join(instrument_ids),
+    response = self._session.get(
+      API_HOST + 'options/chains/',
+      headers=self._authorization_headers,
+      params=params,
+      verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
+  def get_options_chain_collateral(self, options_id, use_account_number=None):
+    """
+    This appears to return a not found if there aren't any existing holdings.
+
+    Example response (when holdings exist):
+    {
+        "collateral_held_for_orders": {
+            "cash": {
+                "infinite": false,
+                "direction": "debit",
+                "amount": "0.0000"
+            },
+            "equities": [
+                {
+                    "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
+                    "quantity": "0.0000",
+                    "symbol": "AAPL",
+                    "direction": "debit"
+                }
+            ]
+        },
+        "collateral": {
+            "cash": {
+                "infinite": false,
+                "direction": "debit",
+                "amount": "0.0000"
+            },
+            "equities": [
+                {
+                    "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
+                    "quantity": "0.0000",
+                    "symbol": "AAPL",
+                    "direction": "debit"
+                }
+            ]
+        }
+    }
+    """
+    account_number = use_account_number or self.get_account()['account_number']
+    params = {
+      'account_number': account_number,
+    }
+    response = self._session.get(
+      API_HOST + 'options/chains/{}/collateral/'.format(options_id),
+      headers=self._authorization_headers,
+      params=params,
+      verify=API_CERT_BUNDLE_PATH
+    )
     self._raise_on_error(response)
     return response.json()

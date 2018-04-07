@@ -6,6 +6,8 @@ API_HOST = 'https://api.robinhood.com/'
 API_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'certs', 'api.robinhood.com.pem')
 ANALYTICS_HOST = 'https://analytics.robinhood.com/'
 ANALYTICS_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'certs', 'analytics.robinhood.com.pem')
+NUMMUS_HOST = 'https://nummus.robinhood.com/'
+NUMMUS_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'certs', 'nummus.robinhood.com.pem')
 
 ORDER_TYPES = [
   'market',
@@ -34,6 +36,19 @@ ORDER_STATES = [
   'rejected',
   'canceled',
   'failed',
+]
+TRADABILITY = [
+  'tradable',
+  'untradable',
+]
+OPTIONS_TYPES = [
+  'put',
+  'call',
+]
+OPTIONS_STATES = [
+  'active',
+  'inactive',
+  'expired',
 ]
 
 
