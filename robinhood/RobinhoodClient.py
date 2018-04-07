@@ -1748,6 +1748,38 @@ class RobinhoodClient:
     assert not response_json['next']
     return response_json['results']
 
+  def get_crypto_portfolios(self):
+    """
+    Example response:
+    TODO
+    """
+    # there's also a /portfolios/<id>/ api
+    self.ensure_valid_oauth2_token()
+    response = self._session.get(
+      NUMMUS_HOST + 'portfolios/',
+      headers=self._authorization_headers,
+      verify=NUMMUS_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    return response.json()['results']
+
+  def get_crypto_orders(self):
+    """
+    Example response:
+    TODO
+    """
+    self.ensure_valid_oauth2_token()
+    response = self._session.get(
+      NUMMUS_HOST + 'orders/',
+      headers=self._authorization_headers,
+      verify=NUMMUS_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
   def get_crypto_currency_pairs(self):
     """
     Example response:
@@ -1791,6 +1823,44 @@ class RobinhoodClient:
     # TODO: autopage
     assert not response_json['next']
     return response_json['results']
+
+  def get_crypto_currency_pair(self, instrument_id):
+    """
+    Example response:
+    {
+        "symbol": "BTC-USD",
+        "min_order_price_increment": "0.010000000000000000",
+        "id": "3d961844-d360-45fc-989b-f6fca761d511",
+        "quote_currency": {
+            "name": "US Dollar",
+            "code": "USD",
+            "id": "1072fc76-1862-41ab-82c2-485837590762",
+            "type": "fiat",
+            "increment": "0.010000000000000000"
+        },
+        "name": "Bitcoin to US Dollar",
+        "tradability": "tradable",
+        "min_order_size": "0.000010000000000000",
+        "display_only": false,
+        "min_order_quantity_increment": "0.000000010000000000",
+        "max_order_size": "5.0000000000000000",
+        "asset_currency": {
+            "name": "Bitcoin",
+            "code": "BTC",
+            "id": "d674efea-e623-4396-9026-39574b92b093",
+            "type": "cryptocurrency",
+            "increment": "0.000000010000000000"
+        }
+    }
+    """
+    self.ensure_valid_oauth2_token()
+    response = self._session.get(
+      NUMMUS_HOST + 'currency_pairs/{}/'.format(instrument_id),
+      headers=self._authorization_headers,
+      verify=NUMMUS_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    return response.json()
 
   def get_crypto_quote(self, symbol_or_instrument_id):
     """
@@ -1905,6 +1975,20 @@ class RobinhoodClient:
       headers=self._authorization_headers,
       params=params,
       verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    return response.json()
+
+  def cancel_crypto_order(self, order_id):
+    """
+    Example response:
+    TODO
+    """
+    self.ensure_valid_oauth2_token()
+    response = self._session.post(
+      NUMMUS_HOST + 'orders/{}/cancel/'.format(order_id),
+      headers=self._authorization_headers,
+      verify=NUMMUS_CERT_BUNDLE_PATH
     )
     self._raise_on_error(response)
     return response.json()
