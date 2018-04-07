@@ -327,13 +327,27 @@ class RobinhoodCachedClient(RobinhoodClient):
       cache_mode
     )
 
+  def get_portfolio_history(self, interval, span=None, use_account_number=None, cache_mode=CACHE_FIRST):
+    account_number = use_account_number or self.get_account()['account_number']
+    return self._simple_call(
+      'portfolio_history_{}_{}'.format(interval, span),
+      super(RobinhoodCachedClient, self).get_portfolio_history,
+      cache_mode,
+      args=[interval],
+      kwargs={
+        'span': span,
+        'use_account_number': account_number,
+      }
+    )
+
   def get_position_by_instrument_id(self, instrument_id, use_account_number=None, cache_mode=CACHE_FIRST):
     account_number = use_account_number or self.get_account()['account_number']
     return self._simple_call(
       'position_{}'.format(instrument_id),
       super(RobinhoodCachedClient, self).get_position_by_instrument_id,
       cache_mode,
-      args=[account_number, instrument_id]
+      args=[instrument_id],
+      kwargs={'use_account_number': account_number}
     )
 
   def get_news(self, symbol, cache_mode=CACHE_FIRST):

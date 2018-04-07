@@ -1420,6 +1420,63 @@ class RobinhoodClient:
     self._raise_on_error(response)
     return response.json()['results'][0]
 
+  def get_portfolio_history(self, interval, span=None, use_account_number=None):
+    """
+    Example response:
+    {
+        "span": "day",
+        "bounds": "trading",
+        "interval": "5minute",
+        "adjusted_previous_close_equity": "32.4500",
+        "total_return": "0.0252",
+        "adjusted_open_equity": "31.8283",
+        "previous_close_equity": "32.4500",
+        "open_equity": "31.8283",
+        "equity_historicals": [
+            {
+                "session": "post",
+                "close_market_value": "51.3814",
+                "net_return": "0.0000",
+                "close_equity": "30.3214",
+                "open_equity": "30.3214",
+                "open_market_value": "51.3814",
+                "adjusted_close_equity": "30.3214",
+                "begins_at": "2018-04-06T21:50:00Z",
+                "adjusted_open_equity": "30.3214"
+            },
+            {
+                "session": "post",
+                "close_market_value": "51.3814",
+                "net_return": "0.0000",
+                "close_equity": "30.3214",
+                "open_equity": "30.3214",
+                "open_market_value": "51.3814",
+                "adjusted_close_equity": "30.3214",
+                "begins_at": "2018-04-06T21:55:00Z",
+                "adjusted_open_equity": "30.3214"
+            },
+            ...
+        ],
+        "open_time": "2018-04-06T13:00:00Z"
+    }
+    """
+    assert interval in INTERVALS
+    account_number = use_account_number or self.get_account()['account_number']
+    params = {
+      'bounds': 'trading',
+      'interval': '5minute',
+    }
+    if span:
+      assert span in SPANS
+      params['span'] = span
+    response = self._session.get(
+        API_HOST + 'portfolios/historicals/{}/'.format(account_number),
+        headers=self._authorization_headers,
+        params=params,
+        verify=API_CERT_BUNDLE_PATH)
+    self._raise_on_error(response)
+    return response.json()
+
   def get_positions(self, include_old=False):
     """
     Example response:
