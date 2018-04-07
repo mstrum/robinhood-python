@@ -1968,7 +1968,7 @@ class RobinhoodClient:
     assert not response_json['next']
     return response_json['results']
 
-  def get_options_chain_collateral(self, options_id, use_account_number=None):
+  def get_options_chain_collateral(self, chain_id, use_account_number=None):
     """
     This appears to return a not found if there aren't any existing holdings.
 
@@ -2011,7 +2011,7 @@ class RobinhoodClient:
       'account_number': account_number,
     }
     response = self._session.get(
-      API_HOST + 'options/chains/{}/collateral/'.format(options_id),
+      API_HOST + 'options/chains/{}/collateral/'.format(chain_id),
       headers=self._authorization_headers,
       params=params,
       verify=API_CERT_BUNDLE_PATH
