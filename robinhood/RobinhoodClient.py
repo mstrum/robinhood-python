@@ -2004,7 +2004,7 @@ class RobinhoodClient:
     if not include_old:
       params['nonzero'] = 'true'
     response = self._session.get(
-      API_HOST + 'options/orders/',
+      API_HOST + 'options/positions/',
       headers=self._authorization_headers,
       params=params,
       verify=API_CERT_BUNDLE_PATH
