@@ -178,6 +178,23 @@ class RobinhoodClient:
     self._raise_on_error(response)
     return response.json()
 
+  def get_experiments(self):
+    """
+    Example response:
+    [
+        {
+            "experiment_name": "android-onboarding-fund-account-sipc-disclaimer"
+        },
+        {
+            "experiment_name": "support-categories"
+        },
+        ...
+    ]
+    """
+    response = self._session.get(ANALYTICS_HOST + 'experiments/', headers=self._authorization_headers, verify=ANALYTICS_CERT_BUNDLE_PATH)
+    self._raise_on_error(response)
+    return response.json()
+
   def get_referral_code(self):
     """
     Example response:

@@ -89,6 +89,13 @@ class RobinhoodCachedClient(RobinhoodClient):
       cache_mode
     )
 
+  def get_experiments(self, cache_mode=CACHE_FIRST):
+    return self._simple_call(
+      'experiments',
+      super(RobinhoodCachedClient, self).get_experiments,
+      cache_mode
+    )
+
   def get_referral_code(self, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'referral_code',
