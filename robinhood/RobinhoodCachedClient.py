@@ -218,6 +218,14 @@ class RobinhoodCachedClient(RobinhoodClient):
       args=[tag]
     )
 
+  def get_earnings(self, instrument_id, cache_mode=CACHE_FIRST):
+    return self._simple_call(
+      'earnings_{}'.format(instrument_id),
+      super(RobinhoodCachedClient, self).get_earnings,
+      cache_mode,
+      args=[instrument_id]
+    )
+
   def get_instrument_by_id(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'instrument_{}'.format(instrument_id),

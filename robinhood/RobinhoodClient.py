@@ -818,6 +818,60 @@ class RobinhoodClient:
     assert not response_json['next']
     return response_json['results']
 
+  def get_earnings(self, instrument_id):
+    """
+    Args:
+      instrument_id: Internal robinhood instrument id (a uuid)
+
+    Example response:
+    [
+        {
+            "year": 2016,
+            "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
+            "call": null,
+            "report": {
+                "date": "2016-10-25",
+                "verified": true,
+                "timing": "pm"
+            },
+            "quarter": 3,
+            "symbol": "AAPL",
+            "eps": {
+                "actual": "1.6700",
+                "estimate": "1.6500"
+            }
+        },
+        {
+            "year": 2016,
+            "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
+            "call": null,
+            "report": {
+                "date": "2017-01-31",
+                "verified": true,
+                "timing": "pm"
+            },
+            "quarter": 4,
+            "symbol": "AAPL",
+            "eps": {
+                "actual": "3.3600",
+                "estimate": "3.2200"
+            }
+        },
+        ...
+    ]
+    """
+    params = {
+      'instrument': instrument_id_to_url(instrument_id),
+      'range': '21day',
+    }
+    response = self._session.get(
+        API_HOST + 'marketdata/earnings/'.format(instrument_id),
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    return response.json()['results']
+
   def get_instrument_by_id(self, instrument_id):
     """
     Args:
