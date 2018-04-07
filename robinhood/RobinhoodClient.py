@@ -26,6 +26,9 @@ from .util import (
   OPTIONS_TYPES,
   OPTIONS_STATES,
   TRADABILITY,
+  BOUNDS,
+  INTERVALS,
+  SPANS,
   get_cursor_from_url,
   get_last_id_from_url,
   instrument_id_to_url
@@ -1729,6 +1732,10 @@ class RobinhoodClient:
   ### CRYPTO ###
 
   def get_crypto_holdings(self):
+    """
+    Example response:
+    TODO
+    """
     self.ensure_valid_oauth2_token()
     response = self._session.get(
       NUMMUS_HOST + 'holdings/',
@@ -1740,6 +1747,167 @@ class RobinhoodClient:
     # TODO: autopage
     assert not response_json['next']
     return response_json['results']
+
+  def get_crypto_currency_pairs(self):
+    """
+    Example response:
+    [
+        {
+            "symbol": "BTC-USD",
+            "min_order_price_increment": "0.010000000000000000",
+            "id": "3d961844-d360-45fc-989b-f6fca761d511",
+            "quote_currency": {
+                "name": "US Dollar",
+                "code": "USD",
+                "id": "1072fc76-1862-41ab-82c2-485837590762",
+                "type": "fiat",
+                "increment": "0.010000000000000000"
+            },
+            "name": "Bitcoin to US Dollar",
+            "tradability": "tradable",
+            "min_order_size": "0.000010000000000000",
+            "display_only": false,
+            "min_order_quantity_increment": "0.000000010000000000",
+            "max_order_size": "5.0000000000000000",
+            "asset_currency": {
+                "name": "Bitcoin",
+                "code": "BTC",
+                "id": "d674efea-e623-4396-9026-39574b92b093",
+                "type": "cryptocurrency",
+                "increment": "0.000000010000000000"
+            }
+        },
+        ...
+    ]
+    """
+    self.ensure_valid_oauth2_token()
+    response = self._session.get(
+      NUMMUS_HOST + 'currency_pairs/',
+      headers=self._authorization_headers,
+      verify=NUMMUS_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
+  def get_crypto_quote(self, symbol_or_instrument_id):
+    """
+    Example response:
+    {
+        "open_price": "6644.0700",
+        "high_price": "7094.8800",
+        "volume": "360467.1666",
+        "id": "3d961844-d360-45fc-989b-f6fca761d511",
+        "bid_price": "6972.1400",
+        "symbol": "BTCUSD",
+        "mark_price": "6984.3650",
+        "low_price": "6551.3600",
+        "ask_price": "6996.5900"
+    }
+    """
+    self.ensure_valid_oauth2_token()
+    response = self._session.get(
+      API_HOST + 'marketdata/forex/quotes/{}/'.format(symbol_or_instrument_id),
+      headers=self._authorization_headers,
+      verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    return response.json()
+
+  def get_crypto_quotes(self, instrument_ids=None, symbols=None):
+    """
+    Example response:
+    [
+        {
+            "open_price": "6644.0700",
+            "high_price": "7094.8800",
+            "volume": "360467.1666",
+            "id": "3d961844-d360-45fc-989b-f6fca761d511",
+            "bid_price": "6972.1400",
+            "symbol": "BTCUSD",
+            "mark_price": "6984.3650",
+            "low_price": "6551.3600",
+            "ask_price": "6996.5900"
+        },
+        ...
+    ]
+    """
+    assert not (symbols and instrument_ids)
+    assert symbols or instrument_ids
+    params = {}
+    if instrument_ids:
+      params['ids'] = ','.join(instrument_ids)
+    if symbols:
+      params['symbols'] = ','.join(symbols)
+    self.ensure_valid_oauth2_token()
+    response = self._session.get(
+      API_HOST + 'marketdata/forex/quotes/',
+      headers=self._authorization_headers,
+      params=params,
+      verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    return response.json()['results']
+
+  def get_crypto_historicals(self, instrument_id, interval, bounds=None, span=None):
+    """
+    Example response:
+    {
+        "open_price": "6767.5400",
+        "span": "day",
+        "symbol": "BTCUSD",
+        "previous_close_price": "6767.5400",
+        "interval": "5minute",
+        "id": "3d961844-d360-45fc-989b-f6fca761d511",
+        "data_points": [
+            {
+                "open_price": "6586.0400",
+                "volume": "0.0000",
+                "begins_at": "2018-04-06T13:30:00Z",
+                "session": "reg",
+                "low_price": "6572.7050",
+                "interpolated": false,
+                "close_price": "6590.4750",
+                "high_price": "6596.7200"
+            },
+            {
+                "open_price": "6586.0150",
+                "volume": "0.0000",
+                "begins_at": "2018-04-06T13:35:00Z",
+                "session": "reg",
+                "low_price": "6579.1450",
+                "interpolated": false,
+                "close_price": "6587.2850",
+                "high_price": "6594.2450"
+            },
+            ...
+        ],
+        "bounds": "regular",
+        "open_time": "2018-04-06T13:30:00Z",
+        "previous_close_time": "2018-04-05T20:00:00Z"
+    }
+    """
+    assert interval in INTERVALS
+    params = {
+      'interval': interval,
+    }
+    if bounds:
+      assert bounds in BOUNDS
+      params['bounds'] = bounds
+    if span:
+      assert span in SPANS
+      params['span'] = span
+    self.ensure_valid_oauth2_token()
+    response = self._session.get(
+      API_HOST + 'marketdata/forex/historicals/{}/'.format(instrument_id),
+      headers=self._authorization_headers,
+      params=params,
+      verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    return response.json()
 
   ### OPTIONS ###
 
@@ -1800,6 +1968,46 @@ class RobinhoodClient:
     assert not response_json['next']
     return response_json['results']
 
+  def get_options_marketdata(self, options_instrument_id):
+    """
+    Example response:
+    {
+        "vega": null,
+        "last_trade_size": null,
+        "low_price": null,
+        "volume": 0,
+        "implied_volatility": null,
+        "break_even_price": "81.8700",
+        "previous_close_date": "2018-04-05",
+        "adjusted_mark_price": "0.1300",
+        "bid_size": 0,
+        "mark_price": "0.1250",
+        "bid_price": "0.0000",
+        "chance_of_profit_short": null,
+        "previous_close_price": "0.0800",
+        "instrument": "https://api.robinhood.com/options/instruments/73f75306-ad07-4734-972b-22ab9dec6693/",
+        "ask_price": "0.2500",
+        "rho": null,
+        "high_price": null,
+        "chance_of_profit_long": null,
+        "theta": null,
+        "last_trade_price": null,
+        "ask_size": 62,
+        "delta": null,
+        "open_interest": 0,
+        "gamma": null
+    }
+    """
+    self.ensure_valid_oauth2_token()
+    response = self._session.get(
+      API_HOST + 'marketdata/options/{}/'.format(options_instrument_id),
+      headers=self._authorization_headers,
+      verify=API_CERT_BUNDLE_PATH
+    )
+    self._raise_on_error(response)
+    response_json = response.json()
+    return response_json
+
   def get_options_instrument(self, options_instrument_id):
     """
     Example response:
@@ -1858,7 +2066,7 @@ class RobinhoodClient:
     """
     # Also exist: chain_id, expiration_dates
     params = {
-      'ids': ','.join(options_ids),
+      'ids': ','.join(options_instrument_ids),
     }
     if option_type:
       assert option_type in OPTIONS_TYPES

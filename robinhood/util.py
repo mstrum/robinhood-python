@@ -41,6 +41,24 @@ TRADABILITY = [
   'tradable',
   'untradable',
 ]
+INTERVALS = [
+  '15second',
+  '5minute',
+  'hour',
+  'day',
+  'week',
+]
+SPANS = [
+  'day',
+  'hour',
+  'week',
+  'year',
+  '5year',
+]
+BOUNDS = [
+  '24_7',
+  'regular',
+]
 OPTIONS_TYPES = [
   'put',
   'call',
