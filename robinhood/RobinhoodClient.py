@@ -18,7 +18,6 @@ from .util import (
   ANALYTICS_CERT_BUNDLE_PATH,
   API_HOST,
   API_CERT_BUNDLE_PATH,
-  KNOWN_TAGS,
   ORDER_SIDES,
   ORDER_TYPES,
   get_cursor_from_url,
@@ -676,7 +675,6 @@ class RobinhoodClient:
         ...
     ]
     """
-    assert tag in KNOWN_TAGS
     response = self._session.get(ANALYTICS_HOST + 'instruments/tag/{}/'.format(tag), headers=self._authorization_headers, verify=ANALYTICS_CERT_BUNDLE_PATH)
     self._raise_on_error(response)
     response_json = response.json()
@@ -727,7 +725,6 @@ class RobinhoodClient:
         "name": "100 Most Popular"
     }
     """
-    assert tag in KNOWN_TAGS
     response = self._session.get(API_HOST + 'midlands/tags/tag/{}/'.format(tag), verify=API_CERT_BUNDLE_PATH)
     self._raise_on_error(response)
     response_json = response.json()

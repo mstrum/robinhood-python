@@ -7,13 +7,6 @@ API_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'certs', 'api.robinhood.c
 ANALYTICS_HOST = 'https://analytics.robinhood.com/'
 ANALYTICS_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'certs', 'analytics.robinhood.com.pem')
 
-KNOWN_TAGS = [
-  '100-most-popular',
-  '10-most-popular',
-  'top-movers',
-  # Personal tag
-  'for-you',
-]
 ORDER_TYPES = [
   'market',
   'limit',
