@@ -59,8 +59,8 @@ Various downloads:
 
 #### Purchasing options
 
-* [show_options_discoveries.py](show_options_quote.py) [call|put] AMZN 2018-05-21 55 [--live]
-  * Displays the quote for the given options contract (pretty raw for now)
+* [show_options_discoveries.py](show_options_quote.py) AMZN [--live]
+  * Displays robinhood's options suggestions for the given symbol (pretty raw for now)
 * [show_options_quote.py](show_options_quote.py) [call|put] AMZN 2018-05-21 55 [--live]
   * Displays the quote for the given options contract (pretty raw for now)
 * [show_pending_options_orders.py](show_pending_options_orders.py)
