@@ -2607,6 +2607,32 @@ class RobinhoodClient:
     _raise_on_error(response)
     return response.json()
 
+  def get_options_level_changes(self, use_account_url=None):
+    """
+    Example response:
+    [
+        {
+            "state": "approved",
+            "updated_at": "2018-03-22T14:57:49.100699Z",
+            "id": "0-0-0-0",
+            "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
+            "created_at": "2018-02-22T14:57:01.376251Z",
+            "option_level": "option_level_2"
+        },
+        ...
+    ]
+    """
+    account_url = use_account_url or self.get_account()['url']
+    params = {
+        'acount': account_url,
+    }
+    response = self._get_session(API, authed=True).get(API_HOST + 'options/level_changes/', params=params)
+    _raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
   def cancel_options_order(self, order_id):
     """
     Example response:
@@ -2627,16 +2653,18 @@ class RobinhoodClient:
     account_url = use_account_url or self.get_account()['url']
     body = {
         'account': account_url,
-        'legs': {
+        'direction': direction,
+        'legs': [{
             'side': DIRECTION_TO_ORDER_SIDE[direction],
             'option': options_instrument_id_to_url(options_instrument_id),
-        },
-        'type': order_type,
-        'direction': direction,
-        'quantity': quantity,
+            'position_effect': 'open',
+            'ratio_quantity': 1,
+        }],
         'price': price,
+        'quantity': quantity,
+        # ref_id?
         'time_in_force': 'gtc',
-        'trigger': 'immediate', # see util.TRIGGERS
+        'type': order_type,
     }
     response = self._get_session(API, authed=True).post(API_HOST + 'options/orders/', data=body)
     _raise_on_error(response)
