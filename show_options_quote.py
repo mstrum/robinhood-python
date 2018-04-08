@@ -22,8 +22,9 @@ def display_options_quote(client, options_type, symbol, date, strike, cache_mode
     exit()
   else:
     instrument_id = instrument['id']
+    name = instrument['simple_name'] or instrument['name']
 
-  options_chains = client.get_options_chains(instrument_ids=[instrument_id])
+  options_chains = [c for c in client.get_options_chains(instrument_ids=[instrument_id]) if c['can_open_position']]
   if len(options_chains) != 1:
     raise Exception('Expected exactly one options chains listing, but got: {}'.format(json.dumps(options_chains, indent=4)))
   options_chain = options_chains[0]
@@ -52,7 +53,37 @@ def display_options_quote(client, options_type, symbol, date, strike, cache_mode
     raise Exception('No options found at that strike price')
 
   options_quote = client.get_options_marketdata(options_instrument['id'])
-  print(json.dumps(options_quote, indent=4))
+
+  break_even_price = Decimal(options_quote['break_even_price'])
+  ask_size = options_quote['ask_size']
+  ask_price = Decimal(options_quote['ask_price'])
+  bid_size = options_quote['bid_size']
+  bid_price = Decimal(options_quote['bid_price'])
+  adjusted_mark_price = Decimal(options_quote['adjusted_mark_price'])
+  mark_price = Decimal(options_quote['mark_price'])
+  max_loss = 100 * adjusted_mark_price
+  bid_spread = ask_price - bid_price
+  implied_volatility = Decimal(options_quote['implied_volatility']) * 100
+  high_price = Decimal(options_quote['high_price'])
+  low_price = Decimal(options_quote['low_price'])
+  hl_spread = high_price - low_price
+  last_trade_size = options_quote['last_trade_size']
+  last_trade_price = Decimal(options_quote['last_trade_price'])
+  open_interest = options_quote['open_interest']
+  volume = options_quote['volume']
+
+  print('${:.2f} {} ({}) {}'.format(strike, symbol, name, options_type[0].upper() + options_type[1:]))
+  print('Break even\t ${:.2f}'.format(break_even_price))
+  print('Expires\t\t {}'.format(date))
+  print('Spread\t\t ${:.2f} ({}) <-> ${:.2f} ({})'.format(bid_price, bid_size, ask_price, ask_size))
+  print('\t\t\t${:.2f} ({:.2f}%)'.format(bid_spread, bid_spread * 100 / adjusted_mark_price))
+  print('Low/High\t ${:.2f} <-> ${:.2f}'.format(low_price, high_price))
+  print('\t\t\t${:.2f} ({:.2f}%)'.format(hl_spread, hl_spread * 100 / adjusted_mark_price))
+  print('Max loss\t ${:.2f}'.format(max_loss))
+  print('Impl Volatil\t {:.2f}%'.format(implied_volatility))
+  print('Last\t\t {} @ ${:.2f}'.format(last_trade_size, last_trade_price))
+  print('Open Int\t {}'.format(open_interest))
+  print('Volume\t\t {}'.format(volume))
 
 
 if __name__ == '__main__':

@@ -2532,6 +2532,33 @@ class RobinhoodClient:
     assert not response_json['next']
     return response_json['results']
 
+  def get_options_discoveries(self, chain_id):
+    """
+    Example response:
+    [
+        {
+            "description": "Best if you have a strong, short-term belief that AMZN will go up.",
+            "strategy_category": "bullish",
+            "legs": [
+                {
+                    "position_effect": "open",
+                    "side": "buy",
+                    "option_id": "284a5f05-40dd-4d92-8b40-40ce0bc94fca"
+                }
+            ],
+            "tags": [
+                "short_term",
+                "high_risk"
+            ],
+            "strategy_type": "buy_call"
+        },
+        ...
+    ]
+    """
+    response = self._get_session(ANALYTICS, authed=True).get(ANALYTICS_HOST + 'options_discovery/{}/'.format(chain_id))
+    _raise_on_error(response)
+    return response.json()['results']
+
   def get_options_chain_collateral(self, chain_id, use_account_number=None):
     """
     This appears to return a not found if there aren't any existing holdings.

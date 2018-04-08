@@ -33,28 +33,38 @@ Various downloads:
 * [download_documents.py](download_documents.py) [--live]
   * Documents (including PDFs) that you've received
 
-Display information:
+### Stocks
+
+#### Purchasing stocks
+
 * [show_quote.py](show_quote.py) AMZN [--live]
   * Displays the latest stock quote for the given symbol along with auxilary info
-* [show_options_quote.py](show_options_quote.py) [call|put] AMZN 2018-05-21 55 [--live]
-  * Displays the quote for the given options contract (pretty raw for now)
+* [order.py](order.py) [market|limit] [buy|sell] SYMBOL QUANTITY PRICE [--no-cancel]
+  * Prints the quote for the given symbol, confirms, and places an order
 * [show_pending_orders.py](show_pending_orders.py)
   * Displays any outstanding stock orders along with position information
+* [cancel.py](cancel.py) ORDER_ID...
+  * Cancels one or more order ids given, or all pending orders if none given
+* [show_potentials.py](show_potentials.py)
+  * Show stocks and some stats to help decide on positions to push forward on.
+    * Note this is basically only useful to myself ATM.
 * [show_interesting_stocks.py](show_interesting_stocks.py)
   * Show stocks that are on various lists
     * 10 popular S&P 500 stocks with Robinhood users
     * S&P 500 top movers up and down
     * Top 10 and 100 popular sticks with Robinhood users
   * This script is kind of a mess and mostly just a raw dump.
-* [show_potentials.py](show_potentials.py)
-  * Show stocks and some stats to help decide on positions to push forward on.
-    * Note this is basically only useful to myself ATM.
 
-Perform actions:
-* [order.py](order.py) [market|limit] [buy|sell] SYMBOL QUANTITY PRICE [--no-cancel]
-  * Prints the quote for the given symbol, confirms, and places an order
-* [cancel.py](cancel.py) ORDER_ID...
-  * Cancels one or more order ids given, or all pending orders if none given
+### Options
+
+#### Purchasing options
+
+* [show_options_discoveries.py](show_options_quote.py) [call|put] AMZN 2018-05-21 55 [--live]
+  * Displays the quote for the given options contract (pretty raw for now)
+* [show_options_quote.py](show_options_quote.py) [call|put] AMZN 2018-05-21 55 [--live]
+  * Displays the quote for the given options contract (pretty raw for now)
+* [show_pending_options_orders.py](show_pending_options_orders.py)
+  * Displays any outstanding options orders
 * [cancel_options.py](cancel_options.py) ORDER_ID...
   * Cancels one or more options order ids given, or all pending options orders if none given
 

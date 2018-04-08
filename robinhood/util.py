@@ -78,6 +78,14 @@ DIRECTIONS = [
     'debit',
     'credit',
 ]
+DIRECTION_TO_SIDE = {
+    'debit': 'buy',
+    'credit': 'sell',
+}
+SIDE_TO_DIRECTION = {
+    'buy': 'debit',
+    'sell': 'credit',
+}
 
 
 def get_last_id_from_url(url):
