@@ -78,11 +78,11 @@ DIRECTIONS = [
     'debit',
     'credit',
 ]
-DIRECTION_TO_SIDE = {
+DIRECTION_TO_ORDER_SIDE = {
     'debit': 'buy',
     'credit': 'sell',
 }
-SIDE_TO_DIRECTION = {
+ORDER_SIDE_TO_DIRECTION = {
     'buy': 'debit',
     'sell': 'credit',
 }

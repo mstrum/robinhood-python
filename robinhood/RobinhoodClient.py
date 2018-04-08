@@ -31,6 +31,7 @@ from .util import (
     INTERVALS,
     SPANS,
     DIRECTIONS,
+    DIRECTION_TO_ORDER_SIDE,
     get_cursor_from_url,
     get_last_id_from_url,
     instrument_id_to_url,
@@ -1934,7 +1935,7 @@ class RobinhoodClient:
   def order(self, instrument_id, order_type, order_side, symbol, quantity, price, use_account_url=None):
     """
     Args:
-      instrument_url
+      instrument_id
       order_type: [market, limit]
       order_side: [buy, sell]
       symbol: e.g. AAPL
@@ -2615,7 +2616,7 @@ class RobinhoodClient:
     _raise_on_error(response)
     return response.json()
 
-  def order_options(self, order_type, direction, quantity, price, use_account_url=None):
+  def order_options(self, options_instrument_id, order_type, direction, quantity, price, use_account_url=None):
     """
     Args:
 
@@ -2623,12 +2624,14 @@ class RobinhoodClient:
     """
     assert order_type in ORDER_TYPES
     assert direction in DIRECTIONS
-    # ref_id?
-    # legs?
     account_url = use_account_url or self.get_account()['url']
     body = {
         'account': account_url,
-        'type': options_type,
+        'legs': {
+            'side': DIRECTION_TO_ORDER_SIDE[direction],
+            'option': options_instrument_id_to_url(options_instrument_id),
+        },
+        'type': order_type,
         'direction': direction,
         'quantity': quantity,
         'price': price,

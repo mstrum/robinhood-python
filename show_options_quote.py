@@ -36,7 +36,6 @@ def display_options_quote(client, options_type, symbol, date, strike, cache_mode
   chain_id = options_chain['id']
   options_instrument_id = options_chain['underlying_instruments'][0]['id']
   multiplier = Decimal(options_chain['trade_value_multiplier'])
-  expiration_dates = options_chain['expiration_dates']
 
   options_instruments = client.get_options_instruments(
       chain_id=chain_id, options_type=options_type, tradability='tradable', state='active', expiration_dates=[date])

@@ -11,7 +11,7 @@ import pytz
 
 from robinhood.exceptions import NotFound
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, FORCE_LIVE
-from robinhood.util import get_last_id_from_url, DIRECTION_TO_SIDE
+from robinhood.util import get_last_id_from_url, DIRECTION_TO_ORDER_SIDE
 
 
 client = RobinhoodCachedClient()
@@ -59,7 +59,7 @@ def display_pending_options_orders():
       order_id = order['id']
       order_state = order['state']
       order_type = order['type']
-      order_side = DIRECTION_TO_SIDE[order['direction']]
+      order_side = DIRECTION_TO_ORDER_SIDE[order['direction']]
       order_quantity = int(float(order['quantity']))
       order_price = Decimal(order['price'])
       order_premium = Decimal(order['premium'])
