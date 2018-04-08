@@ -2233,7 +2233,40 @@ class RobinhoodClient:
   def get_options_orders(self):
     """
     Example response:
-    TODO
+    [
+        {
+            "response_category": null,
+            "type": "limit",
+            "id": "a25ee566-eb97-42ae-b952-09ba0599d951",
+            "cancel_url": "https://api.robinhood.com/options/orders/a25ee566-eb97-42ae-b952-09ba0599d951/cancel/",
+            "canceled_quantity": "0.00000",
+            "trigger": "immediate",
+            "price": "0.10000000",
+            "premium": "10.00000000",
+            "quantity": "1.00000",
+            "processed_quantity": "0.00000",
+            "processed_premium": "0.0000",
+            "created_at": "2018-04-08T07:28:21.582166Z",
+            "pending_quantity": "1.00000",
+            "chain_symbol": "AAXN",
+            "direction": "debit",
+            "time_in_force": "gfd",
+            "updated_at": "2018-04-08T07:28:21.909451Z",
+            "legs": [
+                {
+                    "ratio_quantity": 1,
+                    "executions": [],
+                    "id": "a61afe3b-3b8b-4192-a795-200a294a1bb5",
+                    "side": "buy",
+                    "option": "https://api.robinhood.com/options/instruments/93988a72-cd5a-461a-a25d-d63cdd7d46de/",
+                    "position_effect": "open"
+                }
+            ],
+            "state": "queued",
+            "chain_id": "a6cb269e-d5b5-4a52-a1f6-863d6376a814",
+            "ref_id": "7e029c12-3ed7-4675-9970-1a1b2ac46b30"
+        }
+    ]
     """
     response = self._get_session(API, authed=True).get(API_HOST + 'options/orders/')
     _raise_on_error(response)
@@ -2543,6 +2576,15 @@ class RobinhoodClient:
     }
     response = self._get_session(API, authed=True).get(
         API_HOST + 'options/chains/{}/collateral/'.format(chain_id), params=params)
+    _raise_on_error(response)
+    return response.json()
+
+  def cancel_options_order(self, order_id):
+    """
+    Example response:
+    {}
+    """
+    response = self._get_session(API, authed=True).post(API_HOST + 'options/orders/{}/cancel/'.format(order_id))
     _raise_on_error(response)
     return response.json()
 

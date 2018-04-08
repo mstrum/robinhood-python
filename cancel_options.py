@@ -9,7 +9,7 @@ from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, FORCE_LIVE
 client = RobinhoodCachedClient()
 client.login()
 
-def cancel_orders(order_ids):
+def cancel_options_orders(order_ids):
 
     print('')
     print('!!!!!!!!!!!!!!!!!! CAUTION !!!!!!!!!!!!!!!!!!')
@@ -19,18 +19,18 @@ def cancel_orders(order_ids):
       exit()
 
     for order_id in order_ids:
-      cancelled_order = client.cancel_order(order_id)
+      cancelled_order = client.cancel_options_order(order_id)
       print('Cancelled order {}'.format(order_id))
 
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description='Cancel orders')
-  parser.add_argument('order_ids', nargs='*', help='The order ids to cancel')
+  parser = argparse.ArgumentParser(description='Cancel options orders')
+  parser.add_argument('order_ids', nargs='*', help='The options order ids to cancel')
   args = parser.parse_args()
 
   order_ids = args.order_ids
   if not order_ids:
-    orders = client.get_orders(cache_mode=FORCE_LIVE)
+    orders = client.get_options_orders()
     order_ids = [order['id'] for order in orders if order['state'] in ['queued', 'confirmed']]
 
-  cancel_orders(order_ids)
+  cancel_options_orders(order_ids)

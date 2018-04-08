@@ -25,7 +25,6 @@ def display_pending_orders():
     print('\tNo pending orders')
     exit()
 
-
   instrument_ids = [get_last_id_from_url(o['instrument']) for o in pending_orders]
   instruments = client.get_instruments(instrument_ids)
   instrument_by_id = { i['id']: i for i in instruments }
@@ -64,7 +63,6 @@ def display_pending_orders():
 
       print('\t{}\t{} {}\t{} @ ${:.2f}\t({})'.format(
         order_state, order_type, order_side, order_quantity, order_price, order_id))
-
 
 if __name__ == '__main__':
   display_pending_orders()
