@@ -135,7 +135,11 @@ def display_quote(client, symbol, cache_mode):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Get a quote for a symbol')
   parser.add_argument('symbol', type=str.upper, help='A symbol to get a quote on')
-  parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
+  parser.add_argument(
+      '--live',
+      action='store_true',
+      help='Force to not use cache for APIs where values change'
+  )
   args = parser.parse_args()
 
   client = RobinhoodCachedClient()

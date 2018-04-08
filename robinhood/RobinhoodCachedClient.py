@@ -602,7 +602,6 @@ class RobinhoodCachedClient(RobinhoodClient):
         cache_mode)
 
   # TODO: get_prices
-  # TODO: get_historical_quotes
   # TODO: crypto
   # TODO: options
   # TODO: oauth2

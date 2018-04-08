@@ -27,15 +27,19 @@ def download_documents(cache_mode):
         document_pdf_file.write(contents)
 
       csv_writer.writerow({
-        'document_id': document_id,
-        'date': document_date,
-        'type': document_type,
-        'path': pdf_path,
+          'document_id': document_id,
+          'date': document_date,
+          'type': document_type,
+          'path': pdf_path,
       })
 
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Download a list of your documents')
-  parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
+  parser.add_argument(
+      '--live',
+      action='store_true',
+      help='Force to not use cache for APIs where values change'
+  )
   args = parser.parse_args()
   download_documents(FORCE_LIVE if args.live else CACHE_FIRST)

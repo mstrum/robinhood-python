@@ -9,61 +9,61 @@ https://github.com/Jamonek/Robinhood
 """
 
 from datetime import datetime, timedelta
-import json
 
 import requests
 
 from .exceptions import BadRequest, MfaRequired, NotFound, NotLoggedIn, TooManyRequests
 from .util import (
-  ANALYTICS_HOST,
-  ANALYTICS_CERT_BUNDLE_PATH,
-  API_HOST,
-  API_CERT_BUNDLE_PATH,
-  NUMMUS_HOST,
-  NUMMUS_CERT_BUNDLE_PATH,
-  ORDER_SIDES,
-  ORDER_TYPES,
-  OPTIONS_TYPES,
-  OPTIONS_STATES,
-  TRADABILITY,
-  BOUNDS,
-  INTERVALS,
-  SPANS,
-  get_cursor_from_url,
-  get_last_id_from_url,
-  instrument_id_to_url
+    ANALYTICS_HOST,
+    ANALYTICS_CERT_BUNDLE_PATH,
+    API_HOST,
+    API_CERT_BUNDLE_PATH,
+    NUMMUS_HOST,
+    NUMMUS_CERT_BUNDLE_PATH,
+    ORDER_SIDES,
+    ORDER_TYPES,
+    OPTIONS_TYPES,
+    OPTIONS_STATES,
+    TRADABILITY,
+    BOUNDS,
+    INTERVALS,
+    SPANS,
+    get_cursor_from_url,
+    get_last_id_from_url,
+    instrument_id_to_url
 )
+
+
+def _raise_on_error(response):
+  try:
+    response.raise_for_status()
+  except requests.HTTPError as http_error:
+    if  http_error.response.status_code == requests.codes.unauthorized:
+      raise NotLoggedIn(http_error.response.json()['detail'])
+    elif  http_error.response.status_code == requests.codes.bad_request:
+      raise BadRequest(http_error.response.json())
+    elif  http_error.response.status_code == requests.codes.too_many_requests:
+      raise TooManyRequests()
+    elif  http_error.response.status_code == requests.codes.not_found:
+      raise NotFound()
+    raise
 
 
 class RobinhoodClient:
   def __init__(self):
     self._session = requests.Session()
     self._session.headers = {
-      'Accept': '*/*',
-      'Accept-Encoding': 'gzip, deflate',
-      'Accept-Language': 'en;q=1',
-      'Content-type': 'application/x-www-form-urlencoded; charset=utf-8',
-      'X-Robinhood-API-Version': '1.204.0',
-      'Connection': 'keep-alive',
-      'User-Agent': 'Robinhood/823 (iPhone; iOS 7.1.2; Scale/2.00)',
+        'Accept': '*/*',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'en;q=1',
+        'Content-type': 'application/x-www-form-urlencoded; charset=utf-8',
+        'X-Robinhood-API-Version': '1.204.0',
+        'Connection': 'keep-alive',
+        'User-Agent': 'Robinhood/823 (iPhone; iOS 7.1.2; Scale/2.00)',
     }
     self._authorization_headers = {}
     self._oauth2_refresh_token = None
     self._oauth2_expires_at = None
-
-  def _raise_on_error(self, response):
-    try:
-      response.raise_for_status()
-    except requests.HTTPError as http_error:
-      if  http_error.response.status_code == requests.codes.unauthorized:
-        raise NotLoggedIn(http_error.response.json()['detail'])
-      elif  http_error.response.status_code == requests.codes.bad_request:
-        raise BadRequest(http_error.response.json())
-      elif  http_error.response.status_code == requests.codes.too_many_requests:
-        raise TooManyRequests()
-      elif  http_error.response.status_code == requests.codes.not_found:
-        raise NotFound()
-      raise
 
   def set_auth_token(self, auth_token):
     self._authorization_headers['Authorization'] = 'Token {}'.format(auth_token)
@@ -74,8 +74,12 @@ class RobinhoodClient:
     self._oauth2_expires_at = expires_at
 
   def migrate_token(self):
-    response = self._session.post(API_HOST + 'oauth2/migrate_token/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.post(
+        API_HOST + 'oauth2/migrate_token/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     oauth2_details = response.json()
     self.set_oauth2_token(
         oauth2_details['token_type'],
@@ -90,14 +94,15 @@ class RobinhoodClient:
 
   def set_auth_token_with_credentials(self, username, password, mfa=None):
     body = {
-      'username': username,
-      'password': password,
+        'username': username,
+        'password': password,
     }
     if mfa:
       body['mfa_code'] = mfa
 
-    response = self._session.post(API_HOST + 'api-token-auth/', data=body, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.post(
+        API_HOST + 'api-token-auth/', data=body, verify=API_CERT_BUNDLE_PATH)
+    _raise_on_error(response)
     response_json = response.json()
     if 'mfa_required' in response_json:
       raise MfaRequired()
@@ -106,8 +111,11 @@ class RobinhoodClient:
     return auth_token
 
   def clear_auth_token(self):
-    response = self._session.post(API_HOST + 'api-token-logout/', verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.post(
+        API_HOST + 'api-token-logout/',
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     del self._session.headers['Authorization']
 
   def get_user(self):
@@ -130,8 +138,12 @@ class RobinhoodClient:
         "created_at": "2018-02-01T22:46:39.922345Z"
     }
     """
-    response = self._session.get(API_HOST + 'user/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'user/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_user_basic_info(self):
@@ -152,8 +164,12 @@ class RobinhoodClient:
         "date_of_birth": "1999-01-01"
     }
     """
-    response = self._session.get(API_HOST + 'user/basic_info', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'user/basic_info',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_user_additional_info(self):
@@ -174,8 +190,12 @@ class RobinhoodClient:
         "security_affiliated_firm_name": ""
     }
     """
-    response = self._session.get(API_HOST + 'user/additional_info', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'user/additional_info',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_experiments(self):
@@ -191,8 +211,12 @@ class RobinhoodClient:
         ...
     ]
     """
-    response = self._session.get(ANALYTICS_HOST + 'experiments/', headers=self._authorization_headers, verify=ANALYTICS_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        ANALYTICS_HOST + 'experiments/',
+        headers=self._authorization_headers,
+        verify=ANALYTICS_CERT_BUNDLE_PATH
+        )
+    _raise_on_error(response)
     return response.json()
 
   def get_referral_code(self):
@@ -200,17 +224,25 @@ class RobinhoodClient:
     Example response:
     {
         "code": "matts952",
-        "user_id": "00000000-0000-4000-0000-000000000000",
+        "user_id": "0-0-4-0",
         "url": "https://share.robinhood.com/matts952"
     }
     """
-    response = self._session.get(API_HOST + 'midlands/referral/code/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'midlands/referral/code/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_margin_calls(self):
-    response = self._session.get(API_HOST + 'margin/calls/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'margin/calls/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: auto page if needed
     assert not response_json['next']
@@ -234,8 +266,12 @@ class RobinhoodClient:
     ]
 
     """
-    response = self._session.get(API_HOST + 'subscription/subscription_fees/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'subscription/subscription_fees/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: auto page if needed
     assert not response_json['next']
@@ -265,10 +301,15 @@ class RobinhoodClient:
     ]
     """
     params = {
-      'active': 'true',
+        'active': 'true',
     }
-    response = self._session.get(API_HOST + 'subscription/subscriptions/', params=params, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'subscription/subscriptions/',
+        params=params,
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: auto page if needed
     assert not response_json['next']
@@ -297,8 +338,11 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'markets/', verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'markets/',
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # This api likely never pages, but you never know.
     assert not response_json['next']
@@ -307,11 +351,11 @@ class RobinhoodClient:
   def download_document_by_id(self, document_id):
     """The response is a PDF file"""
     response = self._session.get(
-      API_HOST + 'documents/{}/download/'.format(document_id),
-      headers=self._authorization_headers,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'documents/{}/download/'.format(document_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.content
 
   def get_document_by_id(self, document_id):
@@ -320,22 +364,26 @@ class RobinhoodClient:
     {
         "insert_1_url": "",
         "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
-        "download_url": "https://api.robinhood.com/documents/00000000-0000-4000-0000-000000000000/download/",
+        "download_url": "https://api.robinhood.com/documents/0-0-4-0/download/",
         "insert_4_url": "",
         "insert_2_url": "",
         "insert_6_url": "",
-        "url": "https://api.robinhood.com/documents/00000000-0000-4000-0000-000000000000/",
+        "url": "https://api.robinhood.com/documents/0-0-4-0/",
         "created_at": "2018-02-01T16:17:07.579125Z",
         "insert_3_url": "",
-        "id": "00000000-0000-4000-0000-000000000000",
+        "id": "0-0-4-0",
         "updated_at": "2018-02-01T18:58:54.013192Z",
         "type": "trade_confirm",
         "insert_5_url": "",
         "date": "2018-02-01"
     }
     """
-    response = self._session.get(API_HOST + 'documents/{}/'.format(document_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'documents/{}/'.format(document_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_documents(self):
@@ -346,14 +394,14 @@ class RobinhoodClient:
             {
                 "insert_1_url": "",
                 "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
-                "download_url": "https://api.robinhood.com/documents/00000000-0000-4000-0000-000000000000/download/",
+                "download_url": "https://api.robinhood.com/documents/0-0-4-0/download/",
                 "insert_4_url": "",
                 "insert_2_url": "",
                 "insert_6_url": "",
-                "url": "https://api.robinhood.com/documents/00000000-0000-4000-0000-000000000000/",
+                "url": "https://api.robinhood.com/documents/0-0-4-0/",
                 "created_at": "2018-02-01T16:17:07.579125Z",
                 "insert_3_url": "",
-                "id": "00000000-0000-4000-0000-000000000000",
+                "id": "0-0-4-0",
                 "updated_at": "2018-02-01T18:58:54.013192Z",
                 "type": "trade_confirm",
                 "insert_5_url": "",
@@ -365,8 +413,12 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'documents/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'documents/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -387,8 +439,12 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'watchlists/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'watchlists/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -413,8 +469,12 @@ class RobinhoodClient:
     }
 
     """
-    response = self._session.get(API_HOST + 'watchlists/{}/'.format(watchlist_name), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'watchlists/{}/'.format(watchlist_name),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -483,8 +543,12 @@ class RobinhoodClient:
         "market_push": true
     }
     """
-    response = self._session.get(API_HOST + 'settings/notifications', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'settings/notifications',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_notification_devices(self):
@@ -496,16 +560,20 @@ class RobinhoodClient:
             {
                 "token": "XXX:XXX-XXXX",
                 "identifier": "XXXX",
-                "url": "https://api.robinhood.com/notifications/devices/00000000-0000-4000-0000-000000000000/",
-                "id": "00000000-0000-4000-0000-000000000000",
+                "url": "https://api.robinhood.com/notifications/devices/0-0-4-0/",
+                "id": "0-0-4-0",
                 "type": "android"
             }
         ],
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'notifications/devices/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'notifications/devices/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # This probably won't autopage for a LONG time
     assert not response_json['next']
@@ -575,8 +643,12 @@ class RobinhoodClient:
         "deposit_halted": false
     }
     """
-    response = self._session.get(API_HOST + 'accounts/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'accounts/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()['results'][0]
 
   def get_investment_profile(self):
@@ -601,8 +673,12 @@ class RobinhoodClient:
         "investment_objective": "growth_invest_obj"
     }
     """
-    response = self._session.get(API_HOST + 'user/investment_profile/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'user/investment_profile/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_popularity(self, instrument_id):
@@ -613,8 +689,11 @@ class RobinhoodClient:
         "instrument": "https://api.robinhood.com/instruments/e6f3bb44-dcdf-445b-bbcb-2e738fd21d6d/"
     }
     """
-    response = self._session.get(API_HOST + 'instruments/{}/popularity/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'instruments/{}/popularity/'.format(instrument_id),
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_popularities(self, instrument_ids):
@@ -643,10 +722,14 @@ class RobinhoodClient:
       return full_popularities
 
     params = {
-      'ids': ','.join(instrument_ids),
+        'ids': ','.join(instrument_ids),
     }
-    response = self._session.get(API_HOST + 'instruments/popularity/', params=params, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'instruments/popularity/',
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -665,8 +748,11 @@ class RobinhoodClient:
         "instrument_id": "e6f3bb44-dcdf-445b-bbcb-2e738fd21d6d"
     }
     """
-    response = self._session.get(API_HOST + 'midlands/ratings/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'midlands/ratings/{}/'.format(instrument_id),
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_ratings(self, instrument_ids):
@@ -702,10 +788,14 @@ class RobinhoodClient:
       return full_ratings
 
     params = {
-      'ids': ','.join(instrument_ids),
+        'ids': ','.join(instrument_ids),
     }
-    response = self._session.get(API_HOST + 'midlands/ratings/', params=params, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'midlands/ratings/',
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -723,8 +813,12 @@ class RobinhoodClient:
         ...
     ]
     """
-    response = self._session.get(ANALYTICS_HOST + 'instruments/tag/{}/'.format(tag), headers=self._authorization_headers, verify=ANALYTICS_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        ANALYTICS_HOST + 'instruments/tag/{}/'.format(tag),
+        headers=self._authorization_headers,
+        verify=ANALYTICS_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     return response_json['instruments']
 
@@ -753,10 +847,14 @@ class RobinhoodClient:
     ]
     """
     params = {
-      'similar_to': instrument_id,
+        'similar_to': instrument_id,
     }
-    response = self._session.get(ANALYTICS_HOST + 'instruments/', params=params, verify=ANALYTICS_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        ANALYTICS_HOST + 'instruments/',
+        params=params,
+        verify=ANALYTICS_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     return response_json
 
@@ -773,10 +871,15 @@ class RobinhoodClient:
         "name": "100 Most Popular"
     }
     """
-    response = self._session.get(API_HOST + 'midlands/tags/tag/{}/'.format(tag), verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'midlands/tags/tag/{}/'.format(tag),
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
-    instrument_ids = [get_last_id_from_url(instrument_url) for instrument_url in response_json['instruments']]
+    instrument_ids = [
+        get_last_id_from_url(instrument_url) for instrument_url in response_json['instruments']
+    ]
     return instrument_ids
 
   def get_instruments(self, instrument_ids):
@@ -789,17 +892,17 @@ class RobinhoodClient:
                 "simple_name": "Praetorian Property",
                 "margin_initial_ratio": "1.0000",
                 "min_tick_size": null,
-                "splits": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/splits/",
+                "splits": "https://api.robinhood.com/instruments/0-0-4-0/splits/",
                 "name": "Praetorian Property, Inc. Common Stock",
                 "quote": "https://api.robinhood.com/quotes/PRRE/",
                 "bloomberg_unique": "EQ0000000021483725",
-                "url": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+                "url": "https://api.robinhood.com/instruments/0-0-4-0/",
                 "type": "stock",
                 "tradeable": false,
                 "country": "US",
                 "fundamentals": "https://api.robinhood.com/fundamentals/PRRE/",
                 "market": "https://api.robinhood.com/markets/OTCM/",
-                "id": "00000000-0000-4000-0000-000000000000",
+                "id": "0-0-4-0",
                 "symbol": "PRRE",
                 "tradability": "untradable",
                 "day_trade_ratio": "1.0000",
@@ -825,11 +928,12 @@ class RobinhoodClient:
       return full_instruments
 
     params = {
-      'ids': ','.join(instrument_ids),
-      'active_instruments_only': 'false',
+        'ids': ','.join(instrument_ids),
+        'active_instruments_only': 'false',
     }
-    response = self._session.get(API_HOST + 'instruments/', params=params, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'instruments/', params=params, verify=API_CERT_BUNDLE_PATH)
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -878,15 +982,15 @@ class RobinhoodClient:
     ]
     """
     params = {
-      'instrument': instrument_id_to_url(instrument_id),
-      'range': '21day',
+        'instrument': instrument_id_to_url(instrument_id),
+        'range': '21day',
     }
     response = self._session.get(
         API_HOST + 'marketdata/earnings/'.format(instrument_id),
         params=params,
         verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.json()['results']
 
   def get_instrument_by_id(self, instrument_id):
@@ -906,10 +1010,10 @@ class RobinhoodClient:
         "market": "https://api.robinhood.com/markets/OTCM/",
         "symbol": "PRRE",
         "maintenance_ratio": "1.0000",
-        "url": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+        "url": "https://api.robinhood.com/instruments/0-0-4-0/",
         "country": "US",
-        "splits": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/splits/",
-        "id": "00000000-0000-4000-0000-000000000000",
+        "splits": "https://api.robinhood.com/instruments/0-0-4-0/splits/",
+        "id": "0-0-4-0",
         "margin_initial_ratio": "1.0000",
         "tradeable": false,
         "fundamentals": "https://api.robinhood.com/fundamentals/PRRE/",
@@ -918,8 +1022,11 @@ class RobinhoodClient:
         "name": "Praetorian Property, Inc. Common Stock"
     }
     """
-    response = self._session.get(API_HOST + 'instruments/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'instruments/{}/'.format(instrument_id),
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_instrument_by_symbol(self, symbol):
@@ -936,15 +1043,15 @@ class RobinhoodClient:
                 "min_tick_size": null,
                 "bloomberg_unique": "EQ0010169500001000",
                 "type": "stock",
-                "id": "00000000-0000-4000-0000-000000000000",
+                "id": "0-0-4-0",
                 "state": "active",
                 "list_date": "1990-01-02",
                 "symbol": "AAPL",
                 "margin_initial_ratio": "0.5000",
                 "quote": "https://api.robinhood.com/quotes/AAPL/",
-                "url": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+                "url": "https://api.robinhood.com/instruments/0-0-4-0/",
                 "name": "Apple Inc. - Common Stock",
-                "splits": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/splits/",
+                "splits": "https://api.robinhood.com/instruments/0-0-4-0/splits/",
                 "fundamentals": "https://api.robinhood.com/fundamentals/AAPL/",
                 "market": "https://api.robinhood.com/markets/XNAS/",
                 "simple_name": "Apple",
@@ -958,11 +1065,15 @@ class RobinhoodClient:
     }
     """
     params = {
-      'symbol': symbol,
-      'active_instruments_only': True,
+        'symbol': symbol,
+        'active_instruments_only': True,
     }
-    response = self._session.get(API_HOST + 'instruments/', params=params, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'instruments/',
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     if len(response_json['results']) == 0:
       raise NotFound()
@@ -984,15 +1095,18 @@ class RobinhoodClient:
             {
                 "execution_date": "2014-06-09",
                 "multiplier": "7.00000000",
-                "url": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/splits/93657cb7-478b-42b0-a23c-9a64042cb694/",
+                "url": "https://api.robinhood.com/instruments/0-0-4-0/splits/93657cb7-478b-42b0-a23c-9a64042cb694/",
                 "divisor": "1.00000000",
-                "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/"
+                "instrument": "https://api.robinhood.com/instruments/0-0-4-0/"
             }
         ]
     }
     """
-    response = self._session.get(API_HOST + 'instruments/{}/splits'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'instruments/{}/splits'.format(instrument_id),
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # This is probably never the case.
     assert not response_json['next']
@@ -1008,7 +1122,7 @@ class RobinhoodClient:
         "bid_price": "175.1100",
         "bid_size": 500,
         "has_traded": true,
-        "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+        "instrument": "https://api.robinhood.com/instruments/0-0-4-0/",
         "last_trade_price": "175.0000",
         "previous_close_date": "2018-02-28",
         "previous_close": "178.1200",
@@ -1019,8 +1133,11 @@ class RobinhoodClient:
         "last_trade_price_source": "consolidated"
     }
     """
-    response = self._session.get(API_HOST + 'quotes/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'quotes/{}/'.format(instrument_id),
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_quotes(self, instrument_ids):
@@ -1036,7 +1153,7 @@ class RobinhoodClient:
                 "trading_halted": false,
                 "previous_close_date": "2018-02-28",
                 "ask_size": 1400,
-                "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+                "instrument": "https://api.robinhood.com/instruments/0-0-4-0/",
                 "has_traded": true,
                 "ask_price": "175.3000",
                 "last_trade_price_source": "consolidated",
@@ -1061,11 +1178,17 @@ class RobinhoodClient:
 
     # bounds=trading ?
     params = {
-      'instruments': ','.join([instrument_id_to_url(instrument_id) for instrument_id in instrument_ids])
+        'instruments': ','.join([
+            instrument_id_to_url(instrument_id) for instrument_id in instrument_ids
+        ])
     }
 
-    response = self._session.get(API_HOST + 'quotes/', params=params, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'quotes/',
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()['results']
 
   def get_prices(self, symbols=None, instrument_ids=None):
@@ -1090,15 +1213,21 @@ class RobinhoodClient:
     assert symbols or instrument_ids
     assert not (symbols and instrument_ids)
     params = {
-      'source': 'consolidated',
-      'delayed': 'true',
+        'source': 'consolidated',
+        'delayed': 'true',
     }
     if symbols:
       params['symbols'] = ','.join(symbols)
     if instrument_ids:
-      params['instruments'] = ','.join([instrument_id_to_url(instrument_id) for instrument_id in instrument_ids])
-    response = self._session.get(API_HOST + 'marketdata/prices/'.format(instrument_id), params=params, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+      params['instruments'] = ','.join([
+          instrument_id_to_url(instrument_id) for instrument_id in instrument_ids
+      ])
+    response = self._session.get(
+        API_HOST + 'marketdata/prices/',
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_dividend_by_id(self, dividend_id):
@@ -1106,7 +1235,7 @@ class RobinhoodClient:
     Example response:
     {
         "record_date": "2018-02-27",
-        "url": "https://api.robinhood.com/dividends/00000000-0000-4000-0000-000000000000/",
+        "url": "https://api.robinhood.com/dividends/0-0-4-0/",
         "payable_date": "2018-03-13",
         "paid_at": null,
         "amount": "0.84",
@@ -1114,12 +1243,16 @@ class RobinhoodClient:
         "rate": "0.8400000000",
         "position": "1.0000",
         "withholding": "0.00",
-        "id": "00000000-0000-4000-0000-000000000000",
-        "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/"
+        "id": "0-0-4-0",
+        "instrument": "https://api.robinhood.com/instruments/0-0-4-0/"
     }
     """
-    response = self._session.get(API_HOST + 'dividends/{}/'.format(dividend_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'dividends/{}/'.format(dividend_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_ach_relationship_by_id(self, relationship_id):
@@ -1128,8 +1261,8 @@ class RobinhoodClient:
     {
         "bank_account_holder_name": "Bob Smith",
         "created_at": "2018-02-01T23:41:03.251980Z",
-        "unlink": "https://api.robinhood.com/ach/relationships/00000000-0000-4000-0000-000000000000/unlink/",
-        "id": "00000000-0000-4000-0000-000000000000",
+        "unlink": "https://api.robinhood.com/ach/relationships/0-0-4-0/unlink/",
+        "id": "0-0-4-0",
         "bank_account_nickname": "MY CHECKING",
         "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
         "bank_account_number": "1234",
@@ -1138,14 +1271,18 @@ class RobinhoodClient:
         "verified": true,
         "initial_deposit": "0.00",
         "bank_routing_number": "12344567",
-        "url": "https://api.robinhood.com/ach/relationships/00000000-0000-4000-0000-000000000000/",
+        "url": "https://api.robinhood.com/ach/relationships/0-0-4-0/",
         "unlinked_at": null,
         "bank_account_type": "checking",
         "verification_method": "bank_auth"
     }
     """
-    response = self._session.get(API_HOST + 'ach/relationships/{}'.format(relationship_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'ach/relationships/{}'.format(relationship_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_ach_transfer_by_id(self, transfer_id):
@@ -1155,21 +1292,25 @@ class RobinhoodClient:
         "status_description": "",
         "fees": "0.00",
         "cancel": null,
-        "id": "00000000-0000-4000-0000-000000000000",
+        "id": "0-0-4-0",
         "created_at": "2018-02-01T05:54:32.902711Z",
         "amount": "0.00",
-        "ach_relationship": "https://api.robinhood.com/ach/relationships/00000000-0000-4000-0000-000000000000/",
+        "ach_relationship": "https://api.robinhood.com/ach/relationships/0-0-4-0/",
         "early_access_amount": "0.00",
         "expected_landing_date": "2018-02-08",
         "state": "pending",
         "updated_at": "2018-02-01T05:54:33.524297Z",
         "scheduled": false,
         "direction": "deposit",
-        "url": "https://api.robinhood.com/ach/transfers/00000000-0000-4000-0000-000000000000/"
+        "url": "https://api.robinhood.com/ach/transfers/0-0-4-0/"
     }
     """
-    response = self._session.get(API_HOST + 'ach/transfers/{}'.format(transfer_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'ach/transfers/{}'.format(transfer_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_ach_transfers(self):
@@ -1180,24 +1321,28 @@ class RobinhoodClient:
             "status_description": "",
             "fees": "0.00",
             "cancel": null,
-            "id": "00000000-0000-4000-0000-000000000000",
+            "id": "0-0-4-0",
             "created_at": "2018-02-01T05:54:32.902711Z",
             "amount": "0.00",
-            "ach_relationship": "https://api.robinhood.com/ach/relationships/00000000-0000-4000-0000-000000000000/",
+            "ach_relationship": "https://api.robinhood.com/ach/relationships/0-0-4-0/",
             "early_access_amount": "0.00",
             "expected_landing_date": "2018-02-08",
             "state": "pending",
             "updated_at": "2018-02-01T05:54:33.524297Z",
             "scheduled": false,
             "direction": "deposit",
-            "url": "https://api.robinhood.com/ach/transfers/00000000-0000-4000-0000-000000000000/"
+            "url": "https://api.robinhood.com/ach/transfers/0-0-4-0/"
         },
         ...
     ]
     """
     # There's also updated_at[gte]
-    response = self._session.get(API_HOST + 'ach/transfers/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'ach/transfers/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -1210,7 +1355,7 @@ class RobinhoodClient:
         "results": [
             {
                 "record_date": "2018-02-27",
-                "url": "https://api.robinhood.com/dividends/00000000-0000-4000-0000-000000000000/",
+                "url": "https://api.robinhood.com/dividends/0-0-4-0/",
                 "payable_date": "2018-03-13",
                 "paid_at": null,
                 "amount": "0.84",
@@ -1218,8 +1363,8 @@ class RobinhoodClient:
                 "rate": "0.8400000000",
                 "position": "1.0000",
                 "withholding": "0.00",
-                "id": "00000000-0000-4000-0000-000000000000",
-                "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/"
+                "id": "0-0-4-0",
+                "instrument": "https://api.robinhood.com/instruments/0-0-4-0/"
             },
             ...
         ],
@@ -1227,8 +1372,12 @@ class RobinhoodClient:
         "next": null
     }
     """
-    response = self._session.get(API_HOST + 'dividends/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'dividends/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -1255,22 +1404,26 @@ class RobinhoodClient:
         "response_category": "success",
         "type": "limit",
         "override_day_trade_checks": false,
-        "position": "https://api.robinhood.com/accounts/XXXXXXXX/positions/00000000-0000-4000-0000-000000000000/",
-        "id": "00000000-0000-4000-0000-000000000000",
+        "position": "https://api.robinhood.com/accounts/XXXXXXXX/positions/0-0-4-0/",
+        "id": "0-0-4-0",
         "executions": [],
         "time_in_force": "gtc",
-        "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+        "instrument": "https://api.robinhood.com/instruments/0-0-4-0/",
         "created_at": "2018-03-01T00:00:00.000000Z",
         "fees": "0.00",
         "updated_at": "2018-03-01T00:00:00.000000Z",
-        "ref_id": "00000000-0000-4000-0000-000000000000",
+        "ref_id": "0-0-4-0",
         "side": "buy",
-        "url": "https://api.robinhood.com/orders/00000000-0000-4000-0000-000000000000/",
+        "url": "https://api.robinhood.com/orders/0-0-4-0/",
         "extended_hours": true
     }
     """
-    response = self._session.get(API_HOST + 'orders/{}/'.format(order_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'orders/{}/'.format(order_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_orders(self, instrument_id=None):
@@ -1295,17 +1448,17 @@ class RobinhoodClient:
                 "response_category": "success",
                 "type": "limit",
                 "override_day_trade_checks": false,
-                "position": "https://api.robinhood.com/accounts/XXXXXXXX/positions/00000000-0000-4000-0000-000000000000/",
-                "id": "00000000-0000-4000-0000-000000000000",
+                "position": "https://api.robinhood.com/accounts/XXXXXXXX/positions/0-0-4-0/",
+                "id": "0-0-4-0",
                 "executions": [],
                 "time_in_force": "gtc",
-                "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+                "instrument": "https://api.robinhood.com/instruments/0-0-4-0/",
                 "created_at": "2018-03-01T00:00:00.000000Z",
                 "fees": "0.00",
                 "updated_at": "2018-03-01T00:00:00.000000Z",
-                "ref_id": "00000000-0000-4000-0000-000000000000",
+                "ref_id": "0-0-4-0",
                 "side": "buy",
-                "url": "https://api.robinhood.com/orders/00000000-0000-4000-0000-000000000000/",
+                "url": "https://api.robinhood.com/orders/0-0-4-0/",
                 "extended_hours": true
             },
             ...
@@ -1326,8 +1479,13 @@ class RobinhoodClient:
         params['instrument'] = instrument_id_to_url(instrument_id)
       if cursor:
         params['cursor'] = cursor
-      response = self._session.get(API_HOST + 'orders/', params=params, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-      self._raise_on_error(response)
+      response = self._session.get(
+          API_HOST + 'orders/',
+          params=params,
+          headers=self._authorization_headers,
+          verify=API_CERT_BUNDLE_PATH
+      )
+      _raise_on_error(response)
       orders_json = response.json()
       orders.extend(orders_json['results'])
       if orders_json['next']:
@@ -1386,10 +1544,15 @@ class RobinhoodClient:
     }
     """
     params = {
-      'direction': direction,
+        'direction': direction,
     }
-    response = self._session.get(API_HOST + 'midlands/movers/sp500/', params=params, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'midlands/movers/sp500/',
+        params=params,
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()['results']
 
   def get_portfolio(self):
@@ -1416,8 +1579,12 @@ class RobinhoodClient:
         "last_core_equity": "0.0000"
     }
     """
-    response = self._session.get(API_HOST + 'portfolios/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'portfolios/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()['results'][0]
 
   def get_portfolio_history(self, interval, span=None, use_account_number=None):
@@ -1463,8 +1630,8 @@ class RobinhoodClient:
     assert interval in INTERVALS
     account_number = use_account_number or self.get_account()['account_number']
     params = {
-      'bounds': 'trading',
-      'interval': '5minute',
+        'bounds': 'trading',
+        'interval': '5minute',
     }
     if span:
       assert span in SPANS
@@ -1474,7 +1641,7 @@ class RobinhoodClient:
         headers=self._authorization_headers,
         params=params,
         verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.json()
 
   def get_positions(self, include_old=False):
@@ -1485,7 +1652,7 @@ class RobinhoodClient:
             {
                 "created_at": "2018-02-09T15:42:15.536132Z",
                 "quantity": "1.0000",
-                "url": "https://api.robinhood.com/positions/XXXXXXXX/00000000-0000-4000-0000-000000000000/",
+                "url": "https://api.robinhood.com/positions/XXXXXXXX/0-0-4-0/",
                 "shares_held_for_buys": "0.0000",
                 "updated_at": "2018-02-00T00:00:00.000000Z",
                 "shares_held_for_stock_grants": "0.0000",
@@ -1493,7 +1660,7 @@ class RobinhoodClient:
                 "shares_held_for_options_collateral": "0.0000",
                 "intraday_average_buy_price": "0.0000",
                 "pending_average_buy_price": "0.0000",
-                "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+                "instrument": "https://api.robinhood.com/instruments/0-0-4-0/",
                 "average_buy_price": "0.0000",
                 "intraday_quantity": "0.0000",
                 "shares_held_for_sells": "0.0000",
@@ -1510,12 +1677,12 @@ class RobinhoodClient:
     if not include_old:
       params['nonzero'] = 'true'
     response = self._session.get(
-      API_HOST + 'positions/',
-      params=params,
-      headers=self._authorization_headers,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'positions/',
+        params=params,
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     portfolio_json = response.json()
     # TODO: autopage
     assert not portfolio_json['next']
@@ -1547,11 +1714,11 @@ class RobinhoodClient:
     account_number = use_account_number or self.get_account()['account_number']
     # Possible param: nonzero=true includes only owned securities
     response = self._session.get(
-      API_HOST + 'accounts/{}/positions/{}/'.format(account_number, instrument_id),
-      headers=self._authorization_headers,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'accounts/{}/positions/{}/'.format(account_number, instrument_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.json()
 
   def get_historical_quote(self, symbol, interval, span=None, bounds=None):
@@ -1571,8 +1738,8 @@ class RobinhoodClient:
 
     Example response:
     {
-        "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
-        "quote": "https://api.robinhood.com/quotes/00000000-0000-4000-0000-000000000000/",
+        "instrument": "https://api.robinhood.com/instruments/0-0-4-0/",
+        "quote": "https://api.robinhood.com/quotes/0-0-4-0/",
         "historicals": [
             {
                 "session": "reg",
@@ -1597,8 +1764,8 @@ class RobinhoodClient:
     """
     assert interval in INTERVALS
     params = {
-      'symbol': ','.join(symbol),
-      'interval': interval,
+        'symbol': ','.join(symbol),
+        'interval': interval,
     }
     if span:
       assert span in SPANS
@@ -1606,8 +1773,12 @@ class RobinhoodClient:
     if bounds:
       assert bounds in BOUNDS
       params['bounds'] = bounds
-    response = self._session.get(API_HOST + 'quotes/historicals/{}/'.format(symbol), params=params, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'quotes/historicals/{}/'.format(symbol),
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_historical_quotes(self, symbols, interval, span=None, bounds=None):
@@ -1629,8 +1800,8 @@ class RobinhoodClient:
     {
         "results": [
             {
-                "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
-                "quote": "https://api.robinhood.com/quotes/00000000-0000-4000-0000-000000000000/",
+                "instrument": "https://api.robinhood.com/instruments/0-0-4-0/",
+                "quote": "https://api.robinhood.com/quotes/0-0-4-0/",
                 "historicals": [
                     {
                         "session": "reg",
@@ -1657,8 +1828,8 @@ class RobinhoodClient:
     """
     assert interval in INTERVALS
     params = {
-      'symbols': ','.join(symbols),
-      'interval': interval,
+        'symbols': ','.join(symbols),
+        'interval': interval,
     }
     if span:
       assert span in SPANS
@@ -1666,8 +1837,12 @@ class RobinhoodClient:
     if bounds:
       assert bounds in BOUNDS
       params['bounds'] = bounds
-    response = self._session.get(API_HOST + 'quotes/historicals/', params=params, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'quotes/historicals/',
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()['results']
 
   def get_news(self, symbol):
@@ -1688,7 +1863,7 @@ class RobinhoodClient:
                 "url": "https://finance.yahoo.com/news/top-4-tech-stocks-smart-223300292.html",
                 "updated_at": "2018-03-01T23:03:53.728153Z",
                 "author": "",
-                "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+                "instrument": "https://api.robinhood.com/instruments/0-0-4-0/",
                 "preview_image_url": "https://robinhood-prism-storage.s3.amazonaws.com/feed-images/19ecf438-202c-470d-8ce2-a3149843dcf3",
                 "relay_url": "https://news.robinhood.com/22962f51-1536-39f6-a6d0-3adad7180078/",
                 "num_clicks": 1012,
@@ -1702,8 +1877,11 @@ class RobinhoodClient:
         ]
     }
     """
-    response = self._session.get(API_HOST + 'midlands/news/{}/'.format(symbol), verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'midlands/news/{}/'.format(symbol),
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_tags(self, instrument_id):
@@ -1722,8 +1900,11 @@ class RobinhoodClient:
         ...
     ]
     """
-    response = self._session.get(API_HOST + 'midlands/tags/instrument/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'midlands/tags/instrument/{}/'.format(instrument_id),
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     return response_json['tags']
 
@@ -1740,7 +1921,7 @@ class RobinhoodClient:
         "open": "178.5500",
         "pe_ratio": "17.9804",
         "dividend_yield": "1.5572",
-        "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+        "instrument": "https://api.robinhood.com/instruments/0-0-4-0/",
         "ceo": "Tim Cook",
         "volume": "24285834.0000",
         "high": "179.7750",
@@ -1750,8 +1931,11 @@ class RobinhoodClient:
         "year_founded": 1976
     }
     """
-    response = self._session.get(API_HOST + 'fundamentals/{}/'.format(instrument_id), verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'fundamentals/{}/'.format(instrument_id),
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def get_fundamentals(self, instrument_ids):
@@ -1761,7 +1945,7 @@ class RobinhoodClient:
         {
             "description": "Apple, Inc. engages in the design, manufacture, and marketing of mobile communication, media devices, personal computers, and portable digital music players. It operates through the following geographical segments: Americas, Europe, Greater China, Japan, and Rest of Asia Pacific. The Americas segment includes both North and South America. The Europe segment consists of European countries, as well as India, the Middle East, and Africa. The Greater China segment comprises of China, Hong Kong, and Taiwan. The Rest of Asia Pacific segment includes Australia and Asian countries not included in the reportable operating segments of the company. The company was founded by Steven Paul Jobs, Ronald Gerald Wayne, and Stephen G. Wozniak on April 1, 1976 and is headquartered in Cupertino, CA.",
             "volume": "24285834.0000",
-            "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+            "instrument": "https://api.robinhood.com/instruments/0-0-4-0/",
             "low_52_weeks": "137.0500",
             "pe_ratio": "17.9804",
             "headquarters_state": "California",
@@ -1791,10 +1975,13 @@ class RobinhoodClient:
       return full_fundamentals
 
     params = {
-      'instruments': ','.join([instrument_id_to_url(instrument_id) for instrument_id in instrument_ids])
+        'instruments': ','.join([
+            instrument_id_to_url(instrument_id) for instrument_id in instrument_ids
+        ])
     }
-    response = self._session.get(API_HOST + 'fundamentals/', params=params, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'fundamentals/', params=params, verify=API_CERT_BUNDLE_PATH)
+    _raise_on_error(response)
     return response.json()['results']
 
   def get_referrals(self):
@@ -1842,8 +2029,12 @@ class RobinhoodClient:
         ]
     }
     """
-    response = self._session.get(API_HOST + 'midlands/referral/', headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.get(
+        API_HOST + 'midlands/referral/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -1854,8 +2045,12 @@ class RobinhoodClient:
     Example response:
     {}
     """
-    response = self._session.post(API_HOST + 'orders/{}/cancel/'.format(order_id), headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.post(
+        API_HOST + 'orders/{}/cancel/'.format(order_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   def order(self, account_url, instrument_url, order_type, order_side, symbol, quantity, price):
@@ -1872,7 +2067,7 @@ class RobinhoodClient:
     Example response:
     {
         "override_day_trade_checks": false,
-        "id": "00000000-0000-4000-0000-000000000000d",
+        "id": "0-0-4-0d",
         "cumulative_quantity": "0.00000",
         "trigger": "immediate",
         "ref_id": null,
@@ -1881,16 +2076,16 @@ class RobinhoodClient:
         "response_category": null,
         "extended_hours": false,
         "price": "234.00000000",
-        "url": "https://api.robinhood.com/orders/00000000-0000-4000-0000-000000000000d/",
+        "url": "https://api.robinhood.com/orders/0-0-4-0d/",
         "fees": "0.00",
         "created_at": "2018-03-08T00:56:03.878630Z",
         "executions": [],
         "last_transaction_at": "2018-02-01T00:56:03.878630Z",
         "type": "limit",
         "side": "sell",
-        "cancel": "https://api.robinhood.com/orders/00000000-0000-4000-0000-000000000000d/cancel/",
-        "instrument": "https://api.robinhood.com/instruments/10000000-0000-4000-0000-000000000000/",
-        "position": "https://api.robinhood.com/positions/XXXXXXXX/10000000-0000-4000-0000-000000000000/",
+        "cancel": "https://api.robinhood.com/orders/0-0-4-0d/cancel/",
+        "instrument": "https://api.robinhood.com/instruments/1-0-4-0/",
+        "position": "https://api.robinhood.com/positions/XXXXXXXX/1-0-4-0/",
         "stop_price": null,
         "average_price": null,
         "updated_at": "2018-02-01T00:56:03.955774Z",
@@ -1904,18 +2099,23 @@ class RobinhoodClient:
     assert order_type in ORDER_TYPES
 
     body = {
-      'account': account_url,
-      'instrument': instrument_url,
-      'price': price,
-      'quantity': quantity,
-      'side': order_side,
-      'symbol': symbol,
-      'time_in_force': 'gtc', # see util.TIME_IN_FORCES
-      'trigger': 'immediate', # see util.TRIGGERS
-      'type': order_type,
+        'account': account_url,
+        'instrument': instrument_url,
+        'price': price,
+        'quantity': quantity,
+        'side': order_side,
+        'symbol': symbol,
+        'time_in_force': 'gtc', # see util.TIME_IN_FORCES
+        'trigger': 'immediate', # see util.TRIGGERS
+        'type': order_type,
     }
-    response = self._session.post(API_HOST + 'orders/', data=body, headers=self._authorization_headers, verify=API_CERT_BUNDLE_PATH)
-    self._raise_on_error(response)
+    response = self._session.post(
+        API_HOST + 'orders/',
+        data=body,
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
     return response.json()
 
   ### CRYPTO ###
@@ -1927,11 +2127,11 @@ class RobinhoodClient:
     """
     self.ensure_valid_oauth2_token()
     response = self._session.get(
-      NUMMUS_HOST + 'holdings/',
-      headers=self._authorization_headers,
-      verify=NUMMUS_CERT_BUNDLE_PATH
+        NUMMUS_HOST + 'holdings/',
+        headers=self._authorization_headers,
+        verify=NUMMUS_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -1945,11 +2145,11 @@ class RobinhoodClient:
     # there's also a /portfolios/<id>/ api
     self.ensure_valid_oauth2_token()
     response = self._session.get(
-      NUMMUS_HOST + 'portfolios/',
-      headers=self._authorization_headers,
-      verify=NUMMUS_CERT_BUNDLE_PATH
+        NUMMUS_HOST + 'portfolios/',
+        headers=self._authorization_headers,
+        verify=NUMMUS_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.json()['results']
 
   def get_crypto_orders(self):
@@ -1959,11 +2159,11 @@ class RobinhoodClient:
     """
     self.ensure_valid_oauth2_token()
     response = self._session.get(
-      NUMMUS_HOST + 'orders/',
-      headers=self._authorization_headers,
-      verify=NUMMUS_CERT_BUNDLE_PATH
+        NUMMUS_HOST + 'orders/',
+        headers=self._authorization_headers,
+        verify=NUMMUS_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -2003,11 +2203,11 @@ class RobinhoodClient:
     """
     self.ensure_valid_oauth2_token()
     response = self._session.get(
-      NUMMUS_HOST + 'currency_pairs/',
-      headers=self._authorization_headers,
-      verify=NUMMUS_CERT_BUNDLE_PATH
+        NUMMUS_HOST + 'currency_pairs/',
+        headers=self._authorization_headers,
+        verify=NUMMUS_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -2044,11 +2244,11 @@ class RobinhoodClient:
     """
     self.ensure_valid_oauth2_token()
     response = self._session.get(
-      NUMMUS_HOST + 'currency_pairs/{}/'.format(instrument_id),
-      headers=self._authorization_headers,
-      verify=NUMMUS_CERT_BUNDLE_PATH
+        NUMMUS_HOST + 'currency_pairs/{}/'.format(instrument_id),
+        headers=self._authorization_headers,
+        verify=NUMMUS_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.json()
 
   def get_crypto_quote(self, symbol_or_instrument_id):
@@ -2068,11 +2268,11 @@ class RobinhoodClient:
     """
     self.ensure_valid_oauth2_token()
     response = self._session.get(
-      API_HOST + 'marketdata/forex/quotes/{}/'.format(symbol_or_instrument_id),
-      headers=self._authorization_headers,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'marketdata/forex/quotes/{}/'.format(symbol_or_instrument_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.json()
 
   def get_crypto_quotes(self, instrument_ids=None, symbols=None):
@@ -2102,12 +2302,12 @@ class RobinhoodClient:
       params['symbols'] = ','.join(symbols)
     self.ensure_valid_oauth2_token()
     response = self._session.get(
-      API_HOST + 'marketdata/forex/quotes/',
-      headers=self._authorization_headers,
-      params=params,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'marketdata/forex/quotes/',
+        headers=self._authorization_headers,
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.json()['results']
 
   def get_crypto_historicals(self, instrument_id, interval, bounds=None, span=None):
@@ -2150,7 +2350,7 @@ class RobinhoodClient:
     """
     assert interval in INTERVALS
     params = {
-      'interval': interval,
+        'interval': interval,
     }
     if bounds:
       assert bounds in BOUNDS
@@ -2160,12 +2360,12 @@ class RobinhoodClient:
       params['span'] = span
     self.ensure_valid_oauth2_token()
     response = self._session.get(
-      API_HOST + 'marketdata/forex/historicals/{}/'.format(instrument_id),
-      headers=self._authorization_headers,
-      params=params,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'marketdata/forex/historicals/{}/'.format(instrument_id),
+        headers=self._authorization_headers,
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.json()
 
   def cancel_crypto_order(self, order_id):
@@ -2175,11 +2375,11 @@ class RobinhoodClient:
     """
     self.ensure_valid_oauth2_token()
     response = self._session.post(
-      NUMMUS_HOST + 'orders/{}/cancel/'.format(order_id),
-      headers=self._authorization_headers,
-      verify=NUMMUS_CERT_BUNDLE_PATH
+        NUMMUS_HOST + 'orders/{}/cancel/'.format(order_id),
+        headers=self._authorization_headers,
+        verify=NUMMUS_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.json()
 
   ### OPTIONS ###
@@ -2193,12 +2393,12 @@ class RobinhoodClient:
     if not include_old:
       params['nonzero'] = 'true'
     response = self._session.get(
-      API_HOST + 'options/positions/',
-      headers=self._authorization_headers,
-      params=params,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'options/positions/',
+        headers=self._authorization_headers,
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -2210,11 +2410,11 @@ class RobinhoodClient:
     TODO
     """
     response = self._session.get(
-      API_HOST + 'options/orders/',
-      headers=self._authorization_headers,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'options/orders/',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -2228,14 +2428,14 @@ class RobinhoodClient:
     # states=preparing seems to be passed in if instrument is
     params = {}
     if instrument_id:
-      params['equity_instrument_id'] = instrument_id=None
+      params['equity_instrument_id'] = instrument_id
     response = self._session.get(
-      API_HOST + 'options/events/',
-      headers=self._authorization_headers,
-      params=params,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'options/events/',
+        headers=self._authorization_headers,
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -2273,11 +2473,11 @@ class RobinhoodClient:
     """
     self.ensure_valid_oauth2_token()
     response = self._session.get(
-      API_HOST + 'marketdata/options/{}/'.format(options_instrument_id),
-      headers=self._authorization_headers,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'marketdata/options/{}/'.format(options_instrument_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     response_json = response.json()
     return response_json
 
@@ -2304,11 +2504,11 @@ class RobinhoodClient:
     }
     """
     response = self._session.get(
-      API_HOST + 'options/instruments/{}/'.format(options_instrument_id),
-      headers=self._authorization_headers,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'options/instruments/{}/'.format(options_instrument_id),
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     response_json = response.json()
     return response_json
 
@@ -2339,7 +2539,7 @@ class RobinhoodClient:
     """
     # Also exist: chain_id, expiration_dates
     params = {
-      'ids': ','.join(options_instrument_ids),
+        'ids': ','.join(options_instrument_ids),
     }
     if option_type:
       assert option_type in OPTIONS_TYPES
@@ -2351,12 +2551,12 @@ class RobinhoodClient:
       assert state in TRADABILITY
       params['tradability'] = tradability
     response = self._session.get(
-      API_HOST + 'options/instruments/',
-      headers=self._authorization_headers,
-      params=params,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'options/instruments/',
+        headers=self._authorization_headers,
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -2438,12 +2638,12 @@ class RobinhoodClient:
     if instrument_ids:
       params['equity_instrument_ids'] = ','.join(instrument_ids),
     response = self._session.get(
-      API_HOST + 'options/chains/',
-      headers=self._authorization_headers,
-      params=params,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'options/chains/',
+        headers=self._authorization_headers,
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
@@ -2489,13 +2689,13 @@ class RobinhoodClient:
     """
     account_number = use_account_number or self.get_account()['account_number']
     params = {
-      'account_number': account_number,
+        'account_number': account_number,
     }
     response = self._session.get(
-      API_HOST + 'options/chains/{}/collateral/'.format(chain_id),
-      headers=self._authorization_headers,
-      params=params,
-      verify=API_CERT_BUNDLE_PATH
+        API_HOST + 'options/chains/{}/collateral/'.format(chain_id),
+        headers=self._authorization_headers,
+        params=params,
+        verify=API_CERT_BUNDLE_PATH
     )
-    self._raise_on_error(response)
+    _raise_on_error(response)
     return response.json()

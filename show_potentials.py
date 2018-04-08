@@ -26,13 +26,13 @@ def show_potentials(cache_mode):
     symbol_to_instrument_id[instrument['symbol']] = instrument_id
 
     position_by_instrument_id[instrument_id] = {
-      'quantity': quantity,
-      'average_buy_price': average_buy_price,
-      'equity_cost': quantity * average_buy_price,
-      'symbol': instrument['symbol'],
-      'simple_name': instrument['simple_name'],
-      'full_name': instrument['name'],
-      'last_open': Decimal(fundamental['open']),
+        'quantity': quantity,
+        'average_buy_price': average_buy_price,
+        'equity_cost': quantity * average_buy_price,
+        'symbol': instrument['symbol'],
+        'simple_name': instrument['simple_name'],
+        'full_name': instrument['name'],
+        'last_open': Decimal(fundamental['open']),
     }
 
   position_quotes = client.get_quotes(list(position_by_instrument_id.keys()), cache_mode=cache_mode)
@@ -75,15 +75,15 @@ def show_potentials(cache_mode):
     if position.get('paused'):
       continue
     print('{}\t{}\t{:.2f}\t{:.2f}\t{:.2f}\t{}\t{:.2f}\t{:.2f}\t{}'.format(
-      position.get('priority', 'N/A'),
-      position['symbol'],
-      position['equity_cost'],
-      position['last_price'],
-      position['equity_worth'],
-      position.get('equity_target', 'N/A'),
-      position.get('equity_left', 0),
-      position.get('shares_needed', 0),
-      position.get('category')
+        position.get('priority', 'N/A'),
+        position['symbol'],
+        position['equity_cost'],
+        position['last_price'],
+        position['equity_worth'],
+        position.get('equity_target', 'N/A'),
+        position.get('equity_left', 0),
+        position.get('shares_needed', 0),
+        position.get('category')
     ))
 
   # Discounted (below buy in price)
@@ -91,6 +91,10 @@ def show_potentials(cache_mode):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Show various position potentials to buy into')
-  parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
+  parser.add_argument(
+      '--live',
+      action='store_true',
+      help='Force to not use cache for APIs where values change'
+  )
   args = parser.parse_args()
   show_potentials(FORCE_LIVE if args.live else CACHE_FIRST)

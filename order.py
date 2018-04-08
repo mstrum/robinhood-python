@@ -48,13 +48,13 @@ def place_order(order_type, order_side, symbol, quantity, price, no_cancel):
       print('Cancelled order {}'.format(pending_order['id']))
 
   order = client.order(
-    account_url,
-    instrument['url'],
-    order_type,
-    order_side,
-    symbol,
-    quantity,
-    price
+      account_url,
+      instrument['url'],
+      order_type,
+      order_side,
+      symbol,
+      quantity,
+      price
   )
   print(json.dumps(order, indent=4))
 
@@ -69,11 +69,11 @@ if __name__ == '__main__':
   parser.add_argument('--no-cancel', action='store_true', help='Dont cancel any pending orders')
   args = parser.parse_args()
   place_order(
-    args.order_type,
-    args.order_side,
-    args.symbol,
-    args.quantity,
-    args.price,
-    args.no_cancel,
+      args.order_type,
+      args.order_side,
+      args.symbol,
+      args.quantity,
+      args.price,
+      args.no_cancel,
   )
 

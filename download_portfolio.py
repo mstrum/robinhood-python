@@ -18,22 +18,22 @@ client.login()
 def download_portfolio(cache_mode):
   with open('portfolio.csv', 'w', newline='') as csv_file:
     fieldnames = [
-      'symbol',
-      'name',
-      'quantity',
-      'average_buy_price',
-      'equity_cost',
-      'last_price',
-      'day_price_change',
-      'day_percentage_change',
-      'total_price_change',
-      'total_percentage_change',
-      'equity_worth',
-      'equity_percentage',
-      'equity_idx',
-      'robinhood_holders',
-      'buy_rating',
-      'sell_rating',
+        'symbol',
+        'name',
+        'quantity',
+        'average_buy_price',
+        'equity_cost',
+        'last_price',
+        'day_price_change',
+        'day_percentage_change',
+        'total_price_change',
+        'total_percentage_change',
+        'equity_worth',
+        'equity_percentage',
+        'equity_idx',
+        'robinhood_holders',
+        'buy_rating',
+        'sell_rating',
     ]
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
@@ -46,9 +46,9 @@ def download_portfolio(cache_mode):
       instrument_id = get_last_id_from_url(position['instrument'])
 
       position_by_instrument_id[instrument_id] = {
-        'quantity': quantity,
-        'average_buy_price': average_buy_price,
-        'equity_cost': quantity * average_buy_price,
+          'quantity': quantity,
+          'average_buy_price': average_buy_price,
+          'equity_cost': quantity * average_buy_price,
       }
 
     instrument_ids = list(position_by_instrument_id.keys())
@@ -92,9 +92,10 @@ def download_portfolio(cache_mode):
     total_equity = sum(position['equity_worth'] for position in position_by_instrument_id.values())
 
     positions_by_equity_worth = sorted(
-      position_by_instrument_id.values(),
-      key=lambda p: p['equity_worth'],
-      reverse=True)
+        position_by_instrument_id.values(),
+        key=lambda p: p['equity_worth'],
+        reverse=True
+    )
 
     for idx, position in enumerate(positions_by_equity_worth):
       total_price_change = position['last_price'] - position['average_buy_price']
@@ -102,27 +103,31 @@ def download_portfolio(cache_mode):
       day_percentage_change = day_price_change * 100 / position['last_open']
       total_percentage_change = total_price_change * 100 / position['average_buy_price'] if position['average_buy_price'] else 100
       csv_writer.writerow({
-        'symbol': position['symbol'],
-        'name': position['simple_name'] or position['full_name'],
-        'quantity': position['quantity'],
-        'average_buy_price': round(position['average_buy_price'], 2),
-        'equity_cost': round(position['equity_cost'], 2),
-        'last_price': round(position['last_price'], 2),
-        'day_price_change': round(day_price_change, 2),
-        'day_percentage_change': round(day_percentage_change, 2),
-        'total_price_change': round(total_price_change, 2),
-        'total_percentage_change': round(total_percentage_change, 2),
-        'equity_worth': round(position['equity_worth'], 2),
-        'equity_percentage': round(position['equity_worth'] * 100 / total_equity, 2),
-        'equity_idx': idx + 1,
-        'buy_rating': position['buy_rating'],
-        'sell_rating': position['sell_rating'],
-        'robinhood_holders': position['robinhood_holders'],
+          'symbol': position['symbol'],
+          'name': position['simple_name'] or position['full_name'],
+          'quantity': position['quantity'],
+          'average_buy_price': round(position['average_buy_price'], 2),
+          'equity_cost': round(position['equity_cost'], 2),
+          'last_price': round(position['last_price'], 2),
+          'day_price_change': round(day_price_change, 2),
+          'day_percentage_change': round(day_percentage_change, 2),
+          'total_price_change': round(total_price_change, 2),
+          'total_percentage_change': round(total_percentage_change, 2),
+          'equity_worth': round(position['equity_worth'], 2),
+          'equity_percentage': round(position['equity_worth'] * 100 / total_equity, 2),
+          'equity_idx': idx + 1,
+          'buy_rating': position['buy_rating'],
+          'sell_rating': position['sell_rating'],
+          'robinhood_holders': position['robinhood_holders'],
       })
 
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Download a snapshot of your portfolio')
-  parser.add_argument('--live', action='store_true', help='Force to not use cache for APIs where values change')
+  parser.add_argument(
+      '--live',
+      action='store_true',
+      help='Force to not use cache for APIs where values change'
+  )
   args = parser.parse_args()
   download_portfolio(FORCE_LIVE if args.live else CACHE_FIRST)
