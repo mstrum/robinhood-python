@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import time
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, CACHE_FIRST, FORCE_LIVE
 
@@ -21,6 +22,8 @@ def download_documents(cache_mode):
       document_type = document['type']
       document_date = document['date']
 
+      # Try to not get throttled, there isn't a batch API
+      time.sleep(1)
       contents = client.download_document_by_id(document_id)
       pdf_path = 'document_{}.pdf'.format(document_id)
       with open(pdf_path, 'wb') as document_pdf_file:
