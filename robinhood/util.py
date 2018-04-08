@@ -10,67 +10,67 @@ NUMMUS_HOST = 'https://nummus.robinhood.com/'
 NUMMUS_CERT_BUNDLE_PATH = os.path.join(CURRENT_DIRECTORY, 'certs', 'nummus.robinhood.com.pem')
 
 ORDER_TYPES = [
-  'market',
-  'limit',
+    'market',
+    'limit',
 ]
 ORDER_SIDES = [
-  'buy',
-  'sell',
+    'buy',
+    'sell',
 ]
 TIME_IN_FORCES = [
-  'gfd',
-  'gtc',
-  'ioc',
-  'opg',
+    'gfd',
+    'gtc',
+    'ioc',
+    'opg',
 ]
 TRIGGERS = [
-  'immediate',
-  'stop',
+    'immediate',
+    'stop',
 ]
 ORDER_STATES = [
-  'queued',
-  'unconfirmed',
-  'confirmed',
-  'partially_filled',
-  'filled',
-  'rejected',
-  'canceled',
-  'failed',
+    'queued',
+    'unconfirmed',
+    'confirmed',
+    'partially_filled',
+    'filled',
+    'rejected',
+    'canceled',
+    'failed',
 ]
 TRADABILITY = [
-  'tradable',
-  'untradable',
+    'tradable',
+    'untradable',
 ]
 INTERVALS = [
-  '15second',
-  '5minute',
-  '10minute',
-  'hour',
-  'day',
-  'week',
+    '15second',
+    '5minute',
+    '10minute',
+    'hour',
+    'day',
+    'week',
 ]
 SPANS = [
-  'day',
-  'hour',
-  'week',
-  'year',
-  '5year',
-  'all',
+    'day',
+    'hour',
+    'week',
+    'year',
+    '5year',
+    'all',
 ]
 BOUNDS = [
-  '24_7',
-  'regular',
-  'extended',
-  'trading',
+    '24_7',
+    'regular',
+    'extended',
+    'trading',
 ]
 OPTIONS_TYPES = [
-  'put',
-  'call',
+    'put',
+    'call',
 ]
 OPTIONS_STATES = [
-  'active',
-  'inactive',
-  'expired',
+    'active',
+    'inactive',
+    'expired',
 ]
 
 
