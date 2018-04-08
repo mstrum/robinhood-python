@@ -464,6 +464,16 @@ class RobinhoodCachedClient(RobinhoodClient):
       cache_mode
     )
 
+  def get_ach_relationships(self, cache_mode=CACHE_FIRST):
+    return self._list_call(
+      'ach_relationships',
+      super(RobinhoodCachedClient, self).get_ach_relationships,
+      self.get_ach_relationship_by_id,
+      lambda ach_relationship: ach_relationship['id'],
+      'ach_relationship_{}',
+      cache_mode
+    )
+
   def get_ach_transfers(self, cache_mode=CACHE_FIRST):
     return self._list_call(
       'ach_transfers',

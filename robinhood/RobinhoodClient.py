@@ -1255,6 +1255,42 @@ class RobinhoodClient:
     _raise_on_error(response)
     return response.json()
 
+  def get_ach_relationships(self):
+    """
+    Example response:
+    [
+        {
+            "bank_account_holder_name": "Bob Smith",
+            "created_at": "2018-02-01T23:41:03.251980Z",
+            "unlink": "https://api.robinhood.com/ach/relationships/0-0-4-0/unlink/",
+            "id": "0-0-4-0",
+            "bank_account_nickname": "MY CHECKING",
+            "account": "https://api.robinhood.com/accounts/XXXXXXXX/",
+            "bank_account_number": "1234",
+            "verify_micro_deposits": null,
+            "withdrawal_limit": null,
+            "verified": true,
+            "initial_deposit": "0.00",
+            "bank_routing_number": "12344567",
+            "url": "https://api.robinhood.com/ach/relationships/0-0-4-0/",
+            "unlinked_at": null,
+            "bank_account_type": "checking",
+            "verification_method": "bank_auth"
+        },
+        ...
+    ]
+    """
+    response = self._session.get(
+        API_HOST + 'ach/relationships',
+        headers=self._authorization_headers,
+        verify=API_CERT_BUNDLE_PATH
+    )
+    _raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
   def get_ach_relationship_by_id(self, relationship_id):
     """
     Example response:
