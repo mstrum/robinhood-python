@@ -44,6 +44,7 @@ TRADABILITY = [
 INTERVALS = [
   '15second',
   '5minute',
+  '10minute',
   'hour',
   'day',
   'week',
@@ -54,10 +55,13 @@ SPANS = [
   'week',
   'year',
   '5year',
+  'all',
 ]
 BOUNDS = [
   '24_7',
   'regular',
+  'extended',
+  'trading',
 ]
 OPTIONS_TYPES = [
   'put',

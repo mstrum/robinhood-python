@@ -1554,7 +1554,62 @@ class RobinhoodClient:
     self._raise_on_error(response)
     return response.json()
 
-  def get_historical_quotes(self, symbols, interval, span, bounds):
+  def get_historical_quote(self, symbol, interval, span=None, bounds=None):
+    """
+    Args:
+      symbol: e.g. AAPL
+      interval: [5minute, 10minute, day, week]
+      span: [day, week, year, 5year]
+      bounds: [extended, regular, trading]
+
+    Example combos:
+      * span=week, interval=10minute
+      * span=year, interval=day
+      * span=5year, interval=week
+      * span=5year, interval=week
+      * span=day, interval=5minute
+
+    Example response:
+    {
+        "instrument": "https://api.robinhood.com/instruments/00000000-0000-4000-0000-000000000000/",
+        "quote": "https://api.robinhood.com/quotes/00000000-0000-4000-0000-000000000000/",
+        "historicals": [
+            {
+                "session": "reg",
+                "volume": 1404330,
+                "begins_at": "2018-03-01T14:30:00Z",
+                "low_price": "177.6107",
+                "open_price": "178.5500",
+                "close_price": "177.9400",
+                "interpolated": false,
+                "high_price": "179.3600"
+            },
+            ...
+        ],
+        "open_time": "2018-03-01T14:30:00Z",
+        "open_price": "178.5500",
+        "span": "day",
+        "symbol": "AAPL",
+        "interval": "10minute",
+        "bounds": "regular",
+        "previous_close_price": "178.1200"
+    }
+    """
+    params = {
+      'symbol': ','.join(symbol),
+      'interval': interval,
+    }
+    if span:
+      assert span in SPANS
+      params['span'] = span
+    if bounds:
+      assert bounds in BOUNDS
+      params['bounds'] = bounds
+    response = self._session.get(API_HOST + 'quotes/historicals/{}/'.format(symbol), params=params, verify=API_CERT_BUNDLE_PATH)
+    self._raise_on_error(response)
+    return response.json()
+
+  def get_historical_quotes(self, symbols, interval, span=None, bounds=None):
     """
     Args:
       symbol: e.g. AAPL
@@ -1602,9 +1657,13 @@ class RobinhoodClient:
     params = {
       'symbols': ','.join(symbols),
       'interval': interval,
-      'span': span,
-      'bounds': bounds,
     }
+    if span:
+      assert span in SPANS
+      params['span'] = span
+    if bounds:
+      assert bounds in BOUNDS
+      params['bounds'] = bounds
     response = self._session.get(API_HOST + 'quotes/historicals/', params=params, verify=API_CERT_BUNDLE_PATH)
     self._raise_on_error(response)
     return response.json()
