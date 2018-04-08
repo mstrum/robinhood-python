@@ -10,6 +10,7 @@ https://github.com/Jamonek/Robinhood
 
 from datetime import datetime, timedelta
 import copy
+import uuid
 
 import requests
 
@@ -2662,7 +2663,7 @@ class RobinhoodClient:
         }],
         'price': price,
         'quantity': quantity,
-        # ref_id?
+        'ref_id': str(uuid.uuid4()),
         'time_in_force': 'gtc',
         'type': order_type,
     }
