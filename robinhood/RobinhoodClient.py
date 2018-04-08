@@ -30,9 +30,11 @@ from .util import (
     BOUNDS,
     INTERVALS,
     SPANS,
+    DIRECTIONS,
     get_cursor_from_url,
     get_last_id_from_url,
-    instrument_id_to_url
+    instrument_id_to_url,
+    options_instrument_id_to_url
 )
 
 
@@ -1929,10 +1931,9 @@ class RobinhoodClient:
     _raise_on_error(response)
     return response.json()
 
-  def order(self, account_url, instrument_url, order_type, order_side, symbol, quantity, price):
+  def order(self, instrument_id, order_type, order_side, symbol, quantity, price, use_account_url=None):
     """
     Args:
-      account_url
       instrument_url
       order_type: [market, limit]
       order_side: [buy, sell]
@@ -1971,12 +1972,13 @@ class RobinhoodClient:
         "override_dtbp_checks": false
     }
     """
+    account_url = use_account_url or self.get_account()['url']
     assert order_side in ORDER_SIDES
     assert order_type in ORDER_TYPES
 
     body = {
         'account': account_url,
-        'instrument': instrument_url,
+        'instrument': instrument_id_to_url(instrument_id),
         'price': price,
         'quantity': quantity,
         'side': order_side,
@@ -2143,7 +2145,7 @@ class RobinhoodClient:
       params['ids'] = ','.join(instrument_ids)
     if symbols:
       params['symbols'] = ','.join(symbols)
-    response = self._get_session(API, authed=True, oauth=True).get(
+    response = self._get_session(API, authed=True, oauth2=True).get(
         API_HOST + 'marketdata/forex/quotes/', params=params)
     _raise_on_error(response)
     return response.json()['results']
@@ -2196,7 +2198,7 @@ class RobinhoodClient:
     if span:
       assert span in SPANS
       params['span'] = span
-    response = self._get_session(API, authed=True, oauth=True).get(
+    response = self._get_session(API, authed=True, oauth2=True).get(
         API_HOST + 'marketdata/forex/historicals/{}/'.format(instrument_id), params=params)
     _raise_on_error(response)
     return response.json()
@@ -2286,11 +2288,55 @@ class RobinhoodClient:
         "gamma": null
     }
     """
-    response = self._get_session(API, authed=True, oauth=True).get(
+    response = self._get_session(API, authed=True, oauth2=True).get(
         API_HOST + 'marketdata/options/{}/'.format(options_instrument_id))
     _raise_on_error(response)
     response_json = response.json()
     return response_json
+
+  def get_options_marketdatas(self, options_instrument_ids):
+    """
+    Example response:
+    [
+        {
+            "vega": null,
+            "last_trade_size": null,
+            "low_price": null,
+            "volume": 0,
+            "implied_volatility": null,
+            "break_even_price": "81.8700",
+            "previous_close_date": "2018-04-05",
+            "adjusted_mark_price": "0.1300",
+            "bid_size": 0,
+            "mark_price": "0.1250",
+            "bid_price": "0.0000",
+            "chance_of_profit_short": null,
+            "previous_close_price": "0.0800",
+            "instrument": "https://api.robinhood.com/options/instruments/73f75306-ad07-4734-972b-22ab9dec6693/",
+            "ask_price": "0.2500",
+            "rho": null,
+            "high_price": null,
+            "chance_of_profit_long": null,
+            "theta": null,
+            "last_trade_price": null,
+            "ask_size": 62,
+            "delta": null,
+            "open_interest": 0,
+            "gamma": null
+        },
+        ...
+    ]
+    """
+    params = {
+        'instruments': ','.join([
+            options_instrument_id_to_url(options_instrument_id) for options_instrument_id in options_instrument_ids
+        ]),
+    }
+    response = self._get_session(API, authed=True, oauth2=True).get(API_HOST + 'marketdata/options/', params=params)
+    _raise_on_error(response)
+    results = response.json()['results']
+    assert len(results) == len(options_instrument_ids)
+    return results
 
   def get_options_instrument(self, options_instrument_id):
     """
@@ -2320,7 +2366,7 @@ class RobinhoodClient:
     response_json = response.json()
     return response_json
 
-  def get_options_instruments(self, options_instrument_ids, option_type=None, tradability=None, state=None):
+  def get_options_instruments(self, options_instrument_ids=None, chain_id=None, options_type=None, tradability=None, state=None, expiration_dates=None):
     """
     Example response:
     [
@@ -2346,24 +2392,30 @@ class RobinhoodClient:
     ]
     """
     # Also exist: chain_id, expiration_dates
-    params = {
-        'ids': ','.join(options_instrument_ids),
-    }
-    if option_type:
-      assert option_type in OPTIONS_TYPES
-      params['type'] = option_type
+    params = {}
+    if options_instrument_ids:
+      params['ids'] = ','.join(options_instrument_ids),
+    if chain_id:
+      params['chain_id'] = chain_id
+    if options_type:
+      assert options_type in OPTIONS_TYPES
+      params['type'] = options_type
     if state:
       assert state in OPTIONS_STATES
       params['state'] = state
     if tradability:
-      assert state in TRADABILITY
+      assert tradability in TRADABILITY
       params['tradability'] = tradability
-    response = self._get_session(API, authed=True).get(API_HOST + 'options/instruments/', params=params)
-    _raise_on_error(response)
-    response_json = response.json()
-    # TODO: autopage
-    assert not response_json['next']
-    return response_json['results']
+    if expiration_dates:
+      params['expiration_dates'] = ','.join(expiration_dates)
+
+    options_instruments = self._collect_results(
+        self._get_session(API, authed=True).get,
+        [API_HOST + 'options/instruments/'],
+        request_params=params
+    )
+
+    return options_instruments
 
   def get_options_chains(self, chain_ids=None, instrument_ids=None):
     """
@@ -2491,5 +2543,29 @@ class RobinhoodClient:
     }
     response = self._get_session(API, authed=True).get(
         API_HOST + 'options/chains/{}/collateral/'.format(chain_id), params=params)
+    _raise_on_error(response)
+    return response.json()
+
+  def order_options(self, order_type, direction, quantity, price, use_account_url=None):
+    """
+    Args:
+
+    Example response:
+    """
+    assert order_type in ORDER_TYPES
+    assert direction in DIRECTIONS
+    # ref_id?
+    # legs?
+    account_url = use_account_url or self.get_account()['url']
+    body = {
+        'account': account_url,
+        'type': options_type,
+        'direction': direction,
+        'quantity': quantity,
+        'price': price,
+        'time_in_force': 'gtc',
+        'trigger': 'immediate', # see util.TRIGGERS
+    }
+    response = self._get_session(API, authed=True).post(API_HOST + 'options/orders/', data=body)
     _raise_on_error(response)
     return response.json()

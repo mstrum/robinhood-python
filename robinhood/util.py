@@ -74,6 +74,10 @@ OPTIONS_STATES = [
     'inactive',
     'expired',
 ]
+DIRECTIONS = [
+    'debit',
+    'credit',
+]
 
 
 def get_last_id_from_url(url):
@@ -99,3 +103,6 @@ def get_document_download_url_from_id(document_id):
 
 def instrument_id_to_url(instrument_id):
   return '{}instruments/{}/'.format(API_HOST, instrument_id)
+
+def options_instrument_id_to_url(instrument_id):
+  return '{}options/instruments/{}/'.format(API_HOST, instrument_id)

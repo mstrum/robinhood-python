@@ -36,6 +36,8 @@ Various downloads:
 Display information:
 * [show_quote.py](show_quote.py) AMZN [--live]
   * Displays the latest quote for the given symbol along with auxilary info
+* [show_options_quote.py](show_options_quote.py) [call|put] AMZN 2018-05-21 55 [--live]
+  * Displays the quote for the given options contract (pretty raw for now)
 * [show_pending_orders.py](show_pending_orders.py)
   * Displays any outstanding orders along with position information
 * [show_interesting_stocks.py](show_interesting_stocks.py)

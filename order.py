@@ -16,12 +16,13 @@ from show_quote import display_quote
 def place_order(order_type, order_side, symbol, quantity, price, no_cancel):
   account_url = client.get_account()['url']
   instrument = client.get_instrument_by_symbol(symbol)
+  instrument_id = instrument['id']
 
   display_quote(client, symbol, True)
 
   # We could be more smart and allow canceling individual orders,
   # but for now just do complete cancelling
-  orders = client.get_orders(instrument_id=instrument['id'], cache_mode=FORCE_LIVE)
+  orders = client.get_orders(instrument_id=instrument_id, cache_mode=FORCE_LIVE)
   pending_same_side_orders = [
     order for order in orders
     if order['state'] in ['queued', 'confirmed'] and order['side'] == order_side
@@ -48,13 +49,13 @@ def place_order(order_type, order_side, symbol, quantity, price, no_cancel):
       print('Cancelled order {}'.format(pending_order['id']))
 
   order = client.order(
-      account_url,
-      instrument['url'],
+      instrument_id,
       order_type,
       order_side,
       symbol,
       quantity,
-      price
+      price,
+      use_account_url=account_url
   )
   print(json.dumps(order, indent=4))
 
