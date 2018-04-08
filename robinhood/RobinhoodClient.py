@@ -9,6 +9,7 @@ https://github.com/Jamonek/Robinhood
 """
 
 from datetime import datetime, timedelta
+import copy
 
 import requests
 
@@ -117,6 +118,28 @@ class RobinhoodClient:
     )
     _raise_on_error(response)
     del self._session.headers['Authorization']
+
+  def _collect_results(self, request_method, request_args, request_kwargs={}, request_params={}):
+    """Used within apis that are paged"""
+    results = []
+    cursor = None
+    page_params = copy.copy(request_params)
+
+    while True:
+      if cursor:
+        page_params['cursor'] = cursor
+      response = request_method(
+          *request_args,
+          **request_kwargs,
+          params=page_params
+      )
+      _raise_on_error(response)
+      response_json = response.json()
+      results.extend(response_json['results'])
+      if response_json['next']:
+        cursor = get_cursor_from_url(response_json['next'])
+      else:
+        return results
 
   def get_user(self):
     """
@@ -1506,29 +1529,22 @@ class RobinhoodClient:
     my_class = self.__class__
     self.__class__ = RobinhoodClient
 
-    orders = []
-    cursor = None
+    params = {}
+    if instrument_id:
+      params['instrument'] = instrument_id_to_url(instrument_id)
 
-    while True:
-      params = {}
-      if instrument_id:
-        params['instrument'] = instrument_id_to_url(instrument_id)
-      if cursor:
-        params['cursor'] = cursor
-      response = self._session.get(
-          API_HOST + 'orders/',
-          params=params,
-          headers=self._authorization_headers,
-          verify=API_CERT_BUNDLE_PATH
-      )
-      _raise_on_error(response)
-      orders_json = response.json()
-      orders.extend(orders_json['results'])
-      if orders_json['next']:
-        cursor = get_cursor_from_url(orders_json['next'])
-      else:
-        self.__class__ = my_class
-        return orders
+    orders = self._collect_results(
+        self._session.get,
+        [API_HOST + 'orders/'],
+        request_kwargs={
+            'headers': self._authorization_headers,
+            'verify': API_CERT_BUNDLE_PATH,
+        },
+        request_params=params
+    )
+
+    self.__class__ = my_class
+    return orders
 
   def get_popular_stocks(self):
     """
