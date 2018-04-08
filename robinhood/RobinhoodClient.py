@@ -10,6 +10,7 @@ https://github.com/Jamonek/Robinhood
 
 from datetime import datetime, timedelta
 import copy
+import json
 import uuid
 
 import requests
@@ -2645,9 +2646,39 @@ class RobinhoodClient:
 
   def order_options(self, options_instrument_id, order_type, direction, quantity, price, use_account_url=None):
     """
-    Args:
-
     Example response:
+    {
+        "response_category": null,
+        "type": "limit",
+        "id": "1-0-0-0",
+        "cancel_url": "https://api.robinhood.com/options/orders/1-0-0-0/cancel/",
+        "canceled_quantity": "0.00000",
+        "trigger": "immediate",
+        "price": "0.10000000",
+        "premium": "10.00000000",
+        "quantity": "1.00000",
+        "processed_quantity": "0.00000",
+        "processed_premium": "0.0000",
+        "created_at": "2018-04-08T07:28:21.582166Z",
+        "pending_quantity": "1.00000",
+        "chain_symbol": "AAXN",
+        "direction": "debit",
+        "time_in_force": "gfd",
+        "updated_at": "2018-04-08T07:28:21.909451Z",
+        "legs": [
+            {
+                "ratio_quantity": 1,
+                "executions": [],
+                "id": "a61afe3b-3b8b-4192-a795-200a294a1bb5",
+                "side": "buy",
+                "option": "https://api.robinhood.com/options/instruments/93988a72-cd5a-461a-a25d-d63cdd7d46de/",
+                "position_effect": "open"
+            }
+        ],
+        "state": "queued",
+        "chain_id": "a6cb269e-d5b5-4a52-a1f6-863d6376a814",
+        "ref_id": "0-0-0-0"
+    }
     """
     assert order_type in ORDER_TYPES
     assert direction in DIRECTIONS
@@ -2667,6 +2698,12 @@ class RobinhoodClient:
         'time_in_force': 'gtc',
         'type': order_type,
     }
-    response = self._get_session(API, authed=True).post(API_HOST + 'options/orders/', data=body)
+
+    # Unlike everything else until now, the api wants json...
+    custom_headers = {
+        'Content-type': 'application/json; charset=utf-8',
+    }
+    response = self._get_session(API, authed=True).post(
+        API_HOST + 'options/orders/', data=json.dumps(body), headers=custom_headers)
     _raise_on_error(response)
     return response.json()

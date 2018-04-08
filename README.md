@@ -64,7 +64,7 @@ Various downloads:
 * [show_options_quote.py](show_options_quote.py) [call|put] AMZN 2018-05-21 55 [--live]
   * Displays the quote for the given options contract (pretty raw for now)
 * [order_options.py](order_options.py) [market|limit] [buy|sell] SYMBOL DATE STRIKE [call|put] QUANTITY PRICE
-  * Places an order (pretty raw right now, also doesn't work yet)
+  * Places an options order
 * [show_pending_options_orders.py](show_pending_options_orders.py)
   * Displays any outstanding options orders
 * [cancel_options.py](cancel_options.py) ORDER_ID...

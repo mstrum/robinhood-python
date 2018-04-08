@@ -56,7 +56,7 @@ def place_order(order_type, order_side, symbol, date, strike, options_type, quan
 
   order = client.order_options(
       options_instrument['id'], order_type, ORDER_SIDE_TO_DIRECTION[order_side], quantity, price, use_account_url=account_url)
-  print(order)
+  print(json.dumps(order, indent=4))
 
 
 if __name__ == '__main__':
