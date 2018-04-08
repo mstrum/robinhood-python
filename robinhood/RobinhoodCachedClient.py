@@ -273,6 +273,18 @@ class RobinhoodCachedClient(RobinhoodClient):
       args=[instrument_id]
     )
 
+  def get_historical_quote(self, symbol, interval, span=None, bounds=None, cache_mode=CACHE_FIRST):
+    return self._simple_call(
+      'historical_quote_{}_{}_{}_{}'.format(symbol, interval, span, bounds),
+      super(RobinhoodCachedClient, self).get_historical_quote,
+      cache_mode,
+      args=[symbol, interval],
+      kwargs={
+        'span': span,
+        'bounds': bounds,
+      }
+    )
+
   def get_quote(self, instrument_id, cache_mode=CACHE_FIRST):
     return self._simple_call(
       'quote_{}'.format(instrument_id),
@@ -416,6 +428,7 @@ class RobinhoodCachedClient(RobinhoodClient):
       cache_mode,
       list_args=[],
       list_kwargs={},
+      item_extra_args=[],
       item_kwargs={}):
     results = []
     list_cache_path = os.path.join(cache_root_path, list_cache_name)
@@ -424,7 +437,7 @@ class RobinhoodCachedClient(RobinhoodClient):
       with open(list_cache_path, 'r') as list_cache_file:
         list_json = json.load(list_cache_file)
         for item_id in list_json:
-          results.append(item_method(item_id, **item_kwargs, cache_mode=cache_mode))
+          results.append(item_method(item_id, *item_extra_args, **item_kwargs, cache_mode=cache_mode))
     else:
       live_list_content = self._search_and_cache_call(
           list_method,
@@ -493,6 +506,27 @@ class RobinhoodCachedClient(RobinhoodClient):
       'order_{}',
       cache_mode,
       list_kwargs={'instrument_id': instrument_id}
+    )
+
+  def get_historical_quotes(self, symbols, interval, span=None, bounds=None, cache_mode=CACHE_FIRST):
+    combined_sorted_symbols = ''.join(sorted(symbols))
+    return self._list_call(
+      'historical_quotes_{}_{}_{}_{}'.format(combined_sorted_symbols, interval, span, bounds),
+      super(RobinhoodCachedClient, self).get_historical_quotes,
+      self.get_historical_quote,
+      lambda historical_quote: historical_quote['symbol'],
+      'historical_quote_{{}}_{}_{}_{}'.format(interval, span, bounds),
+      cache_mode,
+      list_args=[symbols, interval],
+      item_extra_args=[interval],
+      list_kwargs={
+        'span': span,
+        'bounds': bounds,
+      },
+      item_kwargs={
+        'span': span,
+        'bounds': bounds,
+      }
     )
 
   def _search_call(

@@ -1595,6 +1595,7 @@ class RobinhoodClient:
         "previous_close_price": "178.1200"
     }
     """
+    assert interval in INTERVALS
     params = {
       'symbol': ','.join(symbol),
       'interval': interval,
@@ -1654,6 +1655,7 @@ class RobinhoodClient:
         ]
     }
     """
+    assert interval in INTERVALS
     params = {
       'symbols': ','.join(symbols),
       'interval': interval,
@@ -1666,7 +1668,7 @@ class RobinhoodClient:
       params['bounds'] = bounds
     response = self._session.get(API_HOST + 'quotes/historicals/', params=params, verify=API_CERT_BUNDLE_PATH)
     self._raise_on_error(response)
-    return response.json()
+    return response.json()['results']
 
   def get_news(self, symbol):
     """
