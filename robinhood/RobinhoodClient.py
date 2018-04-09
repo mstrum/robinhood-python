@@ -2218,6 +2218,27 @@ class RobinhoodClient:
 
   ### OPTIONS ###
 
+  def get_options_suitability(self):
+    """
+    Example response:
+    {
+        "fields_that_need_update": [],
+        "max_option_level": "option_level_2"
+    }
+    """
+    response = self._get_session(API, authed=True).get(API_HOST + 'options/suitability/')
+    _raise_on_error(response)
+    return response.json()
+
+  def get_options_position(self, position_id):
+    """
+    Example response:
+    TODO
+    """
+    response = self._get_session(API, authed=True).get(API_HOST + 'options/positions/{}/'.format(position_id))
+    _raise_on_error(response)
+    return response.json()
+
   def get_options_positions(self, include_old=False):
     """
     Example response:
@@ -2233,6 +2254,46 @@ class RobinhoodClient:
     assert not response_json['next']
     return response_json['results']
 
+  def get_options_order(self, order_id):
+    """
+    Example response:
+    {
+        "response_category": null,
+        "type": "limit",
+        "id": "1-0-0-0",
+        "cancel_url": "https://api.robinhood.com/options/orders/1-0-0-0/cancel/",
+        "canceled_quantity": "0.00000",
+        "trigger": "immediate",
+        "price": "0.10000000",
+        "premium": "10.00000000",
+        "quantity": "1.00000",
+        "processed_quantity": "0.00000",
+        "processed_premium": "0.0000",
+        "created_at": "2018-04-08T07:28:21.582166Z",
+        "pending_quantity": "1.00000",
+        "chain_symbol": "AAXN",
+        "direction": "debit",
+        "time_in_force": "gfd",
+        "updated_at": "2018-04-08T07:28:21.909451Z",
+        "legs": [
+            {
+                "ratio_quantity": 1,
+                "executions": [],
+                "id": "3-0-0-0",
+                "side": "buy",
+                "option": "https://api.robinhood.com/options/instruments/93988a72-cd5a-461a-a25d-d63cdd7d46de/",
+                "position_effect": "open"
+            }
+        ],
+        "state": "queued",
+        "chain_id": "a6cb269e-d5b5-4a52-a1f6-863d6376a814",
+        "ref_id": "2-0-0-0"
+    }
+    """
+    response = self._get_session(API, authed=True).get(API_HOST + 'options/order/{}/'.format(order_id))
+    _raise_on_error(response)
+    return response.json()
+
   def get_options_orders(self):
     """
     Example response:
@@ -2240,8 +2301,8 @@ class RobinhoodClient:
         {
             "response_category": null,
             "type": "limit",
-            "id": "a25ee566-eb97-42ae-b952-09ba0599d951",
-            "cancel_url": "https://api.robinhood.com/options/orders/a25ee566-eb97-42ae-b952-09ba0599d951/cancel/",
+            "id": "1-0-0-0",
+            "cancel_url": "https://api.robinhood.com/options/orders/1-0-0-0/cancel/",
             "canceled_quantity": "0.00000",
             "trigger": "immediate",
             "price": "0.10000000",
@@ -2259,7 +2320,7 @@ class RobinhoodClient:
                 {
                     "ratio_quantity": 1,
                     "executions": [],
-                    "id": "a61afe3b-3b8b-4192-a795-200a294a1bb5",
+                    "id": "3-0-0-0",
                     "side": "buy",
                     "option": "https://api.robinhood.com/options/instruments/93988a72-cd5a-461a-a25d-d63cdd7d46de/",
                     "position_effect": "open"
@@ -2267,7 +2328,7 @@ class RobinhoodClient:
             ],
             "state": "queued",
             "chain_id": "a6cb269e-d5b5-4a52-a1f6-863d6376a814",
-            "ref_id": "7e029c12-3ed7-4675-9970-1a1b2ac46b30"
+            "ref_id": "2-0-0-0"
         }
     ]
     """
@@ -2461,7 +2522,7 @@ class RobinhoodClient:
             "id": "cee01a93-626e-4ee6-9b04-60e2fd1392d1",
             "underlying_instruments": [
                 {
-                    "id": "6a80d2ed-6f5d-4f1c-9418-cc5379d630e3",
+                    "id": "2-0-0-0",
                     "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
                     "quantity": 100
                 }
@@ -2484,7 +2545,7 @@ class RobinhoodClient:
             "id": "db268e26-e383-41a6-9d99-8ab21d6f2cba",
             "underlying_instruments": [
                 {
-                    "id": "6e8abf5f-e3a0-48ae-ae97-57bfab1c477e",
+                    "id": "1-0-0-0",
                     "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
                     "quantity": 100
                 }
@@ -2504,7 +2565,7 @@ class RobinhoodClient:
             "id": "f980211b-e15d-48a8-82e8-4c9000183a09",
             "underlying_instruments": [
                 {
-                    "id": "ca09d064-a4e1-42ca-84c2-419f5ff223f0",
+                    "id": "0-0-0-0",
                     "instrument": "https://api.robinhood.com/instruments/450dfc6d-5510-4d40-abfb-f633b7d9be3e/",
                     "quantity": 100
                 }
@@ -2669,7 +2730,7 @@ class RobinhoodClient:
             {
                 "ratio_quantity": 1,
                 "executions": [],
-                "id": "a61afe3b-3b8b-4192-a795-200a294a1bb5",
+                "id": "3-0-0-0",
                 "side": "buy",
                 "option": "https://api.robinhood.com/options/instruments/93988a72-cd5a-461a-a25d-d63cdd7d46de/",
                 "position_effect": "open"
