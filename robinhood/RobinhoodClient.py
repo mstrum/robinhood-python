@@ -1996,25 +1996,81 @@ class RobinhoodClient:
 
   ### CRYPTO ###
 
-  def get_crypto_holdings(self):
+  def get_crypto_halts(self):
     """
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, auth=True, oauth2=True).get(NUMMUS_HOST + 'holdings/')
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'halts/')
+    _raise_on_error(response)
+    return response.json()['results']
+
+  def get_crypto_activations(self):
+    """
+    Example response:
+    [
+        {
+            "email": "",
+            "created_at": "2018-03-29T22:30:05.307055-04:00",
+            "last_name": "",
+            "external_rejection_reason": "",
+            "updated_at": "2018-04-08T19:50:37.457590-04:00",
+            "speculative": true,
+            "user_id": "0-0-0-0",
+            "state": "in_review",
+            "id": "1-0-0-0",
+            "external_status_code": "ineligible_jurisdiction",
+            "first_name": "",
+            "type": "new_account",
+            "external_rejection_code": "ineligible_jurisdiction"
+        }
+    ]
+    """
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'activations/')
+    _raise_on_error(response)
+    response_json = response.json()
+    assert not response_json['next']
+    return response_json['results']
+
+  def get_crypto_watchlists(self):
+    """
+    Example response:
+    TODO
+    """
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'watchlists/')
     _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
     assert not response_json['next']
     return response_json['results']
 
+  def get_crypto_holdings(self):
+    """
+    Example response:
+    TODO
+    """
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'holdings/')
+    _raise_on_error(response)
+    response_json = response.json()
+    # TODO: autopage
+    assert not response_json['next']
+    return response_json['results']
+
+  def get_crypto_portfolio(self, portfolio_id):
+    """
+    Example response:
+    TODO
+    """
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'portfolios/{}/'.format(portfolio_id))
+    _raise_on_error(response)
+    return response.json()
+
   def get_crypto_portfolios(self):
     """
     Example response:
     TODO
     """
-    # there's also a /portfolios/<id>/ api
-    response = self._get_session(NUMMUS, auth=True, oauth2=True).get(NUMMUS_HOST + 'portfolios/')
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'portfolios/')
     _raise_on_error(response)
     return response.json()['results']
 
@@ -2023,7 +2079,7 @@ class RobinhoodClient:
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, auth=True, oauth2=True).get(NUMMUS_HOST + 'orders/')
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'orders/')
     _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
@@ -2062,7 +2118,7 @@ class RobinhoodClient:
         ...
     ]
     """
-    response = self._get_session(NUMMUS, auth=True, oauth2=True).get(NUMMUS_HOST + 'currency_pairs/')
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'currency_pairs/')
     _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
@@ -2098,7 +2154,7 @@ class RobinhoodClient:
         }
     }
     """
-    response = self._get_session(NUMMUS, auth=True, oauth2=True).get(
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(
         NUMMUS_HOST + 'currency_pairs/{}/'.format(instrument_id))
     _raise_on_error(response)
     return response.json()
@@ -2211,7 +2267,7 @@ class RobinhoodClient:
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, auth=True, oauth2=True).post(
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).post(
         NUMMUS_HOST + 'orders/{}/cancel/'.format(order_id))
     _raise_on_error(response)
     return response.json()
