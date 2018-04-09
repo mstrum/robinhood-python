@@ -1,6 +1,8 @@
 # robinhood-python
 Robinhood module in Python
 
+Not joined Robinhood yet? Get a free stock, use this link which will give both of us shares: https://share.robinhood.com/matts952
+
 Some current caveats:
 * Development has been in python 3, I'm not taking much care to keep python 2 support at the moment.
 * The scripts currently default to extreme caching policies, use --live to guarantee most recent data.
