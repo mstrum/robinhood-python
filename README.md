@@ -63,8 +63,9 @@ Various downloads:
 
 * [show_options_discoveries.py](show_options_quote.py) AMZN [--live]
   * Displays robinhood's options suggestions for the given symbol (pretty raw for now)
-* [show_options_quote.py](show_options_quote.py) [call|put] AMZN 2018-05-21 55 [--live]
+* [show_options_quote.py](show_options_quote.py) AMZN [--type=call|put] [--date 2018-05-21] [--strike=55] [--live]
   * Displays the quote for the given options contract (pretty raw for now)
+    * Can do things like get all $55 puts, get all puts on 2 dates, etc.
 * [order_options.py](order_options.py) [market|limit] [buy|sell] SYMBOL DATE STRIKE [call|put] QUANTITY PRICE
   * Places an options order
 * [show_pending_options_orders.py](show_pending_options_orders.py)

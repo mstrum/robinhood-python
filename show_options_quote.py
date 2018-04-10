@@ -11,10 +11,10 @@ import pytz
 
 from robinhood.exceptions import NotFound
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, CACHE_FIRST, FORCE_LIVE
-from robinhood.util import OPTIONS_TYPES
+from robinhood.util import get_last_id_from_url, OPTIONS_TYPES
 
 
-def display_options_quote(client, options_type, symbol, date, strike, cache_mode):
+def display_options_quote(client, options_type, symbol, dates, strike, cache_mode):
   try:
     instrument = client.get_instrument_by_symbol(symbol)
   except NotFound:
@@ -34,63 +34,74 @@ def display_options_quote(client, options_type, symbol, date, strike, cache_mode
   if not options_chain['can_open_position']:
     raise Exception("Can't open position: {}".format(json.dumps(options_chain, indent=4)))
   chain_id = options_chain['id']
-  options_instrument_id = options_chain['underlying_instruments'][0]['id']
   multiplier = Decimal(options_chain['trade_value_multiplier'])
 
-  options_instruments = client.get_options_instruments(
-      chain_id=chain_id, options_type=options_type, tradability='tradable', state='active', expiration_dates=[date])
+  kwargs = {}
+  if dates:
+    kwargs['expiration_dates'] = dates
+  if options_type:
+    kwargs['options_type'] = options_type
+  potential_options_instruments = client.get_options_instruments(chain_id=chain_id, tradability='tradable', state='active', **kwargs)
+  if not potential_options_instruments:
+    raise Exception('No options found')
+
+  options_instruments = []
+  for potential_options_instrument in potential_options_instruments:
+    if strike is None or strike == float(potential_options_instrument['strike_price']):
+      options_instruments.append(potential_options_instrument)
   if not options_instruments:
-    raise Exception('No options found on that date')
+    raise Exception('No options found')
 
-  options_instrument = None
-  for potential_options_instrument in options_instruments:
-    potential_strike = float(potential_options_instrument['strike_price'])
-    if potential_strike == strike:
-      options_instrument = potential_options_instrument
-      break
-  if not options_instrument:
-    raise Exception('No options found at that strike price')
+  options_instrument_by_id = {
+    options_instrument['id']: options_instrument for options_instrument in options_instruments
+  }
 
-  options_quote = client.get_options_marketdata(options_instrument['id'])
+  options_quotes = client.get_options_marketdatas([options_instrument['id'] for options_instrument in options_instruments])
 
-  break_even_price = Decimal(options_quote['break_even_price'])
-  ask_size = options_quote['ask_size']
-  ask_price = Decimal(options_quote['ask_price'])
-  bid_size = options_quote['bid_size']
-  bid_price = Decimal(options_quote['bid_price'])
-  adjusted_mark_price = Decimal(options_quote['adjusted_mark_price'])
-  mark_price = Decimal(options_quote['mark_price'])
-  max_loss = 100 * adjusted_mark_price
-  bid_spread = ask_price - bid_price
-  implied_volatility = Decimal(options_quote['implied_volatility']) * 100
-  high_price = Decimal(options_quote['high_price'])
-  low_price = Decimal(options_quote['low_price'])
-  hl_spread = high_price - low_price
-  last_trade_size = options_quote['last_trade_size']
-  last_trade_price = Decimal(options_quote['last_trade_price'])
-  open_interest = options_quote['open_interest']
-  volume = options_quote['volume']
+  for options_quote in options_quotes:
+    break_even_price = Decimal(options_quote['break_even_price'])
+    ask_size = options_quote['ask_size']
+    ask_price = Decimal(options_quote['ask_price'])
+    bid_size = options_quote['bid_size']
+    bid_price = Decimal(options_quote['bid_price'])
+    adjusted_mark_price = Decimal(options_quote['adjusted_mark_price'])
+    mark_price = Decimal(options_quote['mark_price'])
+    max_loss = multiplier * adjusted_mark_price
+    bid_spread = ask_price - bid_price
+    implied_volatility = Decimal(options_quote['implied_volatility'] or 1) * 100
+    high_price = Decimal(options_quote['high_price'] or 0)
+    low_price = Decimal(options_quote['low_price'] or 0)
+    hl_spread = high_price - low_price
+    last_trade_size = options_quote['last_trade_size']
+    last_trade_price = Decimal(options_quote['last_trade_price'] or 0)
+    open_interest = options_quote['open_interest']
+    volume = options_quote['volume']
+    options_instrument_id = get_last_id_from_url(options_quote['instrument'])
+    options_instrument = options_instrument_by_id[options_instrument_id]
+    expiration_date = options_instrument['expiration_date']
+    option_strike = Decimal(options_instrument['strike_price'])
 
-  print('${:.2f} {} ({}) {}'.format(strike, symbol, name, options_type[0].upper() + options_type[1:]))
-  print('Break even\t ${:.2f}'.format(break_even_price))
-  print('Expires\t\t {}'.format(date))
-  print('Spread\t\t ${:.2f} ({}) <-> ${:.2f} ({})'.format(bid_price, bid_size, ask_price, ask_size))
-  print('\t\t\t${:.2f} ({:.2f}%)'.format(bid_spread, bid_spread * 100 / adjusted_mark_price))
-  print('Low/High\t ${:.2f} <-> ${:.2f}'.format(low_price, high_price))
-  print('\t\t\t${:.2f} ({:.2f}%)'.format(hl_spread, hl_spread * 100 / adjusted_mark_price))
-  print('Max loss\t ${:.2f}'.format(max_loss))
-  print('Impl Volatil\t {:.2f}%'.format(implied_volatility))
-  print('Last\t\t {} @ ${:.2f}'.format(last_trade_size, last_trade_price))
-  print('Open Int\t {}'.format(open_interest))
-  print('Volume\t\t {}'.format(volume))
+    print('')
+    print('${:.2f} {} ({}) {}'.format(option_strike, symbol, name, options_type[0].upper() + options_type[1:]))
+    print('Break even\t ${:.2f}'.format(break_even_price))
+    print('Expires\t\t {}'.format(expiration_date))
+    print('Spread\t\t ${:.2f} ({}) <-> ${:.2f} ({})'.format(bid_price, bid_size, ask_price, ask_size))
+    print('\t\t\t${:.2f} ({:.2f}%)'.format(bid_spread, bid_spread * 100 / adjusted_mark_price))
+    print('Low/High\t ${:.2f} <-> ${:.2f}'.format(low_price, high_price))
+    print('\t\t\t${:.2f} ({:.2f}%)'.format(hl_spread, hl_spread * 100 / adjusted_mark_price))
+    print('Max loss\t ${:.2f}'.format(max_loss))
+    print('Impl Volatil\t {:.2f}%'.format(implied_volatility))
+    print('Last\t\t {} @ ${:.2f}'.format(last_trade_size, last_trade_price))
+    print('Open Int\t {}'.format(open_interest))
+    print('Volume\t\t {}'.format(volume))
 
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Get a quote for a symbol')
-  parser.add_argument('options_type', choices=OPTIONS_TYPES)
   parser.add_argument('symbol', type=str.upper, help='A symbol to get an options quote on')
-  parser.add_argument('date', type=str, help='Date for the options to expire')
-  parser.add_argument('strike', type=float, help='Amount the strike price should be')
+  parser.add_argument('-t', '--type', choices=OPTIONS_TYPES)
+  parser.add_argument('-d', '--date', nargs='+', type=str, dest='dates', default=[], help='Date for the options to expire')
+  parser.add_argument('-s', '--strike', type=float, help='Amount the strike price should be')
   parser.add_argument(
       '--live',
       action='store_true',
@@ -98,13 +109,16 @@ if __name__ == '__main__':
   )
   args = parser.parse_args()
 
+  if not args.dates and not args.strike:
+    raise Exception('You need to pass in --date and/or --strike')
+
   client = RobinhoodCachedClient()
   client.login()
   display_options_quote(
       client,
-      args.options_type,
+      args.type,
       args.symbol,
-      args.date,
+      args.dates,
       args.strike,
       FORCE_LIVE if args.live else CACHE_FIRST
   )
