@@ -28,8 +28,9 @@ Some current caveats:
     automatically so you usually don't need to call this.
 * [logout.py](logout.py)
   * Invalidates the current auth token and deletes the cached token
+  
+### Account
 
-Various downloads:
 * [download_portfolio.py](download_portfolio.py) [--live]
   * Current positions with various stats
 * [download_history.py](download_history.py) [--live]
