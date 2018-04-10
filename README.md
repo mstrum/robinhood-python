@@ -1,7 +1,9 @@
-# robinhood-python
-Robinhood module in Python
+# robinhood-python &#128480;
+Robinhood module with convenience scripts for automating common activites (downloading entire history, trading, etc.)
 
-Not joined Robinhood yet? Get a free stock, use this link which will give both of us shares: https://share.robinhood.com/matts952
+> Join, get a free stock, develop, profit.
+> https://share.robinhood.com/matts952
+> - Matt S
 
 Some current caveats:
 * Development has been in python 3, I'm not taking much care to keep python 2 support at the moment.
