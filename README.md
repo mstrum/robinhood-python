@@ -82,7 +82,7 @@ Some current caveats:
 
 * [show_crypto_quote.py](show_crypto_quote.py) [-s BTCUSD] [--live]
   * Displays a quote for the given cryptocurrencies or all crypto currencies when none given.
-* [order_crypto.py](order_crypto.py) [market|limit] [buy|sell] SYMBOL DATE STRIKE [call|put] QUANTITY PRICE
+* [order_crypto.py](order_crypto.py) [market|limit] [buy|sell] SYMBOL QUANTITY PRICE
   * Places some cryptocurrency
 * [show_pending_crypto_orders.py](show_pending_crypto_orders.py)
   * Displays any outstanding crypto orders
