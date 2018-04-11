@@ -33,4 +33,8 @@ if __name__ == '__main__':
     orders = client.get_orders(cache_mode=FORCE_LIVE)
     order_ids = [order['id'] for order in orders if order['state'] in ['queued', 'confirmed']]
 
+  if not order_ids:
+    print('Nothing to see here... Move along.')
+    exit()
+
   cancel_orders(order_ids)

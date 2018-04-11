@@ -12,3 +12,6 @@ class BadRequest(Exception):
 
 class TooManyRequests(Exception):
     pass
+
+class Forbidden(Exception):
+    pass

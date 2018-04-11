@@ -76,6 +76,19 @@ Some current caveats:
 * [cancel_options.py](cancel_options.py) ORDER_ID...
   * Cancels one or more options order ids given, or all pending options orders if none given
 
+### Cryptocurrency
+
+#### Purchasing cryptocurrency
+
+* [show_crypto_quote.py](show_crypto_quote.py) [-s BTCUSD] [--live]
+  * Displays a quote for the given cryptocurrencies or all crypto currencies when none given.
+* [order_crypto.py](order_crypto.py) [market|limit] [buy|sell] SYMBOL DATE STRIKE [call|put] QUANTITY PRICE
+  * Places some cryptocurrency
+* [show_pending_crypto_orders.py](show_pending_crypto_orders.py)
+  * Displays any outstanding crypto orders
+* [cancel_crypto.py](cancel_crypto.py) ORDER_ID...
+  * Cancels one or more crypto order ids given, or all pending crypto orders if none given
+
 ## Legal
 
 * This library may have bugs which could result in financial consequences, you are responsible for anything you execute. Inspect the underlying code if you want to be sure it's doing what you think it should be doing.

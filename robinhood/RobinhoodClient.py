@@ -15,7 +15,14 @@ import uuid
 
 import requests
 
-from .exceptions import BadRequest, MfaRequired, NotFound, NotLoggedIn, TooManyRequests
+from .exceptions import (
+    BadRequest,
+    Forbidden,
+    MfaRequired,
+    NotFound,
+    NotLoggedIn,
+    TooManyRequests
+)
 from .util import (
     CERT_BUNDLE_PATH,
     ANALYTICS,
@@ -53,6 +60,8 @@ def _raise_on_error(response):
       raise TooManyRequests()
     elif  http_error.response.status_code == requests.codes.not_found:
       raise NotFound()
+    if  http_error.response.status_code == requests.codes.forbidden:
+      raise Forbidden(http_error.response.json())
     raise
 
 
@@ -2074,6 +2083,15 @@ class RobinhoodClient:
     _raise_on_error(response)
     return response.json()['results']
 
+  def get_crypto_order(self, order_id):
+    """
+    Example response:
+    TODO
+    """
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'orders/{}/'.format(order_id))
+    _raise_on_error(response)
+    return response.json()
+
   def get_crypto_orders(self):
     """
     Example response:
@@ -2125,7 +2143,7 @@ class RobinhoodClient:
     assert not response_json['next']
     return response_json['results']
 
-  def get_crypto_currency_pair(self, instrument_id):
+  def get_crypto_currency_pair(self, currency_pair_id):
     """
     Example response:
     {
@@ -2155,11 +2173,11 @@ class RobinhoodClient:
     }
     """
     response = self._get_session(NUMMUS, authed=True, oauth2=True).get(
-        NUMMUS_HOST + 'currency_pairs/{}/'.format(instrument_id))
+        NUMMUS_HOST + 'currency_pairs/{}/'.format(currency_pair_id))
     _raise_on_error(response)
     return response.json()
 
-  def get_crypto_quote(self, symbol_or_instrument_id):
+  def get_crypto_quote(self, symbol_or_currency_pair_id):
     """
     Example response:
     {
@@ -2175,11 +2193,11 @@ class RobinhoodClient:
     }
     """
     response = self._get_session(API, authed=True, oauth2=True).get(
-        API_HOST + 'marketdata/forex/quotes/{}/'.format(symbol_or_instrument_id))
+        API_HOST + 'marketdata/forex/quotes/{}/'.format(symbol_or_currency_pair_id))
     _raise_on_error(response)
     return response.json()
 
-  def get_crypto_quotes(self, instrument_ids=None, symbols=None):
+  def get_crypto_quotes(self, currency_pair_ids=None, symbols=None):
     """
     Example response:
     [
@@ -2197,11 +2215,11 @@ class RobinhoodClient:
         ...
     ]
     """
-    assert not (symbols and instrument_ids)
-    assert symbols or instrument_ids
+    assert not (symbols and currency_pair_ids)
+    assert symbols or currency_pair_ids
     params = {}
-    if instrument_ids:
-      params['ids'] = ','.join(instrument_ids)
+    if currency_pair_ids:
+      params['ids'] = ','.join(currency_pair_ids)
     if symbols:
       params['symbols'] = ','.join(symbols)
     response = self._get_session(API, authed=True, oauth2=True).get(
@@ -2209,7 +2227,7 @@ class RobinhoodClient:
     _raise_on_error(response)
     return response.json()['results']
 
-  def get_crypto_historicals(self, instrument_id, interval, bounds=None, span=None):
+  def get_crypto_historicals(self, currency_pair_id, interval, bounds=None, span=None):
     """
     Example response:
     {
@@ -2258,7 +2276,7 @@ class RobinhoodClient:
       assert span in SPANS
       params['span'] = span
     response = self._get_session(API, authed=True, oauth2=True).get(
-        API_HOST + 'marketdata/forex/historicals/{}/'.format(instrument_id), params=params)
+        API_HOST + 'marketdata/forex/historicals/{}/'.format(currency_pair_id), params=params)
     _raise_on_error(response)
     return response.json()
 
@@ -2269,6 +2287,26 @@ class RobinhoodClient:
     """
     response = self._get_session(NUMMUS, authed=True, oauth2=True).post(
         NUMMUS_HOST + 'orders/{}/cancel/'.format(order_id))
+    _raise_on_error(response)
+    return response.json()
+
+  def order_crypto(self, currency_pair_id, order_type, order_side, quantity, price):
+    """
+    Example response:
+    TODO
+    """
+    assert order_side in ORDER_SIDES
+    assert order_type in ORDER_TYPES
+    body = {
+        'side': order_side,
+        'currency_pair_id': currency_pair_id,
+        'price': price,
+        'quantity': quantity,
+        'ref_id': str(uuid.uuid4()),
+        'time_in_force': 'gtc',
+        'type': order_type,
+    }
+    response = self._get_session(NUMMUS, authed=True, oauth2=True).post(NUMMUS_HOST + 'orders/')
     _raise_on_error(response)
     return response.json()
 

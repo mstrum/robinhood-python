@@ -11,8 +11,6 @@ from robinhood.util import ORDER_TYPES, ORDER_SIDES, OPTIONS_TYPES, ORDER_SIDE_T
 client = RobinhoodCachedClient()
 client.login()
 
-from show_quote import display_quote
-
 
 def place_order(order_type, order_side, symbol, date, strike, options_type, quantity, price):
   try:
