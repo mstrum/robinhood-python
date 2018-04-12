@@ -17,6 +17,19 @@ def place_order(order_type, order_side, symbol, quantity, price):
   currency_pair_id = quote['id']
   currency_pair = client.get_crypto_currency_pair(currency_pair_id)
 
+  print('')
+  print('!!!!!!!!!!!!!!!!!! CAUTION !!!!!!!!!!!!!!!!!!')
+  confirm = input('Are you sure that you want to {} {} {} {} ({}) for ${:.2f}? [N/y]? '.format(
+    order_type,
+    order_side,
+    quantity,
+    symbol,
+    currency_pair['name'],
+    price)).lower()
+  if confirm not in ['y', 'yes']:
+    print('Bailed out!')
+    exit()
+
   order = client.order_crypto(
       currency_pair_id, order_type, order_side, quantity, price)
   print(json.dumps(order, indent=4))

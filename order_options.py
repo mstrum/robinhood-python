@@ -52,6 +52,22 @@ def place_order(order_type, order_side, symbol, date, strike, options_type, quan
 
   options_quote = client.get_options_marketdata(options_instrument['id'])
 
+  print('')
+  print('!!!!!!!!!!!!!!!!!! CAUTION !!!!!!!!!!!!!!!!!!')
+  confirm = input('Are you sure that you want to {} {} {} {} ${:.2f} {} options of {} ({}) for ${:.2f} each? [N/y]? '.format(
+      order_type,
+      order_side,
+      quantity,
+      date,
+      strike,
+      options_type,
+      symbol,
+      instrument['simple_name'] or instrument['name'],
+      price)).lower()
+  if confirm not in ['y', 'yes']:
+    print('Bailed out!')
+    exit()
+
   order = client.order_options(
       options_instrument['id'], order_type, ORDER_SIDE_TO_DIRECTION[order_side], quantity, price, use_account_url=account_url)
   print(json.dumps(order, indent=4))
