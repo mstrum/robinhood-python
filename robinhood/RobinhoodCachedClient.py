@@ -1,6 +1,7 @@
 """
 A wrapper of RobinhoodClient that introduces a caching layer.
 """
+from datetime import datetime
 import getpass
 import json
 import logging
@@ -22,6 +23,52 @@ FORCE_CACHE = 'FORCE_CACHE'
 class RobinhoodCachedClient(RobinhoodClient):
   def __init__(self):
     super(RobinhoodCachedClient, self).__init__()
+    self.confirm_disclosures_if_needed()
+
+  def confirm_disclosures_if_needed(self):
+    cache_path = os.path.join(cache_root_path, 'disclosures_acknowledged')
+    if os.path.exists(cache_path):
+      return
+
+    disclosures = self.get_home_screen_disclosures()
+    print('')
+    print('vvvvvvvvvvvvvvvvvvvvvvv Robinhood disclosures vvvvvvvvvvvvvvvvvvvvvvv')
+    print('')
+    print(disclosures['disclosure'])
+    print('')
+    print('^^^^^^^^^^^^^^^^^^^^^^^ Robinhood disclosures ^^^^^^^^^^^^^^^^^^^^^^^')
+    print('')
+    confirm = input("Do you acknowledge that you understand Robinhood's disclosures? [N/y] ")
+    if confirm not in ['y', 'yes']:
+      print("Sorry, you need to acknowledge Robinhood's disclosures to continue.")
+      exit()
+
+    print("""
+vvvvvvvvvvvvvvvvvvvvvvv robinhood-python disclosures vvvvvvvvvvvvvvvvvvvvvvv
+
+* This library may have bugs which could result in financial consequences,
+  you are responsible for anything you execute. Inspect the underlying code
+  if you want to be sure it's doing what you think it should be doing.
+
+* This library is not affiliated with Robinhood and this library uses an
+  undocumented API. If you have any questions about them, contact Robinhood
+  directly: https://robinhood.com/
+
+*  By using this library, you understand that you are not to charge or
+  make any money through advertisements or fees. Until Robinhood releases
+  an official API with official guidance, this is only to be used for
+  non-profit activites.  Only you are responsible if Robinhood cancels your
+  account because of misuse of this library.
+
+^^^^^^^^^^^^^^^^^^^^^^^ robinhood-python disclosures ^^^^^^^^^^^^^^^^^^^^^^^
+""")
+    confirm = input("Do you acknowledge that you understand robinhood-python's disclosures? [N/y] ")
+    if confirm not in ['y', 'yes']:
+      print("Sorry, you need to acknowledge robinhood-python's disclosures to continue.")
+      exit()
+
+    with open(cache_path, 'w') as cache_file:
+      cache_file.write(datetime.now().isoformat())
 
   def login(self, force_login=False):
     cache_path = os.path.join(cache_root_path, 'auth_token')

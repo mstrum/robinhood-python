@@ -23,13 +23,19 @@ Some current caveats:
 
 ## Scripts
 
+### Account
+
 * [login.py](login.py)
   * Forces a new login and caches the token. Note most scripts will do this
     automatically so you usually don't need to call this.
 * [logout.py](logout.py)
   * Invalidates the current auth token and deletes the cached token
+* [enable_mfa.py](enable_mfa.py) [app|sms]
+  * Enables MFA for login
+* [disable_mfa.py](disable_mfa.py)
+  * Disables MFA for login
   
-### Account
+### Portfolio management
 
 * [download_portfolio.py](download_portfolio.py) [--live]
   * Current positions with various stats

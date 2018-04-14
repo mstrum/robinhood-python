@@ -179,6 +179,93 @@ class RobinhoodClient:
       else:
         return results
 
+  def request_app_mfa(self):
+    """
+    Example response:
+    {
+      'enabled': False,
+      'totp_token': 'XXXX'
+    }
+    """
+    response = self._get_session(API, authed=True).put(API_HOST + 'mfa/app/request/')
+    _raise_on_error(response)
+    return response.json()
+
+  def request_sms_mfa(self, phone_number):
+    """
+    Example response:
+    {
+      'phone_number': '##########',
+      'enabled': False
+    }
+    """
+    body = {'phone_number': phone_number}
+    response = self._get_session(API, authed=True).put(API_HOST + 'mfa/sms/request/', data=body)
+    _raise_on_error(response)
+    return response.json()
+
+  def verify_app_mfa(self, mfa_code):
+    """
+    Example successful return:
+    {
+      'challenge_type': 'app',
+      'enabled': True
+    }
+    """
+    body = {'mfa_code': mfa_code}
+    response = self._get_session(API, authed=True).put(API_HOST + 'mfa/app/verify/', data=body)
+    _raise_on_error(response)
+    return response.json()
+
+  def verify_sms_mfa(self, mfa_code):
+    """
+    Example response:
+    {
+      'challenge_type': 'sms',
+      'phone_number': '##########',
+      'enabled': True,
+    }
+    """
+    body = {'mfa_code': mfa_code}
+    response = self._get_session(API, authed=True).put(API_HOST + 'mfa/sms/verify/', data=body)
+    _raise_on_error(response)
+    return response.json()
+
+  def get_mfa_backup(self):
+    """
+    Note that this re-generates the backup and invlidates any existing backup code.
+
+    Example response:
+    {
+      'backup_code': '###########'
+    }
+    """
+    response = self._get_session(API, authed=True).get(API_HOST + 'mfa/recovery/')
+    _raise_on_error(response)
+    return response.json()
+
+  def get_mfa(self):
+    """
+    Example response with MFA setup:
+    {
+      'challenge_type': 'app',
+      'enabled': True
+    }
+
+    Example response without MFA setup:
+    {
+      'enabled': False
+    }
+    """
+    response = self._get_session(API, authed=True).get(API_HOST + 'mfa/')
+    _raise_on_error(response)
+    return response.json()
+
+  def remove_mfa(self):
+    """No response, just success."""
+    response = self._get_session(API, authed=True).delete(API_HOST + 'mfa/')
+    _raise_on_error(response)
+
   def get_user(self):
     """
     Example response:
@@ -1453,6 +1540,10 @@ class RobinhoodClient:
     response_json = response.json()
     assert len(response_json) == 1
     return response_json[0]
+
+  def get_home_screen_disclosures(self):
+    response = requests.get('https://brokerage-static.s3.amazonaws.com/disclosures/home_screen_disclosures.json')
+    return response.json()
 
   def get_sp500_movers(self, direction):
     """
