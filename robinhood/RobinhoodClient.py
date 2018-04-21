@@ -1,9 +1,6 @@
 """
 A secure Robinhood library that simplifies API use.
 
-Good unofficial API documentation:
-https://github.com/sanko/Robinhood
-
 Another python library that inspired this:
 https://github.com/Jamonek/Robinhood
 """
