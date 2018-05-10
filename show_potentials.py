@@ -21,9 +21,6 @@ def show_potentials(cache_mode):
     quantity = int(float(position['quantity']))
     average_buy_price = Decimal(position['average_buy_price'])
     instrument_id = get_last_id_from_url(position['instrument'])
-    instrument = client.get_instrument_by_id(instrument_id)
-    fundamental = client.get_fundamental(instrument_id, cache_mode=cache_mode)
-    symbol_to_instrument_id[instrument['symbol']] = instrument_id
 
     position_by_instrument_id[instrument_id] = {
         'quantity': quantity,
@@ -32,8 +29,16 @@ def show_potentials(cache_mode):
         'symbol': instrument['symbol'],
         'simple_name': instrument['simple_name'],
         'full_name': instrument['name'],
-        'last_open': Decimal(fundamental['open']),
     }
+
+  instrument_ids = list(position_by_instrument_id.keys())
+  instruments = client.get_instruments(instrument_ids)
+  for instrument in instruments:
+    instrument_id = instrument['id']
+    position_by_instrument_id[instrument_id]['symbol'] = instrument['symbol']
+    position_by_instrument_id[instrument_id]['simple_name'] = instrument['simple_name']
+    position_by_instrument_id[instrument_id]['full_name'] = instrument['name']
+    symbol_to_instrument_id[instrument['symbol']] = instrument_id
 
   position_quotes = client.get_quotes(list(position_by_instrument_id.keys()), cache_mode=cache_mode)
   for quote in position_quotes:
