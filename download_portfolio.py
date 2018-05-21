@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from decimal import Decimal
 import argparse
 import csv
 
@@ -8,7 +7,7 @@ import csv
 #logging.basicConfig(level=logging.DEBUG)
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, CACHE_FIRST, FORCE_LIVE
-from robinhood.util import get_last_id_from_url
+from robinhood.RobinhoodPortfolio import RobinhoodPortfolio
 
 # Set up the client
 client = RobinhoodCachedClient()
@@ -38,83 +37,22 @@ def download_portfolio(cache_mode):
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
 
-    positions = client.get_positions(cache_mode=cache_mode)
-    position_by_instrument_id = {}
-    for position in positions:
-      quantity = int(float(position['quantity']))
-      average_buy_price = Decimal(position['average_buy_price'])
-      instrument_id = get_last_id_from_url(position['instrument'])
+    portfolio = RobinhoodPortfolio(client, {'cache_mode': cache_mode})
 
-      position_by_instrument_id[instrument_id] = {
-          'quantity': quantity,
-          'average_buy_price': average_buy_price,
-          'equity_cost': quantity * average_buy_price,
-      }
-
-    instrument_ids = list(position_by_instrument_id.keys())
-    instruments = client.get_instruments(instrument_ids)
-    for instrument in instruments:
-      instrument_id = instrument['id']
-      position_by_instrument_id[instrument_id]['symbol'] = instrument['symbol']
-      position_by_instrument_id[instrument_id]['simple_name'] = instrument['simple_name']
-      position_by_instrument_id[instrument_id]['full_name'] = instrument['name']
-
-    symbols = [p['symbol'] for p in position_by_instrument_id.values()]
-
-    fundamentals = client.get_fundamentals(instrument_ids, cache_mode=cache_mode)
-    for fundamental in fundamentals:
-      instrument_id = get_last_id_from_url(fundamental['instrument'])
-      position_by_instrument_id[instrument_id]['last_open'] = Decimal(fundamental['open'])
-
-    popularities = client.get_popularities(instrument_ids, cache_mode=cache_mode)
-    for popularity in popularities:
-      instrument_id = get_last_id_from_url(popularity['instrument'])
-      position_by_instrument_id[instrument_id]['robinhood_holders'] = popularity['num_open_positions']
-
-    ratings = client.get_ratings(instrument_ids, cache_mode=cache_mode)
-    for rating in ratings:
-      instrument_id = rating['instrument_id']
-      num_ratings = sum(v for _, v in rating['summary'].items()) if rating['summary'] else None
-      if num_ratings:
-        percent_buy = rating['summary']['num_buy_ratings'] * 100 / num_ratings
-        percent_sell = rating['summary']['num_sell_ratings']  * 100 / num_ratings
-      position_by_instrument_id[instrument_id]['buy_rating'] = 'N/A' if not num_ratings else '{:.2f}'.format(percent_buy)
-      position_by_instrument_id[instrument_id]['sell_rating'] = 'N/A' if not num_ratings else '{:.2f}'.format(percent_sell)
-
-    position_quotes = client.get_quotes(instrument_ids, cache_mode=cache_mode)
-    for quote in position_quotes:
-      instrument_id = get_last_id_from_url(quote['instrument'])
-      position = position_by_instrument_id[instrument_id]
-
-      position['last_price'] = Decimal(quote['last_trade_price'])
-      position['equity_worth'] = position['quantity'] * position['last_price']
-
-    total_equity = sum(position['equity_worth'] for position in position_by_instrument_id.values())
-
-    positions_by_equity_worth = sorted(
-        position_by_instrument_id.values(),
-        key=lambda p: p['equity_worth'],
-        reverse=True
-    )
-
-    for idx, position in enumerate(positions_by_equity_worth):
-      total_price_change = position['last_price'] - position['average_buy_price']
-      day_price_change = position['last_price'] - position['last_open']
-      day_percentage_change = day_price_change * 100 / position['last_open']
-      total_percentage_change = total_price_change * 100 / position['average_buy_price'] if position['average_buy_price'] else 100
+    for idx, position in enumerate(portfolio.positions_by_equity_worth):
       csv_writer.writerow({
           'symbol': position['symbol'],
-          'name': position['simple_name'] or position['full_name'],
+          'name': position['shortest_name'],
           'quantity': position['quantity'],
           'average_buy_price': round(position['average_buy_price'], 2),
           'equity_cost': round(position['equity_cost'], 2),
           'last_price': round(position['last_price'], 2),
-          'day_price_change': round(day_price_change, 2),
-          'day_percentage_change': round(day_percentage_change, 2),
-          'total_price_change': round(total_price_change, 2),
-          'total_percentage_change': round(total_percentage_change, 2),
+          'day_price_change': round(position['day_price_change'], 2),
+          'day_percentage_change': round(position['day_percentage_change'], 2),
+          'total_price_change': round(position['total_price_change'], 2),
+          'total_percentage_change': round(position['total_percentage_change'], 2),
           'equity_worth': round(position['equity_worth'], 2),
-          'equity_percentage': round(position['equity_worth'] * 100 / total_equity, 2),
+          'equity_percentage': round(position['equity_percentage'], 2),
           'equity_idx': idx + 1,
           'buy_rating': position['buy_rating'],
           'sell_rating': position['sell_rating'],

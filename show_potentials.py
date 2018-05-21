@@ -5,7 +5,7 @@ import argparse
 import json
 
 from robinhood.RobinhoodCachedClient import RobinhoodCachedClient, CACHE_FIRST, FORCE_LIVE
-from robinhood.util import get_last_id_from_url
+from robinhood.RobinhoodPortfolio import RobinhoodPortfolio
 
 # Set up the client
 client = RobinhoodCachedClient()
@@ -13,47 +13,16 @@ client.login()
 
 
 def show_potentials(cache_mode):
-  # First, get the portfolio
-  positions = client.get_positions(cache_mode=cache_mode)
-  position_by_instrument_id = {}
-  symbol_to_instrument_id = {}
-  for position in positions:
-    quantity = int(float(position['quantity']))
-    average_buy_price = Decimal(position['average_buy_price'])
-    instrument_id = get_last_id_from_url(position['instrument'])
+  # Load the portfolio
+  portfolio = RobinhoodPortfolio(client, {'cache_mode': cache_mode})
 
-    position_by_instrument_id[instrument_id] = {
-        'quantity': quantity,
-        'average_buy_price': average_buy_price,
-        'equity_cost': quantity * average_buy_price,
-        'symbol': instrument['symbol'],
-        'simple_name': instrument['simple_name'],
-        'full_name': instrument['name'],
-    }
-
-  instrument_ids = list(position_by_instrument_id.keys())
-  instruments = client.get_instruments(instrument_ids)
-  for instrument in instruments:
-    instrument_id = instrument['id']
-    position_by_instrument_id[instrument_id]['symbol'] = instrument['symbol']
-    position_by_instrument_id[instrument_id]['simple_name'] = instrument['simple_name']
-    position_by_instrument_id[instrument_id]['full_name'] = instrument['name']
-    symbol_to_instrument_id[instrument['symbol']] = instrument_id
-
-  position_quotes = client.get_quotes(list(position_by_instrument_id.keys()), cache_mode=cache_mode)
-  for quote in position_quotes:
-    instrument_id = get_last_id_from_url(quote['instrument'])
-    position = position_by_instrument_id[instrument_id]
-
-    position['last_price'] = Decimal(quote['last_trade_price'])
-    position['equity_worth'] = position['quantity'] * position['last_price']
-
-  # Next, augment with sentiment.
+  # Load the sentiment
   with open('sentiment.json', 'r') as sentiment_file:
     sentiment_json = json.load(sentiment_file)
+
+  # Augment the portfolio with sentiment
   for symbol, symbol_sentiment in sentiment_json.items():
-    instrument_id = symbol_to_instrument_id[symbol]
-    position = position_by_instrument_id[instrument_id]
+    position = portfolio.get_position_for_symbol(symbol)
     assert 'sentiment' not in position
     position['sentiment'] = symbol_sentiment
 
@@ -69,12 +38,9 @@ def show_potentials(cache_mode):
       else:
         position['equity_left'] = equity_left
         position['shares_needed'] = equity_left / position['last_price']
-
-      equity_needed = equity_target
-      # How many needed
     position['paused'] = symbol_sentiment.get('paused', False)
 
-  positions_by_priority = sorted(position_by_instrument_id.values(), key=lambda p: p.get('priority', 999))
+  positions_by_priority = sorted(portfolio.positions, key=lambda p: p.get('priority', 999))
   print('pri\tsym\teq_tot\tlast\twrth\ttrgt\tlft\tsh\tcat')
   for position in positions_by_priority:
     if position.get('paused'):
@@ -91,7 +57,7 @@ def show_potentials(cache_mode):
         position.get('category')
     ))
 
-  # Discounted (below buy in price)
+  # TODO: Discounted (below buy in price)
 
 
 if __name__ == '__main__':

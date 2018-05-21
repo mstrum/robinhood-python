@@ -27,12 +27,14 @@ def display_sp500_movers():
     if direction == 'down':
       movers.reverse()
 
+    
+    instruments = client.get_instruments([get_last_id_from_url(mover['instrument_url']) for mover in movers])
+    instruments_by_id = {i['id']: i for i in instruments}
+
     for mover in movers:
       last_price = Decimal(mover['price_movement']['market_hours_last_price'])
       movement_pct = Decimal(mover['price_movement']['market_hours_last_movement_pct'])
-
-      instrument_id = get_last_id_from_url(mover['instrument_url'])
-      instrument = client.get_instrument_by_id(instrument_id)
+      instrument = instruments_by_id[get_last_id_from_url(mover['instrument_url'])]
 
       print('${:.2f}\t({}{}%)\t{}\t({})'.format(
         last_price, extra_percentage_symbol, movement_pct, instrument['symbol'], instrument['simple_name'] or instrument['name']))
@@ -49,16 +51,16 @@ def display_top_movers():
   print('')
   print('----------------- Top Movers -----------------')
   instrument_ids =  client.get_instrument_ids_for_tag('top-movers', cache_mode=FORCE_LIVE)
-  for instrument_id in instrument_ids:
-    instrument = client.get_instrument_by_id(instrument_id)
+  instruments = client.get_instruments(instrument_ids)
+  for instrument in instruments:
     print('{}\t{}'.format(instrument['symbol'], instrument['simple_name'] or instrument['name']))
 
 def display_100_most_popular():
   print('')
   print('----------------- 100 Most Popular Stocks With Robinhood Users -----------------')
   instrument_ids =  client.get_instrument_ids_for_tag('100-most-popular', cache_mode=FORCE_LIVE)
-  for instrument_id in instrument_ids:
-    instrument = client.get_instrument_by_id(instrument_id)
+  instruments = client.get_instruments(instrument_ids)
+  for instrument in instruments:
     print('{}\t{}'.format(instrument['symbol'], instrument['simple_name'] or instrument['name']))
 
 
