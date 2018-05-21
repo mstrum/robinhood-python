@@ -18,8 +18,10 @@ Some current caveats:
 
 * [RobinhoodClient](robinhood/RobinhoodClient.py)
   * Client that handles getting data from the Robinhood APIs
-* [RobinhoodCachedClient](robinhood/RobinhoodClient.py)
+* [RobinhoodCachedClient](robinhood/RobinhoodCachedClient.py)
   * Client that handles caching on top of the normal client
+* [RobinhoodPortfolio](robinhood/RobinhoodPortfolio.py)
+  * Utility to help process an entire portfolio in a consistent manner
 
 ## Scripts
 
