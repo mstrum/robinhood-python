@@ -63,7 +63,7 @@ class RobinhoodPortfolio:
     for position in position_by_instrument_id.values():
       position['equity_percentage'] = position['equity_worth'] * 100 / total_equity
       position['total_price_change'] = position['last_price'] - position['average_buy_price']
-      position['day_price_change'] = position['last_price'] = - position['previous_close']
+      position['day_price_change'] = position['last_price'] - position['previous_close']
       position['day_percentage_change'] = position['day_price_change'] * 100 / position['previous_close']
       position['total_percentage_change'] = position['total_price_change']  * 100 / position['average_buy_price'] if position['average_buy_price'] else 100
 
