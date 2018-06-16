@@ -2428,7 +2428,7 @@ class RobinhoodClient:
     """
     params = {}
     if not include_old:
-      params['nonzero'] = 'true'
+      params['nonzero'] = 'True'
     response = self._get_session(API, authed=True).get(API_HOST + 'options/positions/', params=params)
     _raise_on_error(response)
     response_json = response.json()
