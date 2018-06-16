@@ -85,8 +85,9 @@ class RobinhoodClient:
     self._authorization_headers = {}
     self._oauth2_refresh_token = None
     self._oauth2_expires_at = None
+    self._client_id = 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS'
 
-  def _get_session(self, host, authed=False, oauth2=False):
+  def _get_session(self, host, authed=False):
     if host == API:
       session = self._api_session
     elif host == NUMMUS:
@@ -98,8 +99,7 @@ class RobinhoodClient:
 
     # Set auth as required
     if authed:
-      if oauth2:
-        self.ensure_valid_oauth2_token()
+      self.ensure_valid_oauth2_token()
       session.headers.update(self._authorization_headers)
     else:
       for key in self._authorization_headers.keys():
@@ -108,48 +108,63 @@ class RobinhoodClient:
 
     return session
 
-  def set_auth_token(self, auth_token):
-    self._authorization_headers['Authorization'] = 'Token {}'.format(auth_token)
-
   def set_oauth2_token(self, token_type, access_token, expires_at, refresh_token):
     self._authorization_headers['Authorization'] = '{} {}'.format(token_type, access_token)
     self._oauth2_refresh_token = refresh_token
     self._oauth2_expires_at = expires_at
 
-  def migrate_token(self):
-    response = self._get_session(API, authed=True).post(API_HOST + 'oauth2/migrate_token/')
+  def ensure_valid_oauth2_token(self):
+    if not self._oauth2_refresh_token:
+      raise Exception('Cannot ensure valid OAuth2 token. No refresh token.')
+    elif datetime.now() > self._oauth2_expires_at:
+      self.refresh_oauth2_token()
+
+  def refresh_oauth2_token(self):
+    body = {
+      'refresh_token': self._oauth2_refresh_token,
+      'grant_type': 'refresh_token',
+      'client_id': self._client_id
+    }
+    response = self._get_session(API).post(API_HOST + 'oauth2/token/', data=body)
     _raise_on_error(response)
     oauth2_details = response.json()
+    if 'mfa_required' in oauth2_details:
+        raise MfaRequired()
     self.set_oauth2_token(
-        oauth2_details['token_type'],
-        oauth2_details['access_token'],
-        datetime.now() + timedelta(minutes=oauth2_details['expires_in']),
-        oauth2_details['refresh_token']
+      oauth2_details['token_type'],
+      oauth2_details['access_token'],
+      datetime.now() + timedelta(seconds=oauth2_details['expires_in']),
+      oauth2_details['refresh_token']
     )
-
-  def ensure_valid_oauth2_token(self):
-    if not self._oauth2_expires_at:
-      self.migrate_token()
 
   def set_auth_token_with_credentials(self, username, password, mfa=None):
     body = {
-        'username': username,
-        'password': password,
+      'username': username,
+      'password': password,
+      'grant_type': 'password',
+      'client_id': self._client_id
     }
     if mfa:
       body['mfa_code'] = mfa
 
-    response = self._get_session(API).post(API_HOST + 'api-token-auth/', data=body)
+    response = self._get_session(API).post(API_HOST + 'oauth2/token/', data=body)
     _raise_on_error(response)
-    response_json = response.json()
-    if 'mfa_required' in response_json:
+    oauth2_details = response.json()
+    if 'mfa_required' in oauth2_details:
       raise MfaRequired()
-    auth_token = response.json()['token']
-    self.set_auth_token(auth_token)
-    return auth_token
+    self.set_oauth2_token(
+      oauth2_details['token_type'],
+      oauth2_details['access_token'],
+      datetime.now() + timedelta(seconds=oauth2_details['expires_in']),
+      oauth2_details['refresh_token']
+    )
 
   def clear_auth_token(self):
-    response = self._get_session(API, authed=True).post(API_HOST + 'api-token-logout/')
+    body = {
+        'client_id': self._client_id,
+        'token': self._oauth2_refresh_token
+    }
+    response = self._get_session(API, authed=True).post(API_HOST + 'oauth2/revoke_token/', )
     _raise_on_error(response)
     self._authorization_headers = {}
     del self._session.headers['Authorization']
@@ -2098,7 +2113,7 @@ class RobinhoodClient:
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'halts/')
+    response = self._get_session(NUMMUS, authed=True).get(NUMMUS_HOST + 'halts/')
     _raise_on_error(response)
     return response.json()['results']
 
@@ -2123,7 +2138,7 @@ class RobinhoodClient:
         }
     ]
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'activations/')
+    response = self._get_session(NUMMUS, authed=True).get(NUMMUS_HOST + 'activations/')
     _raise_on_error(response)
     response_json = response.json()
     assert not response_json['next']
@@ -2134,7 +2149,7 @@ class RobinhoodClient:
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'watchlists/')
+    response = self._get_session(NUMMUS, authed=True).get(NUMMUS_HOST + 'watchlists/')
     _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
@@ -2146,7 +2161,7 @@ class RobinhoodClient:
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'holdings/')
+    response = self._get_session(NUMMUS, authed=True).get(NUMMUS_HOST + 'holdings/')
     _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
@@ -2158,7 +2173,7 @@ class RobinhoodClient:
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'portfolios/{}/'.format(portfolio_id))
+    response = self._get_session(NUMMUS, authed=True).get(NUMMUS_HOST + 'portfolios/{}/'.format(portfolio_id))
     _raise_on_error(response)
     return response.json()
 
@@ -2167,7 +2182,7 @@ class RobinhoodClient:
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'portfolios/')
+    response = self._get_session(NUMMUS, authed=True).get(NUMMUS_HOST + 'portfolios/')
     _raise_on_error(response)
     return response.json()['results']
 
@@ -2176,7 +2191,7 @@ class RobinhoodClient:
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'orders/{}/'.format(order_id))
+    response = self._get_session(NUMMUS, authed=True).get(NUMMUS_HOST + 'orders/{}/'.format(order_id))
     _raise_on_error(response)
     return response.json()
 
@@ -2185,7 +2200,7 @@ class RobinhoodClient:
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'orders/')
+    response = self._get_session(NUMMUS, authed=True).get(NUMMUS_HOST + 'orders/')
     _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
@@ -2224,7 +2239,7 @@ class RobinhoodClient:
         ...
     ]
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(NUMMUS_HOST + 'currency_pairs/')
+    response = self._get_session(NUMMUS, authed=True).get(NUMMUS_HOST + 'currency_pairs/')
     _raise_on_error(response)
     response_json = response.json()
     # TODO: autopage
@@ -2260,7 +2275,7 @@ class RobinhoodClient:
         }
     }
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).get(
+    response = self._get_session(NUMMUS, authed=True).get(
         NUMMUS_HOST + 'currency_pairs/{}/'.format(currency_pair_id))
     _raise_on_error(response)
     return response.json()
@@ -2280,7 +2295,7 @@ class RobinhoodClient:
         "ask_price": "6996.5900"
     }
     """
-    response = self._get_session(API, authed=True, oauth2=True).get(
+    response = self._get_session(API, authed=True).get(
         API_HOST + 'marketdata/forex/quotes/{}/'.format(symbol_or_currency_pair_id))
     _raise_on_error(response)
     return response.json()
@@ -2310,7 +2325,7 @@ class RobinhoodClient:
       params['ids'] = ','.join(currency_pair_ids)
     if symbols:
       params['symbols'] = ','.join(symbols)
-    response = self._get_session(API, authed=True, oauth2=True).get(
+    response = self._get_session(API, authed=True).get(
         API_HOST + 'marketdata/forex/quotes/', params=params)
     _raise_on_error(response)
     return response.json()['results']
@@ -2363,7 +2378,7 @@ class RobinhoodClient:
     if span:
       assert span in SPANS
       params['span'] = span
-    response = self._get_session(API, authed=True, oauth2=True).get(
+    response = self._get_session(API, authed=True).get(
         API_HOST + 'marketdata/forex/historicals/{}/'.format(currency_pair_id), params=params)
     _raise_on_error(response)
     return response.json()
@@ -2373,7 +2388,7 @@ class RobinhoodClient:
     Example response:
     TODO
     """
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).post(
+    response = self._get_session(NUMMUS, authed=True).post(
         NUMMUS_HOST + 'orders/{}/cancel/'.format(order_id))
     _raise_on_error(response)
     return response.json()
@@ -2394,7 +2409,7 @@ class RobinhoodClient:
         'time_in_force': 'gtc',
         'type': order_type,
     }
-    response = self._get_session(NUMMUS, authed=True, oauth2=True).post(NUMMUS_HOST + 'orders/')
+    response = self._get_session(NUMMUS, authed=True).post(NUMMUS_HOST + 'orders/')
     _raise_on_error(response)
     return response.json()
 
@@ -2565,7 +2580,7 @@ class RobinhoodClient:
         "gamma": null
     }
     """
-    response = self._get_session(API, authed=True, oauth2=True).get(
+    response = self._get_session(API, authed=True).get(
         API_HOST + 'marketdata/options/{}/'.format(options_instrument_id))
     _raise_on_error(response)
     response_json = response.json()
@@ -2609,7 +2624,7 @@ class RobinhoodClient:
             options_instrument_id_to_url(options_instrument_id) for options_instrument_id in options_instrument_ids
         ]),
     }
-    response = self._get_session(API, authed=True, oauth2=True).get(API_HOST + 'marketdata/options/', params=params)
+    response = self._get_session(API, authed=True).get(API_HOST + 'marketdata/options/', params=params)
     _raise_on_error(response)
     results = response.json()['results']
     assert len(results) == len(options_instrument_ids)
