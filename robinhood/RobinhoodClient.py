@@ -2514,12 +2514,10 @@ class RobinhoodClient:
         }
     ]
     """
-    response = self._get_session(API, authed=True).get(API_HOST + 'options/orders/')
-    _raise_on_error(response)
-    response_json = response.json()
-    # TODO: autopage
-    assert not response_json['next']
-    return response_json['results']
+    return self._collect_results(
+        self._get_session(API, authed=True).get,
+        [API_HOST + 'options/orders/']
+    )
 
   def get_options_events(self, instrument_id=None):
     """
