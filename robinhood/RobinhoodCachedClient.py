@@ -71,28 +71,43 @@ vvvvvvvvvvvvvvvvvvvvvvv robinhood-python disclosures vvvvvvvvvvvvvvvvvvvvvvv
       cache_file.write(datetime.now().isoformat())
 
   def login(self, force_login=False):
-    cache_path = os.path.join(cache_root_path, 'auth_token')
+    cache_path = os.path.join(cache_root_path, 'auth_data')
     if os.path.exists(cache_path) and not force_login:
       with open(cache_path, 'r') as cache_file:
-        self.set_auth_token(cache_file.read())
+        auth_data = json.load(cache_file)
+        self.set_oauth2_token(
+          auth_data['token_type'],
+          auth_data['access_token'],
+          datetime.strptime(auth_data['expires_at'], "%Y-%m-%d %H:%M:%S.%f"),
+          auth_data['refresh_token']
+        )
     else:
       # Get a new auth token
       username = input('Username: ')
       password = getpass.getpass()
 
       try:
-        auth_token = self.set_auth_token_with_credentials(username, password)
+        self.set_auth_token_with_credentials(username, password)
       except MfaRequired:
         mfa = input('MFA: ')
-        auth_token = self.set_auth_token_with_credentials(username, password, mfa)
+        self.set_auth_token_with_credentials(username, password, mfa)
 
       with open(cache_path, 'w') as cache_file:
-        cache_file.write(auth_token)
+        auth_header = self._authorization_headers['Authorization']
+        auth_data = {
+          'token_type': auth_header.split(' ')[0],
+          'access_token': auth_header.split(' ')[1],
+          'expires_at': self._oauth2_expires_at,
+          'refresh_token': self._oauth2_refresh_token
+        }
+        json.dump(auth_data, cache_file, default=str)
 
   def logout(self):
-    cache_path = os.path.join(cache_root_path, 'auth_token')
+    cache_path = os.path.join(cache_root_path, 'auth_data')
     if os.path.exists(cache_path):
       os.remove(cache_path)
+    if self._oauth2_refresh_token:
+      self.clear_auth_token()
 
   def _simple_call(self, cache_name, method, cache_mode, args=[], kwargs={}, binary=False):
     cache_path = os.path.join(cache_root_path, cache_name)
